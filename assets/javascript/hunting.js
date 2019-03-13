@@ -4,22 +4,51 @@ var player = {
     x: 50,
     y: ($(window).height() / $(window).width()) * 50,
     direction: 0,
+    motion: 0,
     // percent of the screen you can move with one keypress
     speed: 0.5,
     img: null
 };
 
-var pokeball = {
-    x: 0,
-    y: 0,
-    speed: 0.75,
-    img: null,
-    img2: null,
-    direction: 0,
-    maxRange: 20,
-    range: 0,
-    active: false
-};
+class tree {
+
+}
+
+class pokeball {
+    constructor() {
+        this.x = 0;
+        this.y = 0;
+        this.speed = 0;
+        this.topSpeed = 0.75;
+        this.direction = 0;
+        this.maxRange = 20;
+        this.range = 0;
+        this.active = false;
+        this.img = $("<img>").attr('src', 'assets/images/pokeball.png').css({"position": "absolute", "height": "25px", "width": "25px"});
+    }
+    throw (direction) {
+        if (this.active) return;
+        this.img.show();
+        this.speed = this.topSpeed + player.motion * player.speed;
+        this.x = player.x;
+        this.y = player.y;
+        this.direction = direction;
+        this.range = this.maxRange;
+        this.img.css({'left': this.x + "vw", 'top': this.y + "vw"});
+        this.active = true;
+    }
+    fly () {
+        this.x += Math.sin(this.direction * Math.PI / 180.0) * this.speed;
+        this.y -= Math.cos(this.direction * Math.PI / 180.0) * this.speed;
+        this.z = Math.sqrt((this.maxRange / 2  - Math.abs(this.maxRange / 2 - this.range)) * 10 / this.maxRange);
+        this.img.css({'left': this.x + "vw", 'top': (this.y - this.z) + "vw"});
+        this.range--;
+        if (this.range <= 0) {
+            this.active = false;
+            this.img.hide();
+        }
+    }
+}
 
 class pokemon_prey {
     constructor (type, img, x, y, direction) {
@@ -38,50 +67,30 @@ function newPokemon (x, y) {
     }
 }
 
-function throwPokeball (direction) {
-    if (pokeball.active) return;
-    pokeball.img.show();
-    pokeball.x = player.x;
-    pokeball.y = player.y;
-    pokeball.direction = direction;
-    pokeball.range = pokeball.maxRange;
-    pokeball.img.css({'left': pokeball.x + "vw", 'top': pokeball.y + "vw"});
-    pokeball.active = true;
-}
-
-// you can only face 12 different directions 
+// you can only face 12 different directions - 4 better than Oregon Trail's 8
 var turnPositions = 12;
 
 $(document).ready(() => {
-    var move = 0;
-
+    var ball = new pokeball();
     player.img = $("<img>").attr('src', 'assets/images/hunter.png').css({"position": "absolute", "height": "50px", "width": "50px", "transform": "translate(-25%, -25%)"});
-    player.img2 = $("<img>").attr('src', 'assets/images/arrow.jpg').css({"position": "absolute", "height": "25px", "width": "25px", "transform": "translate(-50%, -50%)"});
-    pokeball.img = $("<img>").attr('src', 'assets/images/pokeball.png').css({"position": "absolute", "height": "25px", "width": "25px"});
+    player.img2 = $("<img>").attr('src', 'assets/images/arrow.png').css({"position": "absolute", "height": "25px", "width": "25px", "transform": "translate(-50%, -50%)"});
     $('#huntingField').append(player.img);
     $('#huntingField').append(player.img2);
-    $('#huntingField').append(pokeball.img.hide());
+    $('#huntingField').append(ball.img.hide());
 
     setInterval(() => {
         // move if key is down
-        if (move != 0) {
-            player.x += Math.sin(player.direction * Math.PI / 180.0) * player.speed * move;
-            player.y -= Math.cos(player.direction * Math.PI / 180.0) * player.speed * move;
+        if (player.motion != 0) {
+            player.x += Math.sin(player.direction * Math.PI / 180.0) * player.speed * player.motion;
+            player.y -= Math.cos(player.direction * Math.PI / 180.0) * player.speed * player.motion;
             // stay in bounds
-            var ybound = ($(window).height() / $(window).width()) * 100;
-            player.x = Math.min(Math.max(player.x, 0), 100);
+            var ybound = ($(window).height() - player.img.height()) / ($(window).width() - player.img.width()) * 100 ;
+            var xbound = (1 - player.img.width() / $(window).width()) * 100;
+            player.x = Math.min(Math.max(player.x, 0), xbound);
             player.y = Math.min(Math.max(player.y, 0), ybound);
         }
-        if (pokeball.active) {
-            pokeball.x += Math.sin(pokeball.direction * Math.PI / 180.0) * pokeball.speed;
-            pokeball.y -= Math.cos(pokeball.direction * Math.PI / 180.0) * pokeball.speed;
-            pokeball.img.css({'left': pokeball.x + "vw", 'top': pokeball.y + "vw"});
-            // pokeball.img.css({'left': pokeball.x + "vw", 'top': pokeball.y + "vw"});
-            pokeball.range--;
-            if (pokeball.range <= 0) {
-                pokeball.active = false;
-                pokeball.img.hide();
-            }
+        if (ball.active) {
+            ball.fly();
         }
         // apply position and rotation
         player.img.css({'left': player.x + "vw", 'top': player.y + "vw"});
@@ -95,35 +104,32 @@ $(document).ready(() => {
     $(document).on('keydown', (event) => {
         switch (event.key) {
         case "ArrowLeft":
-            // left
+            // turn left
             player.direction -= (360 / turnPositions);
             break;
         case "ArrowRight":
-            // right
+            // turn right
             player.direction += (360 / turnPositions);
             break;
         case "ArrowUp":
-            // up
-            move = 1;
+            // forward
+            player.motion = 1;
             break;
         case "ArrowDown":
             // down
-            move = -1;
+            player.motion = -1;
             break;
         }
     });
     $(document).on('keyup', (event) => {
         switch (event.key) {
         case "ArrowUp":
-            // up
-            move = 0;
-            break;
         case "ArrowDown":
-            // down
-            move = 0;
+            // stop
+            player.motion = 0;
             break;
         case " ":
-            throwPokeball(player.direction);
+            ball.throw(player.direction);
         }
     });
 });
