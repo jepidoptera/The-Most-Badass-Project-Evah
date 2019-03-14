@@ -4,6 +4,8 @@
 <head>
     <meta charset='UTF-8'>
 
+    <title>Pokémon Trail</title>
+
     <link href="https://fonts.googleapis.com/css?family=VT323" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/normalize.css">
     <link rel="stylesheet" href="assets/css/style.css">
@@ -11,6 +13,7 @@
     <script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous"></script>
     <script src="assets/javascript/catch.js"></script>
     <script src="assets/javascript/battle.js"></script>
+    <script src="assets/javascript/screen-transition.js"></script>
     <script src="https://www.gstatic.com/firebasejs/5.8.6/firebase.js"></script>
 </head>
 
@@ -18,64 +21,39 @@
     <header>
         <h1 class="tracking-in-contract">Pokémon Trail</h1>
     </header>
-    <form class="needs-validation" novalidate>
-        <div class="form-group">
-            <input type="email" class="form-control" id="email" placeholder="enter email" required>
-            <div class="invalid-feedback">
-                please enter your email!
-            </div>
-        </div>
+    <form class="needs-validation login" novalidate>
         <div class="form-group">
             <input type="username" class="form-control" id="username" placeholder="username" required>
             <div class="invalid-feedback">
                 please enter a username!
             </div>
         </div>
+        <div class="form-group">
+            <input type="password" class="form-control" id="password" placeholder="password" required>
+            <div class="invalid-feedback">
+                please enter a password!
+            </div>
+        </div>
         <button type="submit" class="btn btn-light" id="submit">play!</button>
     </form>
+    <div class="menu">
+        <h1 class="tracking-in-contract">Main Menu</h1>
+        <div class="btn-group-vertical">
+            <button type="button" class="btn btn-light">Start Game</button>
+            <button type="button" class="btn btn-light">Instructions</button>
+            <button type="button" class="btn btn-light">Your Pokémon</button>
+        </div>
+    </div>
+    <div class="game-panel">
+        <span class="game"></span>
+    </div>
+    <div class="instructions-panel">
+        <h1 class="tracking-in-contract">Instructions</h1>
+        <p>Use your arrow keys to navigate the screen to hunt for Pokémon! When you see one pop up, try to catch it by pressing the space bar to throw a Pokéball at it!</p>
+    </div>
+    <div class="pokemon-panel">
+        <h1 class="tracking-in-contract">Your Pokémon</h1>
+        <span class="pokemon"></span>
+    </div>
 </body>
 </html>
-
-<script>
-    (function() {
-        'use strict';
-        window.addEventListener('load', function() {
-            // Fetch all the forms we want to apply custom Bootstrap validation styles to
-            var forms = document.getElementsByClassName('needs-validation');
-            // Loop over them and prevent submission
-            var validation = Array.prototype.filter.call(forms, function(form) {
-                form.addEventListener('submit', function(event) {
-                    console.log("hi");
-                    if (form.checkValidity() === false) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                    }
-                    form.classList.add('was-validated');
-                }, false);
-            });
-        }, false);
-    })();
-
-    var config = {
-        apiKey: "AIzaSyAqd2f2a2iFdzSMNqsGzt8ShzjJ_VxSG9w",
-        authDomain: "pokemon-trail.firebaseapp.com",
-        databaseURL: "https://pokemon-trail.firebaseio.com",
-        projectId: "pokemon-trail",
-        storageBucket: "",
-        messagingSenderId: "726250890927"
-    };
-    firebase.initializeApp(config);
-
-    var database = firebase.database();
-
-    $('#submit').on('click', function(e){
-        e.preventDefault();
-        var email = $('#email').val().trim();
-        var username = $('#username').val().trim();
-
-        database.ref().push({
-            email: email,
-            username: username
-        });
-    });
-</script>
