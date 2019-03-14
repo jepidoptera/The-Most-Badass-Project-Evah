@@ -13,22 +13,72 @@
     <script src="assets/javascript/catch.js"></script>
     <script src="assets/javascript/battle.js"></script>
     <script src="assets/javascript/storyline.js"></script>
-    
+    <script src="https://www.gstatic.com/firebasejs/5.8.6/firebase.js"></script>
 </head>
 
 <body class="box-object-gradient-hor bg-pan-left">
     <header>
         <h1 class="tracking-in-contract">Pokémon Trail</h1>
     </header>
-    <form>
+    <form class="needs-validation" novalidate>
         <div class="form-group">
-            <input type="email" class="form-control" id="email" placeholder="enter email">
+            <input type="email" class="form-control" id="email" placeholder="enter email" required>
+            <div class="invalid-feedback">
+                please enter your email!
+            </div>
         </div>
         <div class="form-group">
-            <input type="username" class="form-control" id="username" placeholder="username">
+            <input type="username" class="form-control" id="username" placeholder="username" required>
+            <div class="invalid-feedback">
+                please enter a username!
+            </div>
         </div>
-        <button type="submit" class="btn btn-light">play!</button>
+        <button type="submit" class="btn btn-light" id="submit">play!</button>
     </form>
 </body>
-
 </html>
+
+<script>
+    (function() {
+        'use strict';
+        window.addEventListener('load', function() {
+            // Fetch all the forms we want to apply custom Bootstrap validation styles to
+            var forms = document.getElementsByClassName('needs-validation');
+            // Loop over them and prevent submission
+            var validation = Array.prototype.filter.call(forms, function(form) {
+                form.addEventListener('submit', function(event) {
+                    console.log("hi");
+                    if (form.checkValidity() === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        }, false);
+    })();
+
+    var config = {
+        apiKey: "AIzaSyAqd2f2a2iFdzSMNqsGzt8ShzjJ_VxSG9w",
+        authDomain: "pokemon-trail.firebaseapp.com",
+        databaseURL: "https://pokemon-trail.firebaseio.com",
+        projectId: "pokemon-trail",
+        storageBucket: "",
+        messagingSenderId: "726250890927"
+    };
+    firebase.initializeApp(config);
+
+    var database = firebase.database();
+
+    $('#submit').on('click', function(e){
+        e.preventDefault();
+        var email = $('#email').val().trim();
+        var username = $('#username').val().trim();
+
+        database.ref().push({
+            email: email,
+            username: username
+        });
+    });
+</script>
+
