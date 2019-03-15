@@ -1,17 +1,23 @@
-// var currentTime = new Date()
-// var month = currentTime.getMonth() + 1
-// var day = currentTime.getDate()
-// var year = currentTime.getFullYear()
-// var dateString= month + "/" + day + "/" + year
-var player = GetPlayer();
-// player.SetVar("SystemDate",dateString);
 
-var pokeCharacter = [{
-    pokemon: ["Snorlax", "Jigglypuff", "Charzard", "Articuno", "Ninetails"],
-    imgSrc: "assets/images/mulan.jpg"
+ alert('hello');
 
-}
-]
+ if (window.sessionStorage) {
+    //  Get form elements
+    var txtUsername = document.getElementById('username'); 
+    var txtEmail = document.getElementById('email');
+    
 
+    // Elements get populated by local storage data
+    txtUsername.value = sessionStorage.getItem('username');
+    txtEmail.value = sessionStorage.getItem('email');
+    console.log('email')
+    // Data saved
+    txtUsername.addEventListener('input', function() {
+        sessionStorage.setItem('username', txtUsername.value);
+    }, false);
 
+    txtEmail.addEventListener('input', function() {
+        sessionStorage.setItem('email', txtEmail.value);
+    }, false);
+ }
 
