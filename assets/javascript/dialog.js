@@ -2,6 +2,16 @@
 var msgDiv;
 var keyDownFunction, keyUpFunction;
 
+// example usage:
+// msgBox('title', 'message', dialogButtons([{
+//     text: 'text',
+//     function: function () {}
+// }, {
+//     text: 'text',
+//     function: function () {}
+// }
+// ]));
+
 function deactivateKeyPresses(){
     // store whatever key functions are being used, reactivate them after dialog closes
     keyUpFunction = document.onkeyup;
