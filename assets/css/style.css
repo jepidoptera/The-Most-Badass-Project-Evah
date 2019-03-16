@@ -70,3 +70,32 @@ form {
     margin: auto;
     width: 250px;
 }
+
+.menu {
+    display: none;
+    text-align: center;
+}
+
+.btn-group-vertical {
+    display: inline-block;
+    margin: auto;
+    width: 250px;
+}
+
+.game-panel {
+    display: none;
+}
+
+.instructions-panel {
+    display: none;
+}
+
+p {
+    text-align: center;
+    color: #fff;
+    padding: 200px;
+}
+
+.pokemon-panel {
+    display: none;
+}
