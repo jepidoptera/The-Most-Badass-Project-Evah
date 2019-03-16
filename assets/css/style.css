@@ -71,11 +71,6 @@ form {
     width: 250px;
 }
 
-.menu {
-    display: none;
-    text-align: center;
-}
-
 input.error {
     border: 1px solid red;
 }
@@ -97,13 +92,13 @@ label.error {
     width: 250px;
 }
 
-.game-panel {
-    display: none;
-}
+/*.game-panel {*/
+    /*display: none;*/
+/*}*/
 
-.instructions-panel {
-    display: none;
-}
+/*.instructions-panel {*/
+    /*display: none;*/
+/*}*/
 
 p {
     text-align: center;
@@ -111,6 +106,6 @@ p {
     padding: 200px;
 }
 
-.pokemon-panel {
-    display: none;
-}
+/*.pokemon-panel {*/
+    /*display: none;*/
+/*}*/
