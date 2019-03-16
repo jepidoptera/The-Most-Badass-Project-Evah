@@ -21,6 +21,7 @@ $(document).ready(function(){
     $('#submit').on('click', function(e){
         e.preventDefault();
 
+        $('.title').hide();
         $('.login-form').hide();
         $('.game-panel').show();
 
@@ -35,4 +36,22 @@ $(document).ready(function(){
             password: password
         });
     });
+
+    $('.instructions').on('click', function(e){
+        e.preventDefault();
+        $('.game-panel').hide();
+        $('.instructions-panel').show();
+    })
+
+    $('.pokemon').on('click', function(e){
+        e.preventDefault();
+        $('.game-panel').hide();
+        $('.pokemon-panel').show();
+    })
+
+    $('.ok-btn').on('click', function(){
+        $('.instructions-panel').hide();
+        $('.pokemon-panel').hide();
+        $('.game-panel').show();
+    })
 });
