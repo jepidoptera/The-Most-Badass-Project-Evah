@@ -12,33 +12,27 @@ $(document).ready(function(){
 
     var database = firebase.database();
 
+    $('.game-panel').hide();
+    $('.instructions-panel').hide();
+    $('.pokemon-panel').hide();
+
+    $('.login-form').validate();
+
     $('#submit').on('click', function(e){
         e.preventDefault();
+
+        $('.login-form').hide();
+        $('.game-panel').show();
+
         var username = $('#username').val().trim();
         var password = $('#password').val().trim();
 
         var ref = database.ref();
         var rootRef = firebase.database().ref();
 
-        rootRef.once("value")
-            .then(function(snapshot) {
-                var key = snapshot.key;
-                var childKey = snapshot.child("users/" + username).key;
-                console.log(childKey)
-            });
-
-                // console.log(a);
-                // console.log(b);
-                // console.log(c);
-                // console.log(d);
-
-
-
-        // database.ref("/users").push({
-        //     username: username,
-        //     password: password
-        // });
-
-        // $('.login').hide();
+        database.ref("/users").push({
+            username: username,
+            password: password
+        });
     });
 });
