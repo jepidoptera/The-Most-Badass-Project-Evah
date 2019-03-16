@@ -11,8 +11,8 @@
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
     <script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.0/jquery.validate.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.0/jquery.validate.min.js"></script>
     <script src="assets/javascript/catch.js"></script>
     <script src="assets/javascript/battle.js"></script>
     <script src="assets/javascript/screen-transition.js"></script>
@@ -28,24 +28,21 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav">
-                <li class="nav-item active">
-                    <a class="nav-link" href="#">Login<span class="sr-only">(current)</span></a>
+                <li class="nav-item">
+                    <a class="nav-link instructions" href="#">Instructions</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#">Instructions</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Your Pokémon</a>
+                    <a class="nav-link pokemon" href="#">Your Pokémon</a>
                 </li>
             </ul>
         </div>
     </nav>
     <header>
-        <h1 class="tracking-in-contract">Pokémon Trail</h1>
+        <h1 class="tracking-in-contract title">Pokémon Trail</h1>
     </header>
     <form class="login-form">
         <div class="form-group">
-            <input name="email" minlength="2" type="email" class="form-control" id="email" placeholder="email" required>
+            <input name="email" type="email" class="form-control" id="email" placeholder="email" required>
         </div>
         <div class="form-group">
             <input name="username" minlength="2" type="text" class="form-control" id="username" placeholder="username" required>
@@ -55,16 +52,16 @@
         </div>
         <button type="submit" class="btn btn-light" id="submit">Start Game!</button>
     </form>
-    <div class="game-panel">
-        <span class="game"></span>
-    </div>
+    <div class="game-panel"></div>
     <div class="instructions-panel">
         <h1 class="tracking-in-contract">Instructions</h1>
         <p>Use your arrow keys to navigate the screen to hunt for Pokémon! When you see one pop up, try to catch it by pressing the space bar to throw a Pokéball at it!</p>
+        <button type="button" class="btn btn-light ok-btn">Ok!</button>
     </div>
     <div class="pokemon-panel">
         <h1 class="tracking-in-contract">Your Pokémon</h1>
         <span class="pokemon"></span>
+        <button type="button" class="btn btn-light ok-btn">Ok!</button>
     </div>
 </body>
 </html>
