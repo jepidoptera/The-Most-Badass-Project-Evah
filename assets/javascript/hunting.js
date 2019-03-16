@@ -19,6 +19,7 @@ class pokeball {
         this.direction = 0;
         this.maxRange = 20;
         this.range = 0;
+        this.motion = 1;
         this.active = false;
         this.img = $("<img>").attr('src', 'assets/images/pokeball.png').css({"position": "absolute", "height": "25px", "width": "25px"});
     }
@@ -31,13 +32,14 @@ class pokeball {
         this.direction = direction;
         this.range = this.maxRange;
         this.img.css({'left': this.x + "vw", 'top': (this.y - this.z) + "vw"});
+        this.motion = 1;
         this.active = true;
     }
     fly () {
         // do some math
-        this.x += Math.sin(this.direction * Math.PI / 180.0) * this.speed;
-        this.y -= Math.cos(this.direction * Math.PI / 180.0) * this.speed;
-        this.z = Math.sqrt((this.maxRange / 2  - Math.abs(this.maxRange / 2 - this.range)) * 10 / this.maxRange);
+        this.x += Math.sin(this.direction * Math.PI / 180.0) * this.speed * this.motion;
+        this.y -= Math.cos(this.direction * Math.PI / 180.0) * this.speed * this.motion;
+        this.z = Math.sqrt((this.maxRange / 2  - Math.abs(this.maxRange / 2 - this.range)) * 10 / this.maxRange) * this.motion;
         // set position on the page
         this.img.css({'left': this.x + "vw", 'top': "Calc(" + (this.y - this.z) + "vw - 37px)"});
         // catch pokemon
@@ -49,7 +51,7 @@ class pokeball {
             if (Math.sqrt(xdist * xdist + ydist * ydist) < pokemon.size) {
                 // catch em
                 console.log('caught one!');
-                this.topSpeed = 0;
+                this.motion = 0;
                 pokemon.img.animate({height: 0, width: 0}, {duration: 2000});
                 pokemon.rotate()
                 pokemon.motion = 0;
