@@ -1,6 +1,30 @@
+html, body {
+    overflow: hidden;
+}
 #sky {
     background-color: skyblue;
+    position: absolute;
+    width: 100%;
+    height: 50%;
 }
 #ground {
-    background-color: skyblue;
+    background-color: green;
+    position: absolute;
+    top: 50%;
+    width: 100%;
+    height: 50%;
+}
+#path {
+    background-color: tan;
+    position: absolute;
+    width: 100%;
+    height: 5%;
+    top: 65%;
+}
+#huntButton {
+    position: absolute;
+    left: 10%;
+    top: 85%;
+    font-size: 24pt;
+    border-radius: 3px;
 }

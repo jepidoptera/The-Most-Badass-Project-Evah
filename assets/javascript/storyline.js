@@ -55,33 +55,6 @@ var playerStats = function() {
 };
 $('.mainDiv').append(playerStats);
 
-var trail = [
-    {
-        type: 'city',
-        name: 'Pokemon City'
-    },
-    {
-        type: 'forest',
-        name: 'The Forest of Doom',
-        length: 14 // seconds
-    },
-    {
-        type: 'city',
-        name: 'Pokegonemon'
-    }
-];
-
-function gameLoop () {
-    var currentLocation = 0;
-    switch (trail[currentLocation].type) {
-    case "city":
-        // city menu screen
-        break;
-    default: 
-        
-    }
-}
-
 
 
 

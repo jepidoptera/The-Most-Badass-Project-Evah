@@ -45,7 +45,8 @@ class pokeball {
         // catch pokemon
         var x = parseInt(this.img.css('left'));
         var y = parseInt(this.img.css('top'));
-        activePokemon.forEach((pokemon) => {
+        if (this.motion) activePokemon.forEach((pokemon) => {
+            if (pokemon.caught) return;
             var xdist = x - parseInt(pokemon.img.css('left'));
             var ydist = y - parseInt(pokemon.img.css('top'));
             if (Math.sqrt(xdist * xdist + ydist * ydist) < pokemon.size) {
@@ -53,8 +54,12 @@ class pokeball {
                 console.log('caught one!');
                 this.motion = 0;
                 pokemon.img.animate({height: 0, width: 0}, {duration: 2000});
-                pokemon.rotate()
+                pokemon.img.rotate(180);
+                setTimeout(() => {
+                    pokemon.active = false;
+                }, 2000);
                 pokemon.motion = 0;
+                pokemon.caught = true;
             }
         });
         // range limit
@@ -108,6 +113,7 @@ class pokemon_prey {
         this.speed = 0.25;
         this.motion = 1;
         this.active = true;
+        this.caught = false;
     }
     move () {
         this.x += Math.sin(this.direction * Math.PI / 180.0) * this.speed * this.motion;
@@ -182,12 +188,7 @@ $(document).ready(() => {
             'left': player.x + Math.sin(player.direction * Math.PI / 180.0) * 3 + "vw",
             'top': player.y - Math.cos(player.direction * Math.PI / 180.0) * 3 + "vw"});
     
-        // order things by y coordinate
-        $.each($(".ordered"), (i, element) => {
-            var zindex = parseInt($(element).css('top'));
-            var offset =  parseInt($(element).attr('z-offset')) || 0;
-            $(element).css({"z-index": zindex + offset});
-        });
+        orderZIndex();
     }, 30);
 
     // keyboard input
@@ -234,5 +235,14 @@ $(document).ready(() => {
     function calculateBounds() {
         ybound = ($(window).height() - player.img.height()) / ($(window).width() - player.img.width()) * 100 ;
         xbound = (1 - player.img.width() / $(window).width()) * 100;
+    }
+
+    function orderZIndex() {
+        // order things by y coordinate
+        $.each($(".ordered"), (i, element) => {
+            var zindex = parseInt($(element).css('top'));
+            var offset =  parseInt($(element).attr('z-offset')) || 0;
+            $(element).css({"z-index": zindex + offset});
+        });
     }
 });
