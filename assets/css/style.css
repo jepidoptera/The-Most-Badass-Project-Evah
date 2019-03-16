@@ -76,6 +76,21 @@ form {
     text-align: center;
 }
 
+input.error {
+    border: 1px solid red;
+}
+
+label.error {
+    border-radius: .25rem;
+    text-align: left;
+    display: block;
+    color: white;
+    background: red;
+    width: 100%;
+    margin-top: 5px;
+    padding: 0 15px;
+}
+
 .btn-group-vertical {
     display: inline-block;
     margin: auto;
