@@ -19,6 +19,7 @@ class pokeball {
         this.direction = 0;
         this.maxRange = 20;
         this.range = 0;
+        this.motion = 1;
         this.active = false;
         this.img = $("<img>").attr('src', 'assets/images/pokeball.png').css({"position": "absolute", "height": "25px", "width": "25px"});
     }
@@ -31,28 +32,34 @@ class pokeball {
         this.direction = direction;
         this.range = this.maxRange;
         this.img.css({'left': this.x + "vw", 'top': (this.y - this.z) + "vw"});
+        this.motion = 1;
         this.active = true;
     }
     fly () {
         // do some math
-        this.x += Math.sin(this.direction * Math.PI / 180.0) * this.speed;
-        this.y -= Math.cos(this.direction * Math.PI / 180.0) * this.speed;
-        this.z = Math.sqrt((this.maxRange / 2  - Math.abs(this.maxRange / 2 - this.range)) * 10 / this.maxRange);
+        this.x += Math.sin(this.direction * Math.PI / 180.0) * this.speed * this.motion;
+        this.y -= Math.cos(this.direction * Math.PI / 180.0) * this.speed * this.motion;
+        this.z = Math.sqrt((this.maxRange / 2  - Math.abs(this.maxRange / 2 - this.range)) * 10 / this.maxRange) * this.motion;
         // set position on the page
         this.img.css({'left': this.x + "vw", 'top': "Calc(" + (this.y - this.z) + "vw - 37px)"});
         // catch pokemon
         var x = parseInt(this.img.css('left'));
         var y = parseInt(this.img.css('top'));
-        activePokemon.forEach((pokemon) => {
+        if (this.motion) activePokemon.forEach((pokemon) => {
+            if (pokemon.caught) return;
             var xdist = x - parseInt(pokemon.img.css('left'));
             var ydist = y - parseInt(pokemon.img.css('top'));
             if (Math.sqrt(xdist * xdist + ydist * ydist) < pokemon.size) {
                 // catch em
                 console.log('caught one!');
-                this.topSpeed = 0;
+                this.motion = 0;
                 pokemon.img.animate({height: 0, width: 0}, {duration: 2000});
-                pokemon.rotate()
+                pokemon.img.rotate(180);
+                setTimeout(() => {
+                    pokemon.active = false;
+                }, 2000);
                 pokemon.motion = 0;
+                pokemon.caught = true;
             }
         });
         // range limit
@@ -106,6 +113,7 @@ class pokemon_prey {
         this.speed = 0.25;
         this.motion = 1;
         this.active = true;
+        this.caught = false;
     }
     move () {
         this.x += Math.sin(this.direction * Math.PI / 180.0) * this.speed * this.motion;
@@ -180,12 +188,7 @@ $(document).ready(() => {
             'left': player.x + Math.sin(player.direction * Math.PI / 180.0) * 3 + "vw",
             'top': player.y - Math.cos(player.direction * Math.PI / 180.0) * 3 + "vw"});
     
-        // order things by y coordinate
-        $.each($(".ordered"), (i, element) => {
-            var zindex = parseInt($(element).css('top'));
-            var offset =  parseInt($(element).attr('z-offset')) || 0;
-            $(element).css({"z-index": zindex + offset});
-        });
+        orderZIndex();
     }, 30);
 
     // keyboard input
@@ -232,5 +235,14 @@ $(document).ready(() => {
     function calculateBounds() {
         ybound = ($(window).height() - player.img.height()) / ($(window).width() - player.img.width()) * 100 ;
         xbound = (1 - player.img.width() / $(window).width()) * 100;
+    }
+
+    function orderZIndex() {
+        // order things by y coordinate
+        $.each($(".ordered"), (i, element) => {
+            var zindex = parseInt($(element).css('top'));
+            var offset =  parseInt($(element).attr('z-offset')) || 0;
+            $(element).css({"z-index": zindex + offset});
+        });
     }
 });
