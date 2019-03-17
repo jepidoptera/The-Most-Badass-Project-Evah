@@ -28,3 +28,11 @@ html, body {
     font-size: 24pt;
     border-radius: 3px;
 }
+#narrative {
+    position: absolute;
+    right: 20px;
+    width: 400px;
+    border: 1px solid black;
+    bottom: 20px;
+    z-index: 99;
+}
