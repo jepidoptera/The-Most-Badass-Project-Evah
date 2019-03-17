@@ -209,7 +209,8 @@ function gameLoop () {
     if (trail[atHorizon] == nextLocation) {
         distanceTo = parseInt((yourPosition - trail[atHorizon].frames) / frameRate);
     }
-    else distanceTo = parseInt((yourPosition - trail[atHorizon].frames) / frameRate);
+    //                         measured in seconds        in frames      in frames         ---> convert to seconds (miles)    
+    else distanceTo = parseInt(currentLocation.length + (yourPosition - currentLocation.frames) / frameRate);
     $("#narrative").html('Location: ' + currentLocation.name + '<br>' + distanceTo + ' miles to ' + nextLocation.name + '.');
 
     if (!pause && !exit) {
@@ -226,7 +227,11 @@ function arriveAt(location) {
     switch (location.name) {
         case "Pokegonemon":
             // city menu screen
-            msgBox("You have reached the legendary city!  Rejoice!")
+            msgBox("Yay", "You have reached the legendary city!  Rejoice!", 
+            dialogButtons([{
+                text: "Celebrate",
+                function: win // TODO
+            }]));
             break;
         }
     }
@@ -240,6 +245,10 @@ function orderZIndex(element) {
 
 function hunt() {
     window.open('poke-hunt.html');
+}
+
+function win () {
+    // TODO
 }
 
 gameLoop();
