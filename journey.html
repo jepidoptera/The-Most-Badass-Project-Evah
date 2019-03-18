@@ -9,6 +9,7 @@
     <script src="assets/javascript/pauseableAnimations.js"></script>
     <script src="assets/javascript/jQueryRotate.js"></script>
     <script src="assets/javascript/journey.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.0/jquery-ui.min.js"></script>
     <script src="assets/javascript/dialog.js"></script>
     <link rel="stylesheet" href="assets/css/normalize.css">
     <link rel="stylesheet" href="assets/css/journey.css">
@@ -19,8 +20,12 @@
         <div id='ground'></div>
         <div id='path'></div>
     </div>
-    <p id ='narrative'></p>
-    <button id='huntButton' onclick='hunt()'>hunt</button>
+    <section id='controls'>
+        <p id ='narrative'></p>
+        <button id='huntButton' class='controlButton' onclick='hunt()'>hunt</button>
+        <button id='restButton' class='controlButton' onclick='rest()'>rest</button>
+        <button id='optionsButton' class='controlButton' onclick='hunt()'>options</button>
+    </section>
 </body>
 </html>
 
