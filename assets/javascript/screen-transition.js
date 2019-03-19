@@ -12,27 +12,30 @@ $(document).ready(function(){
 
     var database = firebase.database();
 
-    $('.game-panel').hide();
-    $('.instructions-panel').hide();
-    $('.pokemon-panel').hide();
+    $('.main-menu').hide();
 
     $('.login-form').validate();
 
     $('#submit').on('click', function(e){
         e.preventDefault();
 
+        $('.title').html("Main Menu" + '<img class="pokeball" src="assets/Images/pokeball.png">');
         $('.login-form').hide();
-        $('.game-panel').show();
+        $('.main-menu').show();
 
+        var email = $('#email').val().trim();
         var username = $('#username').val().trim();
         var password = $('#password').val().trim();
 
         var ref = database.ref();
         var rootRef = firebase.database().ref();
 
+        var gameref = database.ref("/users").push({
         database.ref("/users").push({
+            email: email,
             username: username,
             password: password
         });
+        window.open('journey.html?playerID=' + gameref.key);
     });
 });
