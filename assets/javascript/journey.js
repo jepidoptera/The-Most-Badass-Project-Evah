@@ -218,6 +218,12 @@ $(document).ready(() => {
     dialogButtons([{
         text: "let's go",
         function: () => {
+            // give player initial stats
+            player.food = 99;
+            player.money = 1000;
+            player.kibble = 450;
+            player.pokeballs = 27;
+            player.pokemon.add('charizard', null);
             // un-pause again
             pause = false;
             gameLoop();
