@@ -55,3 +55,31 @@ $(document).ready(function(){
         $('.game-panel').show();
     })
 });
+
+
+
+
+
+
+// var email = 'kitcat1216@yahoo.com';
+// function validate(email) {
+
+// apiKey = 'b33ac48d72msh60d9b7f861e0a6ep1512f6jsn2dbe2a0cc93c';
+
+//     var queryURL = "https://pozzad-email-validator.p.rapidapi.com/emailvalidator/validateEmail/" + email;
+
+//     $.ajax({
+//         headers: {
+//             'X-RapidAPI-Key': 'b33ac48d72msh60d9b7f861e0a6ep1512f6jsn2dbe2a0cc93c'
+//         },
+//         url: queryURL,
+//         method: "GET"
+//       }).then(function(response) {
+//           console.log(response);
+//         });
+//   };      
+//     $('#submit').on("click",function(){
+        
+//     }
+    
+// });
