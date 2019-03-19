@@ -12,19 +12,18 @@ $(document).ready(function(){
 
     var database = firebase.database();
 
-    $('.game-panel').hide();
-    $('.instructions-panel').hide();
-    $('.pokemon-panel').hide();
+    $('.main-menu').hide();
 
     $('.login-form').validate();
 
     $('#submit').on('click', function(e){
         e.preventDefault();
 
-        $('.title').hide();
+        $('.title').html("Main Menu" + '<img class="pokeball" src="assets/Images/pokeball.png">');
         $('.login-form').hide();
-        $('.game-panel').show();
+        $('.main-menu').show();
 
+        var email = $('#email').val().trim();
         var username = $('#username').val().trim();
         var password = $('#password').val().trim();
 
@@ -32,26 +31,10 @@ $(document).ready(function(){
         var rootRef = firebase.database().ref();
 
         database.ref("/users").push({
+            email: email,
             username: username,
             password: password
         });
     });
 
-    $('.instructions').on('click', function(e){
-        e.preventDefault();
-        $('.game-panel').hide();
-        $('.instructions-panel').show();
-    })
-
-    $('.pokemon').on('click', function(e){
-        e.preventDefault();
-        $('.game-panel').hide();
-        $('.pokemon-panel').show();
-    })
-
-    $('.ok-btn').on('click', function(){
-        $('.instructions-panel').hide();
-        $('.pokemon-panel').hide();
-        $('.game-panel').show();
-    })
 });

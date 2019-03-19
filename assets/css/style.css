@@ -27,6 +27,7 @@
 
 h1 {
     text-align: center;
+    /*margin: 0;*/
 }
 
 .tracking-in-contract {
@@ -86,10 +87,32 @@ label.error {
     padding: 0 15px;
 }
 
-.btn-group-vertical {
+.btn {
+    background: #ffe15e;
+    color: #fff;
+    text-align: center;
+}
+
+.main-menu {
     display: inline-block;
-    margin: auto;
-    width: 250px;
+    position: absolute;
+    width: 300px;
+    text-align: center;
+    top: 225px;
+    left: 50%;
+    transform: translate(-50%, 0);
+}
+
+.menu-btn {
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.pokeball {
+    margin-left: 10px;
+    margin-bottom: 15px;
+    width: 50px;
+    height: auto;
 }
 
 .game-panel {
@@ -112,9 +135,4 @@ p {
     text-align: center;
     color: #fff;
     padding: 15px 400px;
-}
-
-.ok-btn {
-    text-align: center;
-    margin-left: 48%;
 }

@@ -20,47 +20,43 @@
     <script src="https://www.gstatic.com/firebasejs/5.8.6/firebase.js"></script>
 </head>
 <body class="box-object-gradient-hor bg-pan-left">
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="#">Pokémon Trail</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav">
-                <li class="nav-item">
-                    <a class="nav-link instructions" href="#">Instructions</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link pokemon" href="#">Your Pokémon</a>
-                </li>
-            </ul>
-        </div>
-    </nav>
     <header>
         <h1 class="tracking-in-contract title" id=signInHeader>Pokémon Trail</h1>
     </header>
-    <form class="login-form">
-        <div class="form-group">
-            <input name="email" type="email" class="form-control" id="email" placeholder="email" required>
+    <div class="row">
+        <div class="col-sm">
+            <form class="login-form">
+                <div class="form-group">
+                    <input name="email" type="email" class="form-control" id="email" placeholder="email" required>
+                </div>
+                <div class="form-group">
+                    <input name="username" minlength="2" type="text" class="form-control" id="username" placeholder="username" required>
+                </div>
+                <div class="form-group">
+                    <input name="password" minlength="2" type="password" class="form-control" id="password" placeholder="password" required>
+                </div>
+                <button type="submit" class="btn" id="submit">Go!</button>
+            </form>
         </div>
-        <div class="form-group">
-            <input name="username" minlength="2" type="text" class="form-control" id="username" placeholder="username" required>
-        </div>
-        <div class="form-group">
-            <input name="password" minlength="2" type="password" class="form-control" id="password" placeholder="password" required>
-        </div>
-        <button type="submit" class="btn btn-light" id="submit">Start Game!</button>
-    </form>
-    <div class="game-panel"></div>
-    <div class="instructions-panel">
-        <h1 class="tracking-in-contract">Instructions</h1>
-        <p>Use your arrow keys to navigate the screen to hunt for Pokémon! When you see one pop up, try to catch it by pressing the space bar to throw a Pokéball at it!</p>
-        <button type="button" class="btn btn-light ok-btn">Ok!</button>
     </div>
-    <div class="pokemon-panel">
-        <h1 class="tracking-in-contract">Your Pokémon</h1>
-        <span class="pokemon"></span>
-        <button type="button" class="btn btn-light ok-btn">Ok!</button>
+    <div class="row main-menu">
+        <div class="col-sm">
+            <button type="button" class="btn btn-block menu-btn">About the Game</button>
+            <button type="button" class="btn btn-block menu-btn">Instructions</button>
+            <button type="button" class="btn btn-block menu-btn">Start Game!</button>
+            <button type="button" class="btn btn-block menu-btn">Pokédex</button>
+        </div>
     </div>
+    <!--<div class="game-panel"></div>-->
+    <!--<div class="instructions-panel">-->
+        <!--<h1 class="tracking-in-contract">Instructions</h1>-->
+        <!--<p>Use your arrow keys to navigate the screen to hunt for Pokémon! When you see one pop up, try to catch it by pressing the space bar to throw a Pokéball at it!</p>-->
+        <!--<button type="button" class="btn btn-light ok-btn">Ok!</button>-->
+    <!--</div>-->
+    <!--<div class="pokemon-panel">-->
+        <!--<h1 class="tracking-in-contract">Your Pokémon</h1>-->
+        <!--<span class="pokemon"></span>-->
+        <!--<button type="button" class="btn btn-light ok-btn">Ok!</button>-->
+    <!--</div>-->
 </body>
 </html>
