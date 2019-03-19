@@ -1,0 +1,40 @@
+.mainDiv{
+    background-color: blue;
+    padding:40px;
+    border:solid 10px red;
+}
+#poke-gifs-go-here{
+background-color:blue;
+border:solid 10px black;
+padding: 20px;
+/* margin-right: 60px; */
+}
+#snorlaxBtn{
+   border-bottom-color: white;
+   
+}
+#charizardBtn{
+    border-bottom-color: white;
+  
+}
+#ninetalesBtn{
+    border-bottom-color: white;
+}
+#jigglypuffBtn{
+    border-bottom-color: white;
+}
+#articunoBtn{
+    border-bottom-color: white;
+}
+
+.jumbotron{
+    
+    border: solid 10px red;
+}
+.table{
+    font-size: 30px;
+     border-top-color: black;
+}
+.{
+   
+}
