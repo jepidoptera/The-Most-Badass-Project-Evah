@@ -36,11 +36,4 @@ $(document).ready(function(){
             password: password
         });
     });
-
-    $('#about-game').on('click', function(){
-        $('#about-modal').modal();
-    })
-
-
-
 });
