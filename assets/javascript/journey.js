@@ -273,7 +273,7 @@ function gameLoop () {
     $("#narrative").html('Location: ' + currentLocation.name + '<br>' + distanceTo + ' miles to ' + nextLocation.name + '.');
 
     // are we there yet?
-    if (distanceTo == 0) arriveAt(nextLocation);
+    if (distanceTo < 0) arriveAt(nextLocation);
 
     if (!pause && !exit) {
         // set up next frame
@@ -311,11 +311,4 @@ function hunt() {
 
 function win () {
     // TODO
-}
-
-function getUrlParameter(name) {
-    name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
-    var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
-    var results = regex.exec(location.search);
-    return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
 }
