@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>pokeShop</title>
+    <link rel="stylesheet" type="text/css" href="assets/css/shop.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="assets/javascript/shop.js">
+    integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+    crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/ui/1.12.0/jquery-ui.min.js"
+    integrity="sha256-eGE6blurk5sHj+rmkfsGYeKyZx3M4bG+ZlFyA7Kns7E="
+    crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="jumbotron" style="background-color: black; color: white">
+            <h1 class="text-center">Poké Store</h1>
+            <br>
+            <br>
+            <br>
+        </div>
+
+
+    <div id="container-fluid mainDiv">
+<div class="tableDiv" id="container-fluid">
+        <table class="table table-bordered table-dark">
+                <thead>
+                  <tr>
+                    <th scope="col">Items</th>
+                    <th scope="col">Player</th>
+                    <th scope="col">Store</th>
+                    <!-- <th scope="col">Handle</th> -->
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th scope="row">PokeBalls</th>
+                    <td id="pBal">This is where the player info goes</td>
+                    <td id="sBal">This is where the store info goes</td>
+                    <!-- <td>@mdo</td> -->
+                  </tr>
+                  <tr>
+                    <th scope="row">Kibble</th>
+                    <td id="pkib">This is where player kibble goes</td>
+                    <td id="skib">This is where store kibbble goes</td>
+                    <!-- <td>@fat</td> -->
+                  </tr>
+                  <tr>
+                    <th scope="row">Food</th>
+                    <td id="pFoo">This is where player Food goes</td>
+                    <td id="sFoo">This is where store Food goes</td>
+                  </tr>
+                  
+                  <th scope="row">Money</th>
+                  <td id="pMon" colspan="2">Player $ goes here</td>
+                </tbody>
+              </table>
+            </div>
+
+
+    <div class="buttonDiv" id="container-fluid">
+        <button class="btn btn-warning  btn btn-lg" onclick="onBuyFood();">Buy Food</button>
+        <br>
+        <br>
+        <button class="btn btn-warning btn btn-lg" onclick="onBuyAPoke();">Buy Poké Balls</button>
+        <br>
+        <br>
+        <button class="btn btn-warning btn btn-lg" onclick="onBuyKibble();">Buy Kibble</button>
+        
+      
+    <br>
+    <br>
+  
+    <div id="modal">
+      <div id="modal-container">
+        <!-- <h2 id="modal-title">Inventory</h2> -->
+        <div id="modal-content">
+          <div class="item">
+            <span class="item-name"></span>
+            <span class="item-count"></span>
+            
+  
+        </div>
+      </div>
+    </div>    
+  </div>  
+</div>
+</div>
+</body>
+</html>
+
+
+
