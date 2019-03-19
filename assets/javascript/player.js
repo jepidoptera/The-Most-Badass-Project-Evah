@@ -50,15 +50,15 @@ var player = {
     pokemon: {
         _pokes: [],
         add (pokename, pokestats) {
-            this._pokes.push({name: pokename, stats: pokestats});
+            player.pokemon._pokes.push({name: pokename, stats: pokestats});
             // set to database
-            firebase.database().ref('users/' + playerID + "/gameInfo/pokemon").set(this._pokes);
+            firebase.database().ref('users/' + playerID + "/gameInfo/pokemon").set(player.pokemon._pokes);
         },
         remove (index) {
             // remove at index
-            this._pokes.slice(index, 1);
+            player.pokemon._pokes.slice(index, 1);
             // set to database
-            firebase.database().ref('users/' + playerID + "/gameInfo/pokemon").set(this._pokes);
+            firebase.database().ref('users/' + playerID + "/gameInfo/pokemon").set(player.pokemon._pokes);
         },
         get list() {
             return this._pokes;
@@ -94,7 +94,6 @@ $(document).ready(() => {
         player._speed = value.val().speed;
         player._time = value.val().time;
         player._day = value.val().day;
-        console.log(player);
     });
 });
 
