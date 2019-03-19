@@ -1,3 +1,6 @@
 .col{
     border: solid 20px black;
 }
+#pokeCaptured{
+    background-color: blue;
+}
