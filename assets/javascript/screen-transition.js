@@ -14,9 +14,7 @@ $(document).ready(function(){
 
     var database = firebase.database();
 
-    $('.game-panel').hide();
-    $('.instructions-panel').hide();
-    $('.pokemon-panel').hide();
+    $('.main-menu').hide();
 
     var userRef = database.ref('/users');
     userRef.on('child_added', (user) => {
@@ -25,9 +23,6 @@ $(document).ready(function(){
             users[user.val().username] = {username: user.val().username, password: user.val().password, key: user.key};
         }
     });
-    // return the cleaned array to the database
-    // userRef.set(users);
-    
 
     $('#submit').on('click', function(e){
         e.preventDefault();
@@ -35,10 +30,7 @@ $(document).ready(function(){
         $('.login-form').validate();
         if (!$('.login-form').validate().checkForm()) return;
 
-        // $('.title').hide();
-        // $('.login-form').hide();
-        // $('.game-panel').show();
-
+        var email = $('#email').val().trim();
         var username = $('#username').val().trim();
         var password = $('#password').val().trim();
         
@@ -65,6 +57,10 @@ $(document).ready(function(){
             };
         }
         else return;
+        // successful login
+        $('.title').html("Main Menu" + '<img class="pokeball" src="assets/Images/pokeball.png">');
+        $('.login-form').hide();
+        $('.main-menu').show();
 
         window.open('journey.html?playerID=' + users[username].key);
     });

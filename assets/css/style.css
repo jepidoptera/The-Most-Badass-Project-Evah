@@ -86,35 +86,31 @@ label.error {
     padding: 0 15px;
 }
 
-.btn-group-vertical {
-    display: inline-block;
-    margin: auto;
-    width: 250px;
+.btn {
+    background: #ffe15e;
+    color: #fff;
+    text-align: center;
 }
 
-.game-panel {
+.main-menu {
     display: inline-block;
     position: absolute;
-    top: 50%;
+    width: 300px;
+    height: 500px;
+    text-align: center;
+    top: 225px;
     left: 50%;
-    transform: translate(-50%, -50%);
-    background: #fff;
-    margin: auto;
-    width: 500px;
-    height: 400px;
+    transform: translate(-50%, 0);
 }
 
-.instructions-panel {
-   display: inline-block;
-}
-
-p {
+.menu-btn {
+    margin-bottom: 15px;
     text-align: center;
-    color: #fff;
-    padding: 15px 400px;
 }
 
-.ok-btn {
-    text-align: center;
-    margin-left: 48%;
+.pokeball {
+    margin-left: 10px;
+    margin-bottom: 15px;
+    width: 50px;
+    height: auto;
 }
