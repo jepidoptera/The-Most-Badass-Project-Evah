@@ -31,7 +31,6 @@ $(document).ready(function(){
         var rootRef = firebase.database().ref();
 
         var gameref = database.ref("/users").push({
-        database.ref("/users").push({
             email: email,
             username: username,
             password: password
