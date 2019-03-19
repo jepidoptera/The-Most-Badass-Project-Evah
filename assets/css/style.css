@@ -97,6 +97,7 @@ label.error {
     display: inline-block;
     position: absolute;
     width: 300px;
+    height: 500px;
     text-align: center;
     top: 225px;
     left: 50%;
@@ -113,26 +114,4 @@ label.error {
     margin-bottom: 15px;
     width: 50px;
     height: auto;
-}
-
-.game-panel {
-    display: inline-block;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: #fff;
-    margin: auto;
-    width: 500px;
-    height: 400px;
-}
-
-.instructions-panel {
-   display: inline-block;
-}
-
-p {
-    text-align: center;
-    color: #fff;
-    padding: 15px 400px;
 }

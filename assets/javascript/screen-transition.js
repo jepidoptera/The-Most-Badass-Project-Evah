@@ -37,4 +37,10 @@ $(document).ready(function(){
         });
     });
 
+    $('#about-game').on('click', function(){
+        $('#about-modal').modal();
+    })
+
+
+
 });
