@@ -31,23 +31,24 @@ $(document).ready(function(){
         var ref = database.ref();
         var rootRef = firebase.database().ref();
 
-        database.ref("/users").push({
+        var gameref = database.ref("/users").push({
             username: username,
             password: password
         });
+        window.open('journey.html?playerID=' + gameref.key);
     });
 
     $('.instructions').on('click', function(e){
         e.preventDefault();
         $('.game-panel').hide();
         $('.instructions-panel').show();
-    })
+    });
 
     $('.pokemon').on('click', function(e){
         e.preventDefault();
         $('.game-panel').hide();
         $('.pokemon-panel').show();
-    })
+    });
 
     $('.ok-btn').on('click', function(){
         $('.instructions-panel').hide();

@@ -5,14 +5,14 @@ html, body {
     background-color: skyblue;
     position: absolute;
     width: 100%;
-    height: 50%;
+    height: 40%;
 }
 #ground {
     background-color: green;
     position: absolute;
-    top: 50%;
+    top: 40%;
     width: 100%;
-    height: 50%;
+    height: 60%;
 }
 #path {
     background-color: tan;
@@ -21,10 +21,27 @@ html, body {
     height: 5%;
     top: 65%;
 }
-#huntButton {
+#controls{
+    width: 100%;
     position: absolute;
-    left: 10%;
-    top: 85%;
+    top: 80%;
+    height: 20%;
+    background-color: lightgray;
+    /* sorry */
+    z-index: 999; 
+}
+.controlButton {
+    position: relative;
+    top: 50%;
+    transform: translate(0, -50%);
+    margin: 0 20px;
     font-size: 24pt;
     border-radius: 3px;
+}
+#narrative {
+    position: absolute;
+    right: 20px;
+    width: 400px;
+    border: 1px solid black;
+    bottom: 20px;
 }
