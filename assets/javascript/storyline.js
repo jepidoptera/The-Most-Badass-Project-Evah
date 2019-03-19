@@ -4,7 +4,6 @@
 // var day = currentTime.getDate()
 // var year = currentTime.getFullYear()
 // var dateString= month + "/" + day + "/" + year
-var player = GetPlayer();
 // player.SetVar("SystemDate",dateString);
 var instruct;
 var clearDiv;
