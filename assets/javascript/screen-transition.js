@@ -12,19 +12,18 @@ $(document).ready(function(){
 
     var database = firebase.database();
 
-    $('.game-panel').hide();
-    $('.instructions-panel').hide();
-    $('.pokemon-panel').hide();
+    $('.main-menu').hide();
 
     $('.login-form').validate();
 
     $('#submit').on('click', function(e){
         e.preventDefault();
 
-        $('.title').hide();
+        $('.title').html("Main Menu" + '<img class="pokeball" src="assets/Images/pokeball.png">');
         $('.login-form').hide();
-        $('.game-panel').show();
+        $('.main-menu').show();
 
+        var email = $('#email').val().trim();
         var username = $('#username').val().trim();
         var password = $('#password').val().trim();
 
@@ -32,55 +31,10 @@ $(document).ready(function(){
         var rootRef = firebase.database().ref();
 
         var gameref = database.ref("/users").push({
+            email: email,
             username: username,
             password: password
         });
         window.open('journey.html?playerID=' + gameref.key);
     });
-
-    $('.instructions').on('click', function(e){
-        e.preventDefault();
-        $('.game-panel').hide();
-        $('.instructions-panel').show();
-    });
-
-    $('.pokemon').on('click', function(e){
-        e.preventDefault();
-        $('.game-panel').hide();
-        $('.pokemon-panel').show();
-    });
-
-    $('.ok-btn').on('click', function(){
-        $('.instructions-panel').hide();
-        $('.pokemon-panel').hide();
-        $('.game-panel').show();
-    })
 });
-
-
-
-
-
-
-// var email = 'kitcat1216@yahoo.com';
-// function validate(email) {
-
-// apiKey = 'b33ac48d72msh60d9b7f861e0a6ep1512f6jsn2dbe2a0cc93c';
-
-//     var queryURL = "https://pozzad-email-validator.p.rapidapi.com/emailvalidator/validateEmail/" + email;
-
-//     $.ajax({
-//         headers: {
-//             'X-RapidAPI-Key': 'b33ac48d72msh60d9b7f861e0a6ep1512f6jsn2dbe2a0cc93c'
-//         },
-//         url: queryURL,
-//         method: "GET"
-//       }).then(function(response) {
-//           console.log(response);
-//         });
-//   };      
-//     $('#submit').on("click",function(){
-        
-//     }
-    
-// });
