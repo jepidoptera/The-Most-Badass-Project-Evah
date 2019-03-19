@@ -60,14 +60,14 @@ var pokegifs = $('#poke-gifs-go-here');
         console.log(response)
         var Results = response.moves;
         console.log(Results[0].move.name)
-        for (var i = 0; i < Results.length; i++) {
+        for (var i = 0; i < Math.min(5, Results.length); i++) {
           var tr = $('<tr></tr>');
           var movesNames = $('<th>' + Results[i].move.name + '</th>')
           // var moveDesc = $('<td><a href = ' + Results[i].moves.move + '>' + Results[i].moves.move + '</a></td>')
           $(movesNames).appendTo(tr);
           // $(moveDesc).appendTo(tr);
           $(tr).appendTo('#movesTable')
-          document.getElementById('#movesTable').append(tr);
+          // document.getElementById('#movesTable').append(tr);
           console.log(tr);
         }
     })
