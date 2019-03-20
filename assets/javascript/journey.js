@@ -9,12 +9,21 @@ var trail = [
             height: 150,
             width: 250,
             distance: 1,
-        }]
+        }],
     },
     {
         type: 'suburb',
         name: 'The Outskirts of Orepoke',
-        length: 5
+        scenery: [
+            {
+                type: 'house',
+                spacing: 28,
+                sizeRange: {min: {x: 25, y: 25}, max: {x: 50, y: 50}},
+                imgRange: {min: 0, max: 2},
+                get distance() {return Math.sqrt(Math.random()) * 20 - 5;}
+            }
+        ],
+        length: 10
     },
     {
         type: 'forest',
@@ -99,7 +108,7 @@ var trail = [
             height: 150,
             width: 250,
             distance: 1,
-            offset: ['0', '-100%']
+            offset: ['-50%', '-100%']
         }],
         function: () => {
             // you won
@@ -132,6 +141,85 @@ for (i = 0; i < trail.length; i ++) {
             item.spacing = item.spacing || 0;
             item.next = Math.random() * item.spacing;
         });
+    }
+}
+
+var events = [
+    {
+        name: "ebola",
+        get occurs() {
+            return Math.random() * 1000;
+        },
+        function: () => {
+            pause = true;
+            // strikes randomly
+            victim = posse[parseInt(Math.random * posse.length)];
+            victim.conditions.push('ebola');
+            msgBox ("outbreak!", victim.name + " has ebola.", dialogButtons([{
+                text: "stop to rest",
+                function: rest
+            },{
+                text: "keep going",
+                function: () => {
+                    victim.health -= 1;
+                }
+            }]));
+        }
+    }
+];
+
+class pokePosse {
+    constructor (name, x, y, hop) {
+        this._hop = hop;
+        this.name = name;
+        this.x = x;
+        this.y = y;
+        switch (name) {
+        case "articuno":
+            this.height = 40;
+            this.width = 40;
+            break;
+        case "charizard":
+            this.height = 40;
+            this.width = 50;
+            break;
+        case "snorlax":
+            this.height = 40;
+            this.width = 40;
+            break;
+        case "jigglypuff":
+            this.height = 30;
+            this.width = 30;
+            break;
+        case "ninetales":
+            this.height = 40;
+            this.width = 50;
+            break;
+        }
+        this.img = $("<img>").
+            attr('src', 'assets/images/' + this.name + ".png")
+            .css({
+                'position': 'absolute', 
+                'height': this.height + 'px', 
+                'width': this.width + 'px', 
+                'left': this.x + "%", 
+                'top': this.y + "%", 
+                "transform": "translate(-50%, -50%)"})
+            .addClass('ordered');
+        // perfect health
+        this.health = 10;
+        this.conditions = [];
+        $("#walkingPath").append(this.img);
+        setTimeout(() => {
+            // zorder
+            orderZIndex(this.img);            
+        }, 100);
+    }
+    hop() {
+        // hoppin' down the trail
+        var y = Math.cos(Math.PI * (0.5 + (time + this._hop % 0.5))) * 4;
+        // position on screen according to object coordinates
+        this.img.css({'left': this.x + "%", 'top': (this.y - y) + "%"});
     }
 }
 
@@ -204,6 +292,7 @@ var nextLocation = trail[1];
 var scrollSpeed = 1;
 var timeSpeed = 0.05;
 var time = 0;
+var posse = [];
 
 $(document).ready(() => {
     // here we can append permanent objects to the DOM, after the document has loaded
@@ -213,37 +302,67 @@ $(document).ready(() => {
         // TODO
     }
     orderZIndex(you);
-    // fast-forward to player's location
-    pause = true;
+    // say hi
+    // if (player.location == null) {
+        newGame();
+        msgBox('your journey begins', 
+        'Leaving behind your beleaguered home city of Orepoke, \
+        you look ahead, over many obstacles, to your legendary destination: Pokegonemon.',
+        dialogButtons([{
+            text: "let's go",
+            function: () => {
+                pause = false;
+                gameLoop();    
+            }
+        }]));
+    // }
+    // else {
+    //     // pick up where we left off
+    //     loadGame();
+    // }
+});
+
+function newGame() {
+    // give player initial stats
+    player.food = 99;
+    player.money = 1000;
+    player.kibble = 450;
+    player.pokeballs = 27;
+    player.speed = 4;
+    player.pokemon.clear();
+    posse = ['charizard', 'jigglypuff', 'articuno', 'ninetales', 'snorlax'].map((name, i) => {
+        return new pokePosse(name, 25 - i * 4 - 4, 65, i * 0.2);
+    });
+    player.posse = posse;
     player.time = 0;
     player.day = 0;
-    for (i = 0; i < yourPosition; i++) {
+
+    // fast-forward to player's location
+    pause = true;
+    var walkTo = 18 * frameRate; // so scenery almost takes up the screen
+    for (i = 0; i < walkTo; i++) {
         // un-pause it on the last round - so it will draw the scenery
-        if (i == yourPosition - 1) pause = false;
+        if (i == walkTo - 1) pause = false;
         gameLoop();
     }
     // re-pause
     pause = true;
-    // say hi
-    msgBox('your journey begins', 
-    'Leaving behind your beleaguered home city of Orepoke, \
-    you look ahead, over many obstacles, to your legendary destination: Pokegonemon.',
-    dialogButtons([{
-        text: "let's go",
-        function: () => {
-            // give player initial stats
-            player.food = 99;
-            player.money = 1000;
-            player.kibble = 450;
-            player.pokeballs = 27;
-            player.speed = 4;
-            player.pokemon.add('charizard', null);
-            // un-pause again
-            pause = false;
-            gameLoop();
-        }
-    }]));
-});
+}
+
+function loadGame() {
+    // where were we?
+    currentLocation = trail[trail.map((location) => 
+    {return location.name;}).indexOf(player.location.name)];
+    // rewind
+    currentLocation.frames = player.location.frames - yourPosition;
+    // play forward
+    pause = true;
+    for (i = 0; i < yourPosition; i++) {
+        gameLoop();
+    }
+    pause = false;
+    gameLoop();
+}
 
 function gameLoop () {
     // move along (for each on-screen location)
@@ -253,6 +372,8 @@ function gameLoop () {
     // time does pass
     time += timeSpeed;
     if (!pause) player.time = time;
+    // move the sun
+    moveSun();
     // a new dawn
     if (player.time >= 24 &! pause) nextDay();
 
@@ -269,11 +390,13 @@ function gameLoop () {
         });
     }
     // switch edge location when it's run out
-    if (trail[atHorizon].frames > trail[atHorizon].length * frameRate) {
+    if (trail[atHorizon].frames > (trail[atHorizon].length - 1) * frameRate) {
         atHorizon ++;
         activeLocations.push(trail[atHorizon]);
         console.log(trail[atHorizon].name + " appears on the horizon");
     }
+    // keep player info updated
+    player.location = currentLocation;
     // image animation and garbage collection
     var activeImages = [];
     backgroundImages.forEach((image) => {
@@ -286,6 +409,16 @@ function gameLoop () {
         if (image.active) activeImages.push(image);
     });
     backgroundImages = activeImages;
+
+    // pokemon hop
+    posse.forEach((pokemon) =>{
+        pokemon.hop();
+    });
+
+    // do random events
+    events.forEach((event) => {
+        if (event.occurs) event.function();
+    });
 
     // narrate the journey
     narrate();
@@ -304,6 +437,11 @@ function gameLoop () {
         }, 1000 / frameRate);
     } 
 }
+function moveSun() {
+    var x = -Math.sin(Math.PI * (0.5 + time / 24)) * 50 + 50;
+    var y = Math.cos(Math.PI * (0.5 + time / 24)) * 45 + 45;
+    $("#sun").css({'top': y + '%', 'left': x + '%'});
+}
 
 function nextDay() {
     time = 0;
@@ -315,20 +453,27 @@ function narrate() {
     // measure the distance to out next location
     var distanceTo;
     if (trail[atHorizon] == nextLocation) {
+        // a new location is on the horizon, but you aren't there yet
         distanceTo = parseInt((yourPosition - trail[atHorizon].frames) / frameRate) + 1;
     }
     //                         measured in seconds        in frames      in frames         ---> convert to seconds (miles)    
-    else distanceTo = parseInt(currentLocation.length + (yourPosition - currentLocation.frames) / frameRate) + 1;
-
+    else {
+        distanceTo = parseInt(currentLocation.length + (yourPosition - currentLocation.frames) / frameRate) + 1;
+        if (distanceTo == 1) distanceTo = 0;
+    }
     $("#narrative").html(
-        'Day: ' + player.day +
-        '<br>Location: ' + currentLocation.name + 
-        '<br>' + distanceTo + ' miles to ' + nextLocation.name + '.');
+        'Day: ' + player.day + 
+        ((distanceTo == 0) 
+        ? ('<br>' + 'You have reached: ' + nextLocation.name + '.')
+        : ('<br>Location: ' + currentLocation.name +
+            '<br>' + distanceTo + ' miles to ' + nextLocation.name + '.')));
 }
 
 function arriveAt(location) {
     currentLocation = location;
     nextLocation = currentLocation.next;
+    // execute this location's function, if it has one
+    if (currentLocation.function) currentLocation.function();
 }
 
 function orderZIndex(element) {
@@ -339,7 +484,19 @@ function orderZIndex(element) {
 }
 
 function hunt() {
-    window.open('poke-hunt.html');
+    window.location.href = 'poke-hunt.html?playerID=' + player.ID;
+}
+
+function rest() {
+    // how long?
+}
+
+function inventory() {
+    // TODO
+}
+
+function partyStats() {
+    // TODO
 }
 
 function win () {

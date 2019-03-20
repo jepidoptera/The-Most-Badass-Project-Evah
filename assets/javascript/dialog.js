@@ -27,7 +27,7 @@ function activateKeyPresses(){
 }
 
 // javascript doesn't do type hinting, unfortunately.
-function msgBox(/*string*/title, /*string*/message, /*dialogButtons*/buttons) {
+function msgBox(/*string*/title, /*string*/message, /*dialogButtons*/buttons, hasInput) {
     // no keypress events while dialog is open
     // all buttons will have been set to reactivate keypresses on click
     deactivateKeyPresses();
@@ -50,6 +50,7 @@ function msgBox(/*string*/title, /*string*/message, /*dialogButtons*/buttons) {
     title = (title == undefined) ? "The page says:" : title;
 
     msgDiv = $('<div class="msgBox">');
+    if (hasInput) msgDiv.append($('<input id="formInput">'))
     msgDiv.html(message);
     msgDiv.attr('title', title);
     msgDiv.dialog({

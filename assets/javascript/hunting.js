@@ -1,6 +1,6 @@
 // jshint esversion: 6
 
-var player = {
+var hunter = {
     x: 50,
     y: ($(window).height() / $(window).width()) * 50,
     direction: 0,
@@ -26,9 +26,9 @@ class pokeball {
     throw (direction) {
         if (this.active) return;
         this.img.show();
-        this.speed = this.topSpeed + player.motion * player.speed;
-        this.x = player.x;
-        this.y = player.y;
+        this.speed = this.topSpeed + hunter.motion * hunter.speed;
+        this.x = hunter.x;
+        this.y = hunter.y;
         this.direction = direction;
         this.range = this.maxRange;
         this.img.css({'left': this.x + "vw", 'top': (this.y - this.z) + "vw"});
@@ -45,13 +45,14 @@ class pokeball {
         // catch pokemon
         var x = parseInt(this.img.css('left'));
         var y = parseInt(this.img.css('top'));
-        if (this.motion) activePokemon.forEach((pokemon) => {
+        if (this.motion) activeCreatures.forEach((pokemon) => {
             if (pokemon.caught) return;
             var xdist = x - parseInt(pokemon.img.css('left'));
             var ydist = y - parseInt(pokemon.img.css('top'));
             if (Math.sqrt(xdist * xdist + ydist * ydist) < pokemon.size) {
                 // catch em
                 console.log('caught one!');
+                $("#msg").text("You caught " + pokemon.name)
                 this.motion = 0;
                 pokemon.img.animate({height: 0, width: 0}, {duration: 2000});
                 pokemon.img.rotate(180);
@@ -89,9 +90,9 @@ class tree {
     }
 }
 
-var activePokemon = [];
+var activeCreatures = [];
 
-class pokemon_prey {
+class creature {
     constructor (type) {
         this.type = type;
         this.size = 50;
@@ -138,18 +139,18 @@ var xbound = 100;
 $(document).ready(() => {
     // load images
     var ball = new pokeball();
-    player.img = $("<img>")
+    hunter.img = $("<img>")
         .attr('src', 'assets/images/hunter.png')
         .css({"position": "absolute", "height": "50px", "width": "50px", "transform": "translate(-25%, -25%)"})
         .addClass('ordered')
         .attr('id', 'you')
         .attr('z-offset', 37);
-    player.img2 = $("<img>")
+    hunter.img2 = $("<img>")
         .attr('src', 'assets/images/arrow.png')
         .css({"position": "absolute", "height": "25px", "width": "25px", "transform": "translate(-50%, -50%)"})
         .addClass('ordered');
-    $('#huntingField').append(player.img);
-    $('#huntingField').append(player.img2);
+    $('#huntingField').append(hunter.img);
+    $('#huntingField').append(hunter.img2);
     $('#huntingField').append(ball.img.hide());
 
     // make a few trees
@@ -161,13 +162,13 @@ $(document).ready(() => {
 
     setInterval(() => {
         // move if key is down
-        if (player.motion != 0) {
-            player.x += Math.sin(player.direction * Math.PI / 180.0) * player.speed * player.motion;
-            player.y -= Math.cos(player.direction * Math.PI / 180.0) * player.speed * player.motion;
+        if (hunter.motion != 0) {
+            hunter.x += Math.sin(hunter.direction * Math.PI / 180.0) * hunter.speed * hunter.motion;
+            hunter.y -= Math.cos(hunter.direction * Math.PI / 180.0) * hunter.speed * hunter.motion;
             // stay in bounds
             calculateBounds();
-            player.x = Math.min(Math.max(player.x, 0), xbound);
-            player.y = Math.min(Math.max(player.y, 0), ybound);
+            hunter.x = Math.min(Math.max(hunter.x, 0), xbound);
+            hunter.y = Math.min(Math.max(hunter.y, 0), ybound);
         }
         // move pokeball
         if (ball.active) {
@@ -175,18 +176,18 @@ $(document).ready(() => {
         }
         // pokemon processing and garbage collection
         var stillActivePokemon = [];
-        activePokemon.forEach((pokemon) => {
+        activeCreatures.forEach((pokemon) => {
             pokemon.move();
             if (pokemon.active) stillActivePokemon.push(pokemon);
         });
-        activePokemon = stillActivePokemon;
+        activeCreatures = stillActivePokemon;
 
         // apply position and rotation for player
-        player.img.css({'left': player.x + "vw", 'top': player.y + "vw"});
-        player.img2.rotate({angle: player.direction, center: ["50%", "50%"]});
-        player.img2.css({
-            'left': player.x + Math.sin(player.direction * Math.PI / 180.0) * 3 + "vw",
-            'top': player.y - Math.cos(player.direction * Math.PI / 180.0) * 3 + "vw"});
+        hunter.img.css({'left': hunter.x + "vw", 'top': hunter.y + "vw"});
+        hunter.img2.rotate({angle: hunter.direction, center: ["50%", "50%"]});
+        hunter.img2.css({
+            'left': hunter.x + Math.sin(hunter.direction * Math.PI / 180.0) * 3 + "vw",
+            'top': hunter.y - Math.cos(hunter.direction * Math.PI / 180.0) * 3 + "vw"});
     
         orderZIndex();
     }, 30);
@@ -196,19 +197,19 @@ $(document).ready(() => {
         switch (event.key) {
         case "ArrowLeft":
             // turn left
-            player.direction -= (360 / turnPositions);
+            hunter.direction -= (360 / turnPositions);
             break;
         case "ArrowRight":
             // turn right
-            player.direction += (360 / turnPositions);
+            hunter.direction += (360 / turnPositions);
             break;
         case "ArrowUp":
             // forward
-            player.motion = 1;
+            hunter.motion = 1;
             break;
         case "ArrowDown":
             // down
-            player.motion = -1;
+            hunter.motion = -1;
             break;
         }
     });
@@ -218,23 +219,44 @@ $(document).ready(() => {
         case "ArrowUp":
         case "ArrowDown":
             // stop
-            player.motion = 0;
+            hunter.motion = 0;
             break;
         case " ":
-            ball.throw(player.direction);
+            ball.throw(hunter.direction);
         }
     });
 
     // sometimes send out a pokemon
     function newPokemon () {
-        activePokemon.push(new pokemon_prey('snorlax'));
+        var preys = 
+        [
+            {name: 'snorlax',
+            chance: 1},
+            {name: 'bison',
+            chance: 6},
+            {name: 'deer',
+            chance: 11},
+            {name: 'squirrel',
+            chance: 32},
+        ];
+        // cast the die
+        var totalChance = preys.reduce((sum, nextPrey) => {sum += nextPrey.chance; nextPrey.chance = sum; return sum;});
+        var chance = Math.random() * totalChance;
+        // see which one we picked
+        for (i = 0; i < preys.length; i++) {
+            if (preys[i].chance > chance) {
+                activeCreatures.push(new creature(preys[i].name));
+                break;
+            }
+        }
+        // wait for next one
         setTimeout(newPokemon, parseInt(Math.random() * 1000) + 100);
     }
     newPokemon();
 
     function calculateBounds() {
-        ybound = ($(window).height() - player.img.height()) / ($(window).width() - player.img.width()) * 100 ;
-        xbound = (1 - player.img.width() / $(window).width()) * 100;
+        ybound = ($(window).height() - hunter.img.height()) / ($(window).width() - hunter.img.width()) * 100 ;
+        xbound = (1 - hunter.img.width() / $(window).width()) * 100;
     }
 
     function orderZIndex() {

@@ -1,5 +1,6 @@
 // jshint esversion: 6
 var users = [];
+var username;
 $(document).ready(function(){
 
     var config = {
@@ -30,8 +31,8 @@ $(document).ready(function(){
         $('.login-form').validate();
         if (!$('.login-form').validate().checkForm()) return;
 
-        var email = $('#email').val().trim();
-        var username = $('#username').val().trim();
+        // var email = $('#email').val().trim();
+        username = $('#username').val().trim();
         var password = $('#password').val().trim();
         
         // does this user exist?
@@ -62,6 +63,10 @@ $(document).ready(function(){
         $('.login-form').hide();
         $('.main-menu').show();
 
-        window.open('journey.html?playerID=' + users[username].key);
+    });
+
+    $("#startGame").on('click', () => {
+        // start game
+        window.location.href=('journey.html?playerID=' + users[username].key);
     });
 });
