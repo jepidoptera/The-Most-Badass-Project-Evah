@@ -306,9 +306,16 @@ function firebaseReady() {
         // but don't appear if the window isn't focused
         if (!document.hasFocus()) return;
 
-        var preys = 
-        [
+        var preys = [
             {name: 'snorlax',
+            chance: 1},
+            {name: 'charizard',
+            chance: 1},
+            {name: 'ninetales',
+            chance: 1},
+            {name: 'jigglypuff',
+            chance: 1},
+            {name: 'articuno',
             chance: 1},
             {name: 'bison',
             chance: 6},
