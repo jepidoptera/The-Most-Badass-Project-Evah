@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>PokéStats</title>
+    <link rel="stylesheet" type="text/css" href="assets/css/stats.css">
+    
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="assets/javascript/poke-stats.js">
+    integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+    crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/ui/1.12.0/jquery-ui.min.js"
+    integrity="sha256-eGE6blurk5sHj+rmkfsGYeKyZx3M4bG+ZlFyA7Kns7E="
+    crossorigin="anonymous"></script>
+</head>
+<body>
+    
+    <div class="jumbotron" style="background-color: black; color: white">
+     <h1 class="text-center">Pokémon Stats</h1>
+     <h3 class="text-center">
+        <button type="button" span class="pokeButton btn btn-dark" id="snorlaxBtn"  data-poke="snorlax">Snorlax</button>
+        <button type="button" span class="pokeButton btn btn-dark" id="charizardBtn" data-poke="charizard">Charizard</button>
+        <button type="button" span class="pokeButton btn btn-dark" id="ninetalesBtn" data-poke="ninetales">Ninetales</button>
+        <button type="button" span class="pokeButton btn btn-dark" id="jigglypuffBtn" data-poke="jigglypuff">Jigglypuff</button>
+        <button type="button" span class="pokeButton btn btn-dark" id="articunoBtn" data-poke="articuno">Articuno</button>
+     </h3>
+    
+  </div>
+    
+    <div class="container-fluid mainDiv">
+    <div class="row">
+    <div class="col-sm">    
+      <table class="table table-sm table table1" id='abilities'>
+        <thead>
+          <tr>
+            <th>
+                <strong>Special Abilities</strong>
+            </th>
+          </tr>
+        </thead>
+        <tbody id = "abilityTable">
+          <tr>
+            <th><strong>Poké Power</strong></th>
+
+          </tr>
+        </tbody>
+      </table> 
+    </div>
+
+    
+
+    <div class="gifDiv col-sm container-fluid " id="poke-gifs-go-here"></div>
+
+      <div class="col-sm">
+          <table class="table table-sm table table2" id='pokePower'>
+            <thead>
+                <tr>
+                  <th><strong>Power Moves</strong>
+                  </th>
+                </tr>
+              </thead>
+              <tbody id = "movesTable">
+              </tbody>
+          </table> 
+        </div>
+    </div>
+    </div>   
+  </body>
+</html>

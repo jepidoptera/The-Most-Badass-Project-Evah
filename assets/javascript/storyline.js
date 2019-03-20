@@ -4,7 +4,6 @@
 // var day = currentTime.getDate()
 // var year = currentTime.getFullYear()
 // var dateString= month + "/" + day + "/" + year
-var player = GetPlayer();
 // player.SetVar("SystemDate",dateString);
 var instruct;
 var clearDiv;
@@ -28,32 +27,32 @@ if (window.sessionStorage) {
     var txtEmail = document.getElementById('email');
 }    
 
-var instruct = function() {
-    var instructions =  $('<button> Instructions </button>');
-    instructions.attr('id', 'instructBtn');
-    instructions.attr('class','btn btn-danger');
-    instructions.appendTo('.mainDiv');
-};
+// var instruct = function() {
+//     var instructions =  $('<button> Instructions </button>');
+//     instructions.attr('id', 'instructBtn');
+//     instructions.attr('class','btn btn-danger');
+//     instructions.appendTo('.mainDiv');
+// };
 
-$('.mainDiv').empty();
-$('.mainDiv').append(instruct);
+// $('.mainDiv').empty();
+// $('.mainDiv').append(instruct);
 
 
-var start = function() {
-    var startBtn = $('<button> Start </button>');
-    startBtn.attr('id', 'startBtn');
-    startBtn.attr('class', 'btn btn-danger');
-    startBtn.appendTo('.mainDiv');
-};
-$('.mainDiv').append(start);
+// var start = function() {
+//     var startBtn = $('<button> Start </button>');
+//     startBtn.attr('id', 'startBtn');
+//     startBtn.attr('class', 'btn btn-danger');
+//     startBtn.appendTo('.mainDiv');
+// };
+// $('.mainDiv').append(start);
 
-var playerStats = function() {
-    var statsBtn = $('<button> Player Stats </button>');
-    statsBtn.attr('id', 'statsBtn');
-    statsBtn.attr('class', 'btn btn-danger');
-    statsBtn.appendTo('.mainDiv');
-};
-$('.mainDiv').append(playerStats);
+// var playerStats = function() {
+//     var statsBtn = $('<button> Player Stats </button>');
+//     statsBtn.attr('id', 'statsBtn');
+//     statsBtn.attr('class', 'btn btn-danger');
+//     statsBtn.appendTo('.mainDiv');
+// };
+// $('.mainDiv').append(playerStats);
 
 
 

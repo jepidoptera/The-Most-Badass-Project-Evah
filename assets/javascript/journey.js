@@ -100,7 +100,16 @@ var trail = [
             width: 250,
             distance: 1,
             offset: ['0', '-100%']
-        }]
+        }],
+        function: () => {
+            // you won
+            msgBox("Yay", "You have reached the legendary city!  Rejoice!", 
+            dialogButtons([{
+                text: "Celebrate",
+                function: win // TODO
+            }]));
+            pause = true;
+        }
     },
     {
         type: 'nothing',
@@ -125,11 +134,7 @@ for (i = 0; i < trail.length; i ++) {
         });
     }
 }
-var frameRate = 30;
-var pause = false;
-var exit = false;
-var speed = 5;
-var trailHeight = 65;
+
 class backGroundImage {
     constructor (prototype) {
         // position
@@ -162,7 +167,7 @@ class backGroundImage {
     }
     move() {
         // move one frame
-        this.x -= speed / frameRate;
+        this.x -= scrollSpeed * 5 / frameRate;
         if (!pause) this.calcPosition();
         // delete when off screen
         if (this.x < 0) {
@@ -182,17 +187,23 @@ var you = $('<img>')
     .css({'top': "65%", 'left': '25%', 'position': 'absolute', 'height': '50px', 'width': '50px', 'transform': 'translate(-50%, -50%)'})
     .addClass('ordered')
     .attr('z-offset', 25);
-var nextTree = 0;
+var frameRate = 30;
+var pause = false;
+var exit = false;
+var trailHeight = 65;
 // how many frames does it take for a thing from the right side of the screen
 // to reach your stick figure animation?
 // when frames / framerate * speed = 75
 // so frames / framerate / speed = 1%, * 75 = ...whatever.  it works, right?
-var yourPosition = 75 / speed * frameRate;
+var yourPosition = 15 * frameRate;
 var atHorizon = 0;
 // this is the only active location to start with
 var activeLocations = [trail[atHorizon]];
 var currentLocation = trail[0];
 var nextLocation = trail[1];
+var scrollSpeed = 1;
+var timeSpeed = 0.05;
+var time = 0;
 
 $(document).ready(() => {
     // here we can append permanent objects to the DOM, after the document has loaded
@@ -204,6 +215,8 @@ $(document).ready(() => {
     orderZIndex(you);
     // fast-forward to player's location
     pause = true;
+    player.time = 0;
+    player.day = 0;
     for (i = 0; i < yourPosition; i++) {
         // un-pause it on the last round - so it will draw the scenery
         if (i == yourPosition - 1) pause = false;
@@ -218,6 +231,13 @@ $(document).ready(() => {
     dialogButtons([{
         text: "let's go",
         function: () => {
+            // give player initial stats
+            player.food = 99;
+            player.money = 1000;
+            player.kibble = 450;
+            player.pokeballs = 27;
+            player.speed = 4;
+            player.pokemon.add('charizard', null);
             // un-pause again
             pause = false;
             gameLoop();
@@ -228,8 +248,14 @@ $(document).ready(() => {
 function gameLoop () {
     // move along (for each on-screen location)
     activeLocations.forEach(location => {
-        location.frames++;
+        location.frames += scrollSpeed;
     });
+    // time does pass
+    time += timeSpeed;
+    if (!pause) player.time = time;
+    // a new dawn
+    if (player.time >= 24 &! pause) nextDay();
+
     // bring in new scenery from the location which is currently at the edge of the screen
     if (trail[atHorizon].scenery) {
         trail[atHorizon].scenery.forEach (item => {
@@ -239,7 +265,7 @@ function gameLoop () {
                 item.next = parseInt(item.spacing * Math.random());
             }
             // count down to the next one
-            else item.next --;
+            else item.next -= scrollSpeed;
         });
     }
     // switch edge location when it's run out
@@ -261,19 +287,15 @@ function gameLoop () {
     });
     backgroundImages = activeImages;
 
-    // measure the distance to out next location
-    var distanceTo;
-    if (trail[atHorizon] == nextLocation) {
-        distanceTo = parseInt((yourPosition - trail[atHorizon].frames) / frameRate) + 1;
-    }
-    //                         measured in seconds        in frames      in frames         ---> convert to seconds (miles)    
-    else distanceTo = parseInt(currentLocation.length + (yourPosition - currentLocation.frames) / frameRate) + 1;
-
     // narrate the journey
-    $("#narrative").html('Location: ' + currentLocation.name + '<br>' + distanceTo + ' miles to ' + nextLocation.name + '.');
+    narrate();
 
     // are we there yet?
-    if (distanceTo < 0) arriveAt(nextLocation);
+    if (currentLocation.frames >= currentLocation.length * frameRate + yourPosition) {
+        // we are here!
+        arriveAt(nextLocation);
+        if (currentLocation.function) currentLocation.function();
+    }
 
     if (!pause && !exit) {
         // set up next frame
@@ -283,20 +305,31 @@ function gameLoop () {
     } 
 }
 
+function nextDay() {
+    time = 0;
+    player.time = 0; 
+    player.day += 1;
+}
+
+function narrate() {
+    // measure the distance to out next location
+    var distanceTo;
+    if (trail[atHorizon] == nextLocation) {
+        distanceTo = parseInt((yourPosition - trail[atHorizon].frames) / frameRate) + 1;
+    }
+    //                         measured in seconds        in frames      in frames         ---> convert to seconds (miles)    
+    else distanceTo = parseInt(currentLocation.length + (yourPosition - currentLocation.frames) / frameRate) + 1;
+
+    $("#narrative").html(
+        'Day: ' + player.day +
+        '<br>Location: ' + currentLocation.name + 
+        '<br>' + distanceTo + ' miles to ' + nextLocation.name + '.');
+}
+
 function arriveAt(location) {
     currentLocation = location;
     nextLocation = currentLocation.next;
-    switch (location.name) {
-        case "Pokegonemon":
-            // city menu screen
-            msgBox("Yay", "You have reached the legendary city!  Rejoice!", 
-            dialogButtons([{
-                text: "Celebrate",
-                function: win // TODO
-            }]));
-            break;
-        }
-    }
+}
 
 function orderZIndex(element) {
     // order z-coordinate by y coordinate and optional offset value
