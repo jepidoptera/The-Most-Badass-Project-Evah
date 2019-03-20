@@ -500,19 +500,74 @@ function hunt() {
         pause = false;
         window.onfocus = null;
         gameLoop();
-    }
+    };
 }
 
 function rest() {
     // how long?
+    pause = true;
+    $("#rest").show();
+    $("#restform").submit((event) => {
+        event.preventDefault();
+        player.day += parseInt($("#restLength").val());
+        $("#rest").hide();
+        pause = false;
+        gameLoop();
+    });
 }
 
 function inventory() {
-    // TODO
+    // show your items
+    pause = true;
+    $("#inventory").empty().html('<h1>Your Items:</h1>').show();
+    $("#inventory").append("Money: " + player.money + "<br>");
+    $("#inventory").append("Pokeballs: " + player.pokeballs + "<br>");
+    $("#inventory").append("Food: " + player.food + "<br>");
+    $("#inventory").append("Kibble: " + player.kibble + "<br>");
+    $("#inventory").append("Extra Pokemon: " + "<br>");
+    if (player.pokemon.lenth > 0) {
+        player.pokemon.forEach((pokemon) => {
+            $("#inventory").append(pokemon.name + "<br>");
+        });
+    }
+    else $("#inventory").append('none<br>');
+    $("#inventory").append($("<button>").text('close').addClass('closeButton').on('click', closeInventory));
 }
 
 function partyStats() {
-    // TODO
+    // show posse stats
+    pause = true;
+    $("#posse").empty();
+    $("#posse").html('<h1>Your Pokemon Posse:</h1>');
+    posse.forEach((pokemon) => {
+        var health = 'excellent';
+        if (pokemon.health <= 9) health = 'good';
+        if (pokemon.health <= 7) health = 'fair';
+        if (pokemon.health <= 5) health = 'poor';
+        if (pokemon.health <= 3) health = 'terrible';
+        var html = "name: " + pokemon.name +
+        '<br>' + 'health: ' + health + '<br>';
+        if (pokemon.conditions.length > 0) {
+            pokemon.conditions.forEach((condition) => {
+                html += 'has ' + condition.name + '<br>'; 
+            });
+        }
+        var item = $('<p>').html(html).addClass('pokestats');
+        $("#posse").append(item);
+    });
+    $("#posse").append($("<button>").text('close').addClass('closeButton').on('click', closePosse));
+    $("#posse").show();
+}
+
+function closePosse() {
+    pause = false;
+    gameLoop();
+    $("#posse").hide();
+}
+function closeInventory() {
+    pause = false;
+    gameLoop();
+    $("#inventory").hide();
 }
 
 function win () {

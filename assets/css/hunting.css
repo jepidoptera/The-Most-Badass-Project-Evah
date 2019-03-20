@@ -10,7 +10,7 @@ body {
     color: white;
     text-align: center;
     /* sorry */
-    z-index: 999; 
+    z-index: 999999; 
 }
 
 .outline {
@@ -23,7 +23,7 @@ body {
 
 #time, #bullets {
     position: absolute;
-
+    color: white;
 }
 
 #time {
