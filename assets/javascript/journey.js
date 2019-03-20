@@ -117,7 +117,6 @@ var trail = [
                 text: "Celebrate",
                 function: win // TODO
             }]));
-            pause = true;
         }
     },
     {
@@ -147,18 +146,26 @@ for (i = 0; i < trail.length; i ++) {
 var events = [
     {
         name: "ebola",
+        occurrences: 0,
         get occurs() {
-            return Math.random() * 1000;
+            // every morning at dawn
+            return player.day == this.occurrences + 1 || Math.random() * 1000;
         },
         function: () => {
+            // it happens again
+            this.occurences ++;
             pause = true;
             // strikes randomly
-            victim = posse[parseInt(Math.random * posse.length)];
-            victim.conditions.push('ebola');
+            victim = posse[parseInt(Math.random() * posse.length)];
+            victim.conditions['ebola'] = () => {
+                victim.health -= 3;
+            };
+            // there's not much you can do but rest and hope
             msgBox ("outbreak!", victim.name + " has ebola.", dialogButtons([{
                 text: "stop to rest",
                 function: rest
             },{
+                // or ruthlessly carry forward
                 text: "keep going",
                 function: () => {
                     victim.health -= 1;
@@ -217,7 +224,7 @@ class pokePosse {
     }
     hop() {
         // hoppin' down the trail
-        var y = Math.cos(Math.PI * (0.5 + (time + this._hop % 0.5))) * 4;
+        var y = Math.cos(Math.PI * (0.5 + (player.time + this._hop % 0.5))) * 4;
         // position on screen according to object coordinates
         this.img.css({'left': this.x + "%", 'top': (this.y - y) + "%"});
     }
@@ -291,10 +298,9 @@ var currentLocation = trail[0];
 var nextLocation = trail[1];
 var scrollSpeed = 1;
 var timeSpeed = 0.05;
-var time = 0;
 var posse = [];
 
-$(document).ready(() => {
+function firebaseReady() {
     // here we can append permanent objects to the DOM, after the document has loaded
     $('#walkingPath').append(you);
     // ground segments, so we can have different terrain colors
@@ -320,7 +326,7 @@ $(document).ready(() => {
     //     // pick up where we left off
     //     loadGame();
     // }
-});
+}
 
 function newGame() {
     // give player initial stats
@@ -370,12 +376,13 @@ function gameLoop () {
         location.frames += scrollSpeed;
     });
     // time does pass
-    time += timeSpeed;
-    if (!pause) player.time = time;
-    // move the sun
-    moveSun();
-    // a new dawn
-    if (player.time >= 24 &! pause) nextDay();
+    if (!pause) {
+        player.time += timeSpeed;
+        // move the sun
+        moveSun();
+        // a new dawn
+        if (player.time >= 24) nextDay();
+    }
 
     // bring in new scenery from the location which is currently at the edge of the screen
     if (trail[atHorizon].scenery) {
@@ -417,7 +424,7 @@ function gameLoop () {
 
     // do random events
     events.forEach((event) => {
-        if (event.occurs) event.function();
+        // if (event.occurs) event.function();
     });
 
     // narrate the journey
@@ -438,15 +445,18 @@ function gameLoop () {
     } 
 }
 function moveSun() {
-    var x = -Math.sin(Math.PI * (0.5 + time / 24)) * 50 + 50;
-    var y = Math.cos(Math.PI * (0.5 + time / 24)) * 45 + 45;
+    var x = -Math.sin(Math.PI * (0.5 + player.time / 24)) * 50 + 50;
+    var y = Math.cos(Math.PI * (0.5 + player.time / 24)) * 45 + 45;
     $("#sun").css({'top': y + '%', 'left': x + '%'});
 }
 
 function nextDay() {
-    time = 0;
+    // reset time
     player.time = 0; 
     player.day += 1;
+    // eat
+    player.food -= 10;
+    player.kibble -= 5 * posse.length;
 }
 
 function narrate() {
@@ -484,7 +494,13 @@ function orderZIndex(element) {
 }
 
 function hunt() {
-    window.location.href = 'poke-hunt.html?playerID=' + player.ID;
+    pause = true;
+    window.open('poke-hunt.html?playerID=' + player.ID);
+    window.onfocus = () => {
+        pause = false;
+        window.onfocus = null;
+        gameLoop();
+    }
 }
 
 function rest() {
@@ -500,5 +516,6 @@ function partyStats() {
 }
 
 function win () {
+    pause = true;
     // TODO
 }

@@ -6,7 +6,7 @@ var hunter = {
     direction: 0,
     motion: 0,
     // percent of the screen you can move with one keypress
-    speed: 0.5,
+    speed: 0.37,
     img: null
 };
 
@@ -17,15 +17,23 @@ class pokeball {
         this.speed = 0;
         this.topSpeed = 0.75;
         this.direction = 0;
-        this.maxRange = 20;
+        this.maxRange = 23;
         this.range = 0;
         this.motion = 1;
         this.active = false;
-        this.img = $("<img>").attr('src', 'assets/images/pokeball.png').css({"position": "absolute", "height": "25px", "width": "25px"});
+        this.size = 15;
+        this.img = $("<img>")
+            .attr('src', 'assets/images/pokeball.png')
+            .css({"position": "absolute", "height": this.size + "px", "width": this.size + "px", "transform": "translate (-50%, -50%)"})
+            .hide();
     }
     throw (direction) {
         if (this.active) return;
-        this.img.show();
+        if (player.pokeballs <= 0) {
+            message('You are out of pokeballs!');
+            return;
+        }
+        player.pokeballs --;
         this.speed = this.topSpeed + hunter.motion * hunter.speed;
         this.x = hunter.x;
         this.y = hunter.y;
@@ -41,33 +49,56 @@ class pokeball {
         this.y -= Math.cos(this.direction * Math.PI / 180.0) * this.speed * this.motion;
         this.z = Math.sqrt((this.maxRange / 2  - Math.abs(this.maxRange / 2 - this.range)) * 10 / this.maxRange) * this.motion;
         // set position on the page
-        this.img.css({'left': this.x + "vw", 'top': "Calc(" + (this.y - this.z) + "vw - 37px)"});
+        this.img
+            .css({'left': this.x + "vw", 'top': (this.y - this.z) + "vw"})
+            .show();
         // catch pokemon
         var x = parseInt(this.img.css('left'));
         var y = parseInt(this.img.css('top'));
-        if (this.motion) activeCreatures.forEach((pokemon) => {
-            if (pokemon.caught) return;
-            var xdist = x - parseInt(pokemon.img.css('left'));
-            var ydist = y - parseInt(pokemon.img.css('top'));
-            if (Math.sqrt(xdist * xdist + ydist * ydist) < pokemon.size) {
-                // catch em
-                console.log('caught one!');
-                $("#msg").text("You caught " + pokemon.name)
-                this.motion = 0;
-                pokemon.img.animate({height: 0, width: 0}, {duration: 2000});
-                pokemon.img.rotate(180);
-                setTimeout(() => {
-                    pokemon.active = false;
-                }, 2000);
-                pokemon.motion = 0;
-                pokemon.caught = true;
+        if (this.motion) activeCreatures.forEach((creature) => {
+            if (creature.caught) return;
+            var xdist = x - parseInt(creature.img.css('left'));
+            var ydist = y - parseInt(creature.img.css('top'));
+            if (Math.sqrt(xdist * xdist + ydist * ydist) < creature.size / 2 + this.size) {
+                this.catch(creature);
             }
         });
         // range limit
         this.range--;
-        if (this.range <= 0) {
-            this.active = false;
-            this.img.hide();
+        if (this.range <= 3) this.img.hide();
+        if (this.range <= 0) this.active = false;
+    }
+    catch (creature) {
+        // catch em
+        console.log('caught one!');
+        message ("You caught " + creature.type);
+        this.motion = 0;
+        creature.img.animate({height: 0, width: 0, transform: "translate(-50%, -50%)"}, {duration: 2000});
+        creature.img.rotate({angle: 0, center: ["50%", "50%"], animateTo: 360, duration: 2000});
+        setTimeout(() => {
+            creature.active = false;
+        }, 2000);
+        creature.motion = 0;
+        creature.caught = true;
+        var food = 0;
+        switch (creature.type) {
+        case "squirrel":
+            food = 1;
+            break;
+        case "deer":
+            food = parseInt(Math.random() * 100 + 80);
+            break;
+        case "bison":
+            food = parseInt(Math.random() * 600 + 800);
+            break;
+        default:
+            // must be a pokemon
+            player.pokemon.add(creature.type, null);
+            break;
+        }
+        if (food) {
+            player.food += food;
+            message("You gained " + food + " food.");
         }
     }
 }
@@ -84,7 +115,7 @@ class tree {
         // construct tree image
         this.img = $('<img>')
             .attr('src', 'assets/images/tree' + parseInt(Math.random() * numTrees) + ".png")
-            .css({'position': 'absolute', 'left': this.x + "vw", 'top': this.y + "vw", 'height': this.size + 'px', 'width': this.size + 'px', "transform": "translate(-50%, -100%)"})
+            .css({'position': 'absolute', 'left': this.x + "vw", 'top': this.y + "vw", 'height': this.size + 'px', 'width': this.size + 'px', "transform": "translate(-0%, -100%)"})
             .addClass('ordered');
         $("#huntingField").append(this.img);
     }
@@ -96,17 +127,8 @@ class creature {
     constructor (type) {
         this.type = type;
         this.size = 50;
-        this.img = $("<img>")
-            .attr('src', 'assets/images/' + type + ".png")
-            .css({'position': 'absolute', 'left': this.x + "vw", 'top': this.y + "vw", 'height': this.size + 'px', 'width': this.size + 'px'})
-            .addClass('ordered')
-            .attr('z-offset', this.size * 0.75)
-            .on('click', () => {console.log('x: ', this.x, 'y, ', this.y, 'speed: ', this.speed, 'motion: ', this.motion, 'direction: ', this.direction);});
-        $("#huntingField").append(this.img);
-        this.x = (Math.random() < 0.5) ? (Math.random() > 0.5 ? 0 : xbound) : Math.random() * xbound;
-        this.y = (this.x == 0 || this.x == xbound) ? Math.random() * ybound : (Math.random() > 0.5 ? 0 : ybound);
-        // initial position
-        this.calcPosition();
+        this.x = (Math.random() < 0.5) ? (Math.random() > 0.5 ? -this.size : xbound + this.size) : Math.random() * xbound;
+        this.y = (this.x < 0 || this.x > xbound) ? Math.random() * ybound : (Math.random() > 0.5 ? -this.size : this.size + ybound);
         // face within 45 degrees of the center
         var xdist = xbound/2 - this.x;
         var ydist = ybound/2 - this.y;
@@ -115,19 +137,41 @@ class creature {
         this.motion = 1;
         this.active = true;
         this.caught = false;
+        var imgName = 'assets/images/' + type + ".png";
+
+        if (['deer', 'bison', 'squirrel'].includes(this.type)) {
+            this.x = Math.random() < 0.5 ? -this.size : xbound + this.size;
+            this.y = Math.random() * ybound;
+            this.direction =  75 + Math.random() * 30;
+            this.direction *= -Math.sign(this.x); // *= parseInt(Math.random() * 2) * 2 - 1;
+            if (this.type == 'deer') this.size = 50;
+            if (this.type == 'bison') {this.height = 80; this.width = 100; this.size = 80;}
+            if (this.type == 'squirrel') this.size = 25;
+            imgName = "assets/images/animals/" + 
+                type + ['_left', '_right'][parseInt((Math.sign(this.direction) + 1) / 2)] + '.png';
+        }
+        this.img = $("<img>")
+            .attr('src', imgName)
+            .css({'position': 'absolute', 'left': this.x + "vw", 'top': this.y + "vw", 'height': (this.height || this.size) + 'px', 'width': (this.width || this.size) + 'px', 'transform': 'translate(-50%, -50%)'})
+            .addClass('ordered')
+            .attr('z-offset', this.size * 0.75)
+            .on('click', () => {console.log('x: ', this.x, 'y, ', this.y, 'speed: ', this.speed, 'motion: ', this.motion, 'direction: ', this.direction);});
+        $("#huntingField").append(this.img);
     }
     move () {
         this.x += Math.sin(this.direction * Math.PI / 180.0) * this.speed * this.motion;
         this.y -= Math.cos(this.direction * Math.PI / 180.0) * this.speed * this.motion;
-        this.calcPosition();
         // delete if it leaves bounds
-        if (this.x < 0 || this.y < 0 || this.x > xbound || this.y > ybound) {
+        if (this.x < -this.size * 2 || this.y < -this.size * 2 || this.x > xbound + this.size * 2 || this.y > ybound + this.size * 2) {
             this.img.remove();
             this.active = false;
         }
+        this.display();
     }
-    calcPosition() {
-        this.img.css({'left': this.x + "vw", 'top': this.y + "vw"});
+    display() {
+        this.img
+        .css({'left': this.x + "vw", 'top': this.y + "vw"})
+        .show();
     }
 }
 
@@ -136,7 +180,15 @@ var turnPositions = 12;
 var ybound = 100;
 var xbound = 100;
 
-$(document).ready(() => {
+function message(text) {
+    var msg = $('<p>').text(text).addClass('msg').addClass('outline');
+    $('#huntingField').append(msg);
+    setTimeout(() => {
+        msg.remove();
+    }, 3000);
+}
+
+function firebaseReady() {
     // load images
     var ball = new pokeball();
     hunter.img = $("<img>")
@@ -160,7 +212,25 @@ $(document).ready(() => {
         new tree(Math.random() * xbound, (i / totalTrees) * ybound);
     }
 
-    setInterval(() => {
+    // count down til dark
+    function timeDown() {
+        player.time += 1;
+        hoursTilDark = parseInt((24 - player.time) / 2);
+        $("#time").text('Hours til dark: '+ hoursTilDark);
+        if (hoursTilDark == 0) {
+            msgBox('darkness', "The sun has gone down.  You head back to camp with your day's catch.",
+            dialogButtons([{text: "ok", function: window.close}]));
+            clearInterval(gameLoop);
+            // it's dark now
+            $("#blackout").show();
+        }
+        else {
+            setTimeout(timeDown, 4000);
+        }
+    }    
+    timeDown();
+
+    var gameLoop = setInterval(() => {
         // move if key is down
         if (hunter.motion != 0) {
             hunter.x += Math.sin(hunter.direction * Math.PI / 180.0) * hunter.speed * hunter.motion;
@@ -188,7 +258,9 @@ $(document).ready(() => {
         hunter.img2.css({
             'left': hunter.x + Math.sin(hunter.direction * Math.PI / 180.0) * 3 + "vw",
             'top': hunter.y - Math.cos(hunter.direction * Math.PI / 180.0) * 3 + "vw"});
-    
+        
+        $("#bullets").text("pokeballs remaining: " + player.pokeballs);
+        // keep things ordered    
         orderZIndex();
     }, 30);
 
@@ -226,8 +298,14 @@ $(document).ready(() => {
         }
     });
 
-    // sometimes send out a pokemon
+    // sometimes send out a pokemon or animal
     function newPokemon () {
+        // wait for next one
+        setTimeout(newPokemon, parseInt(Math.random() * 10000) + 100);
+
+        // but don't appear if the window isn't focused
+        if (!document.hasFocus()) return;
+
         var preys = 
         [
             {name: 'snorlax',
@@ -240,7 +318,13 @@ $(document).ready(() => {
             chance: 32},
         ];
         // cast the die
-        var totalChance = preys.reduce((sum, nextPrey) => {sum += nextPrey.chance; nextPrey.chance = sum; return sum;});
+        var totalChance = preys
+            .map((prey) => {return prey.chance;})
+            .reduce((sum, nextChance, i) => {
+                sum += nextChance; 
+                preys[i].chance = sum; 
+                return sum;
+            });
         var chance = Math.random() * totalChance;
         // see which one we picked
         for (i = 0; i < preys.length; i++) {
@@ -249,8 +333,6 @@ $(document).ready(() => {
                 break;
             }
         }
-        // wait for next one
-        setTimeout(newPokemon, parseInt(Math.random() * 1000) + 100);
     }
     newPokemon();
 
@@ -267,4 +349,4 @@ $(document).ready(() => {
             $(element).css({"z-index": zindex + offset});
         });
     }
-});
+}

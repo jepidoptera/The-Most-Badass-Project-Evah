@@ -31,7 +31,8 @@ function msgBox(/*string*/title, /*string*/message, /*dialogButtons*/buttons, ha
     // no keypress events while dialog is open
     // all buttons will have been set to reactivate keypresses on click
     deactivateKeyPresses();
-
+    // pause game
+    pause = true;
     // use this for keypresses instead (navigate between buttons using arrow keys)
     document.onkeyup =
         function(e)
@@ -50,7 +51,7 @@ function msgBox(/*string*/title, /*string*/message, /*dialogButtons*/buttons, ha
     title = (title == undefined) ? "The page says:" : title;
 
     msgDiv = $('<div class="msgBox">');
-    if (hasInput) msgDiv.append($('<input id="formInput">'))
+    if (hasInput) msgDiv.append($('<input id="formInput">'));
     msgDiv.html(message);
     msgDiv.attr('title', title);
     msgDiv.dialog({
@@ -87,6 +88,8 @@ function dialogButtons (buttons){
                 // close dialog box, remove div
                 $(this).dialog("close");
                 msgDiv.remove();
+                // un-pause
+                pause = false;
                 // user-defined custom function
                 if (button.function != null) button.function();
                 // return keypress control to document

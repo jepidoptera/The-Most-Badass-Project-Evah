@@ -49,7 +49,7 @@ var player = {
     get posse() {return this._posse;},
     set posse(value) {
         if (value == undefined) return;
-        this._posse = value.map(value => {return {name: value.name, health: value.health, conditions: value.conditions};});
+        this._posse = value.map(value => {return {name: value.name, health: value.health, conditions: value.conditions, hop: value};});
         firebase.database().ref('users/' + player.ID + "/gameInfo/posse").set(this._posse);
     },
     get location() {return this._location;},
@@ -89,6 +89,9 @@ var player = {
     },
 };
 
+var firebaseReady = new Event('firebaseReady');
+var loaded = false;
+
 var playerRef;
 $(document).ready(() => {
     // set up database connection
@@ -114,6 +117,10 @@ $(document).ready(() => {
         player._speed = value.val().speed;
         player._time = value.val().time;
         player._day = value.val().day;
+        if (firebaseReady && !loaded) {
+            loaded = true;
+            firebaseReady();
+        }
     });
 });
 
