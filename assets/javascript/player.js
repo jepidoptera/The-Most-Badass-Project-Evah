@@ -1,4 +1,5 @@
 // jshint esversion:6
+
 var playerID;
 var player = {
     /**

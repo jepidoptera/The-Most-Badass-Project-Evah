@@ -1,7 +1,7 @@
 // jshint esversion: 6
 var users = [];
 $(document).ready(function(){
-
+    
     var config = {
         apiKey: "AIzaSyAqd2f2a2iFdzSMNqsGzt8ShzjJ_VxSG9w",
         authDomain: "pokemon-trail.firebaseapp.com",
@@ -65,3 +65,4 @@ $(document).ready(function(){
         window.open('journey.html?playerID=' + users[username].key);
     });
 });
+
