@@ -149,7 +149,8 @@ var events = [
         occurrences: 0,
         get occurs() {
             // every morning at dawn
-            return player.day == this.occurrences + 1 || Math.random() * 1000;
+            // occasionally
+            return (Math.random() * 1000 == 0);
         },
         function: () => {
             // it happens again
@@ -157,9 +158,8 @@ var events = [
             pause = true;
             // strikes randomly
             victim = posse[parseInt(Math.random() * posse.length)];
-            victim.conditions['ebola'] = () => {
-                victim.health -= 3;
-            };
+            victim.conditions.push ({name: 'ebola', function: () => {
+                victim.health -= 3;}});
             // there's not much you can do but rest and hope
             msgBox ("outbreak!", victim.name + " has ebola.", dialogButtons([{
                 text: "stop to rest",
@@ -169,6 +169,8 @@ var events = [
                 text: "keep going",
                 function: () => {
                     victim.health -= 1;
+                    pause = false;
+                    gameLoop();
                 }
             }]));
         }
@@ -424,7 +426,7 @@ function gameLoop () {
 
     // do random events
     events.forEach((event) => {
-        // if (event.occurs) event.function();
+        if (event.occurs == true) event.function();
     });
 
     // narrate the journey
@@ -494,6 +496,7 @@ function orderZIndex(element) {
 }
 
 function hunt() {
+    if (pause) return;
     pause = true;
     window.open('poke-hunt.html?playerID=' + player.ID);
     window.onfocus = () => {
@@ -505,6 +508,7 @@ function hunt() {
 
 function rest() {
     // how long?
+    if (pause) return;
     pause = true;
     $("#rest").show();
     $("#restform").submit((event) => {
@@ -518,6 +522,7 @@ function rest() {
 
 function inventory() {
     // show your items
+    if (pause) return;
     pause = true;
     $("#inventory").empty().html('<h1>Your Items:</h1>').show();
     $("#inventory").append("Money: " + player.money + "<br>");
@@ -536,6 +541,7 @@ function inventory() {
 
 function partyStats() {
     // show posse stats
+    if (pause) return;
     pause = true;
     $("#posse").empty();
     $("#posse").html('<h1>Your Pokemon Posse:</h1>');
