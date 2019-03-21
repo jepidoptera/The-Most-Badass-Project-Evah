@@ -14,7 +14,7 @@ var pokegifs = $('#poke-gifs-go-here');
     var queryURL = "https://api.giphy.com/v1/gifs/search?q=" +
       poke + "&api_key=8rWTYSGMgDTrwqndYxIEjk7QT2CSpo0D&limit=1";
     
-    var pokeAPI = "http://pokeapi.co/api/v2/pokemon/" + poke + "/";
+    var pokeAPI = "https://pokeapi.co/api/v2/pokemon/" + poke + "/";
 
     $.ajax({
       url: queryURL,
