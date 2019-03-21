@@ -150,7 +150,7 @@ var events = [
         get occurs() {
             // every morning at dawn
             // occasionally
-            return (Math.random() * 1000 == 0);
+            return parseInt(Math.random() * 5000) == 0;
         },
         function: () => {
             // it happens again
@@ -158,8 +158,12 @@ var events = [
             pause = true;
             // strikes randomly
             victim = posse[parseInt(Math.random() * posse.length)];
-            victim.conditions.push ({name: 'ebola', function: () => {
-                victim.health -= 3;}});
+            victim.conditions.push ({
+                name: 'ebola', 
+                function: () => {
+                victim.health -= 3;},
+                length: parseInt(Math.random() * 5)
+            });
             // there's not much you can do but rest and hope
             msgBox ("outbreak!", victim.name + " has ebola.", dialogButtons([{
                 text: "stop to rest",
@@ -229,6 +233,13 @@ class pokePosse {
         var y = Math.cos(Math.PI * (0.5 + (player.time + this._hop % 0.5))) * 4;
         // position on screen according to object coordinates
         this.img.css({'left': this.x + "%", 'top': (this.y - y) + "%"});
+    }
+    doConditions() {
+        this.conditions.forEach((condition) => {
+            condition.function();
+            condition.length--;
+            if (condition.length <= 0) condition.active = false;
+        });
     }
 }
 
@@ -426,7 +437,7 @@ function gameLoop () {
 
     // do random events
     events.forEach((event) => {
-        if (event.occurs == true) event.function();
+        if (!pause && event.occurs == true) event.function();
     });
 
     // narrate the journey
