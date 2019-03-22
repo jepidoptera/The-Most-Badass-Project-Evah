@@ -29,8 +29,22 @@
         <button id='restButton' class='controlButton' onclick='rest()'>rest</button>
         <button id='invButton' class='controlButton' onclick='inventory()'>inventory</button>
         <button id='partyButton' class='controlButton' onclick='partyStats()'>posse</button>
-        <button id='optionsButton' class='controlButton' onclick='options()'>options</button>
+        <!-- <button id='optionsButton' class='controlButton' onclick='options()'>options</button> -->
     </section>
+    <div id='posse'>
+        Your Pokemon Posse:
+    </div>
+    <div id='rest'>
+        Rest for how long?:
+        <form id='restform' action="">
+            <input id="restLength" type="number"> days
+            <br><br>
+            <button type="submit">ok</button>
+        </form>        
+    </div>
+    <div id='inventory'>
+        Your items:
+    </div>
 </body>
 </html>
 

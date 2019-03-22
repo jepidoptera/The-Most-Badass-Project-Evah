@@ -149,7 +149,8 @@ var events = [
         occurrences: 0,
         get occurs() {
             // every morning at dawn
-            return player.day == this.occurrences + 1 || Math.random() * 1000;
+            // occasionally
+            return parseInt(Math.random() * 5000) == 0;
         },
         function: () => {
             // it happens again
@@ -157,9 +158,12 @@ var events = [
             pause = true;
             // strikes randomly
             victim = posse[parseInt(Math.random() * posse.length)];
-            victim.conditions['ebola'] = () => {
-                victim.health -= 3;
-            };
+            victim.conditions.push ({
+                name: 'ebola', 
+                function: () => {
+                victim.health -= 3;},
+                length: parseInt(Math.random() * 5)
+            });
             // there's not much you can do but rest and hope
             msgBox ("outbreak!", victim.name + " has ebola.", dialogButtons([{
                 text: "stop to rest",
@@ -169,6 +173,8 @@ var events = [
                 text: "keep going",
                 function: () => {
                     victim.health -= 1;
+                    pause = false;
+                    gameLoop();
                 }
             }]));
         }
@@ -227,6 +233,13 @@ class pokePosse {
         var y = Math.cos(Math.PI * (0.5 + (player.time + this._hop % 0.5))) * 4;
         // position on screen according to object coordinates
         this.img.css({'left': this.x + "%", 'top': (this.y - y) + "%"});
+    }
+    doConditions() {
+        this.conditions.forEach((condition) => {
+            condition.function();
+            condition.length--;
+            if (condition.length <= 0) condition.active = false;
+        });
     }
 }
 
@@ -424,7 +437,7 @@ function gameLoop () {
 
     // do random events
     events.forEach((event) => {
-        // if (event.occurs) event.function();
+        if (!pause && event.occurs == true) event.function();
     });
 
     // narrate the journey
@@ -494,25 +507,84 @@ function orderZIndex(element) {
 }
 
 function hunt() {
+    if (pause) return;
     pause = true;
     window.open('poke-hunt.html?playerID=' + player.ID);
     window.onfocus = () => {
         pause = false;
         window.onfocus = null;
         gameLoop();
-    }
+    };
 }
 
 function rest() {
     // how long?
+    if (pause) return;
+    pause = true;
+    $("#rest").show();
+    $("#restform").submit((event) => {
+        event.preventDefault();
+        player.day += parseInt($("#restLength").val());
+        $("#rest").hide();
+        pause = false;
+        gameLoop();
+    });
 }
 
 function inventory() {
-    // TODO
+    // show your items
+    if (pause) return;
+    pause = true;
+    $("#inventory").empty().html('<h1>Your Items:</h1>').show();
+    $("#inventory").append("Money: " + player.money + "<br>");
+    $("#inventory").append("Pokeballs: " + player.pokeballs + "<br>");
+    $("#inventory").append("Food: " + player.food + "<br>");
+    $("#inventory").append("Kibble: " + player.kibble + "<br>");
+    $("#inventory").append("Extra Pokemon: " + "<br>");
+    if (player.pokemon.lenth > 0) {
+        player.pokemon.forEach((pokemon) => {
+            $("#inventory").append(pokemon.name + "<br>");
+        });
+    }
+    else $("#inventory").append('none<br>');
+    $("#inventory").append($("<button>").text('close').addClass('closeButton').on('click', closeInventory));
 }
 
 function partyStats() {
-    // TODO
+    // show posse stats
+    if (pause) return;
+    pause = true;
+    $("#posse").empty();
+    $("#posse").html('<h1>Your Pokemon Posse:</h1>');
+    posse.forEach((pokemon) => {
+        var health = 'excellent';
+        if (pokemon.health <= 9) health = 'good';
+        if (pokemon.health <= 7) health = 'fair';
+        if (pokemon.health <= 5) health = 'poor';
+        if (pokemon.health <= 3) health = 'terrible';
+        var html = "name: " + pokemon.name +
+        '<br>' + 'health: ' + health + '<br>';
+        if (pokemon.conditions.length > 0) {
+            pokemon.conditions.forEach((condition) => {
+                html += 'has ' + condition.name + '<br>'; 
+            });
+        }
+        var item = $('<p>').html(html).addClass('pokestats');
+        $("#posse").append(item);
+    });
+    $("#posse").append($("<button>").text('close').addClass('closeButton').on('click', closePosse));
+    $("#posse").show();
+}
+
+function closePosse() {
+    pause = false;
+    gameLoop();
+    $("#posse").hide();
+}
+function closeInventory() {
+    pause = false;
+    gameLoop();
+    $("#inventory").hide();
 }
 
 function win () {
