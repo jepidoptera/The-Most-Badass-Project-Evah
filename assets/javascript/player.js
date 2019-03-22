@@ -1,4 +1,5 @@
 // jshint esversion:6
+var playerID;
 var player = {
     /**
      * @param {number} value
@@ -89,7 +90,6 @@ var player = {
     },
 };
 
-var firebaseReady = new Event('firebaseReady');
 var loaded = false;
 
 var playerRef;
