@@ -90,7 +90,6 @@ var player = {
     },
 };
 
-var firebaseReady = new Event('firebaseReady');
 var loaded = false;
 
 var playerRef;
