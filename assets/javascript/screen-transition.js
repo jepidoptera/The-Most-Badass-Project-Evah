@@ -67,7 +67,7 @@ $(document).ready(function(){
 
     $("#startGame").on('click', () => {
         // start game
-        window.location.href=('journey.html?playerID=' + users[username].key);
+        window.location.assign('journey.html?playerID=' + users[username].key);
     });
 });
 

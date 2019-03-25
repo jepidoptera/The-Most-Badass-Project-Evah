@@ -2,10 +2,15 @@
 // jshint multistr: true
 var trail = [
     {
+        type: 'nowhere',
+        name: 'the beginning of infinity',
+        length: 1000000000001
+    },
+    {
         type: 'city',
         name: 'Orepoke',
         scenery: [{
-            image: 'assets/images/city0.png',
+            image: 'https://raw.githubusercontent.com/jepidoptera/The-Most-Badass-Project-Evah/master/assets/images/city0.png',
             height: 150,
             width: 250,
             distance: 1,
@@ -104,7 +109,7 @@ var trail = [
         type: 'city',
         name: 'Pokegonemon',
         scenery: [{
-            image: 'assets/images/pokegonemon.png',
+            image: 'https://raw.githubusercontent.com/jepidoptera/The-Most-Badass-Project-Evah/master/assets/images/pokegonemon.png',
             height: 150,
             width: 250,
             distance: 1,
@@ -143,42 +148,54 @@ for (i = 0; i < trail.length; i ++) {
     }
 }
 
-var events = [
-    {
+var events = {
+    ebola: {
         name: "ebola",
         occurrences: 0,
         get occurs() {
-            // every morning at dawn
-            return player.day == this.occurrences + 1 || Math.random() * 1000;
+            // occasionally
+            return player.day == events.ebola.occurrences + 1 || Math.random() * 1000;
         },
         function: () => {
+            var self = events.ebola;
             // it happens again
-            this.occurences ++;
+            self.occurences ++;
+            self.length = Math.random() * 5;
             pause = true;
             // strikes randomly
             victim = posse[parseInt(Math.random() * posse.length)];
-            victim.conditions['ebola'] = () => {
-                victim.health -= 3;
-            };
+            if ($.inArray(self, victim.conditions)) {
+                // can't get it twice
+                console.log('prevented double occurrence of ebola.');
+                return;
+            } 
+            victim.conditions.push ({
+                name: 'ebola',
+                function: () => {
+                    victim.health -= 3;
+            }});
             // there's not much you can do but rest and hope
-            msgBox ("outbreak!", victim.name + " has ebola.", dialogButtons([{
+            msgBox ("Outbreak!", victim.name + " has ebola.", dialogButtons([{
                 text: "stop to rest",
                 function: rest
             },{
                 // or ruthlessly carry forward
                 text: "keep going",
                 function: () => {
+                    // which cuts their chances of survival from 2/3 to 1/3, incidentally
                     victim.health -= 1;
                 }
             }]));
         }
     }
-];
+};
 
 class pokePosse {
-    constructor (name, x, y, hop) {
+    constructor (name, health, conditions, x, y, hop) {
         this._hop = hop;
         this.name = name;
+        this.health = health;
+        this.conditions = conditions;
         this.x = x;
         this.y = y;
         switch (name) {
@@ -204,7 +221,7 @@ class pokePosse {
             break;
         }
         this.img = $("<img>").
-            attr('src', 'assets/images/' + this.name + ".png")
+            attr('src', 'https://raw.githubusercontent.com/jepidoptera/The-Most-Badass-Project-Evah/master/assets/images/' + this.name + ".png")
             .css({
                 'position': 'absolute', 
                 'height': this.height + 'px', 
@@ -213,9 +230,6 @@ class pokePosse {
                 'top': this.y + "%", 
                 "transform": "translate(-50%, -50%)"})
             .addClass('ordered');
-        // perfect health
-        this.health = 10;
-        this.conditions = [];
         $("#walkingPath").append(this.img);
         setTimeout(() => {
             // zorder
@@ -227,6 +241,28 @@ class pokePosse {
         var y = Math.cos(Math.PI * (0.5 + (player.time + this._hop % 0.5))) * 4;
         // position on screen according to object coordinates
         this.img.css({'left': this.x + "%", 'top': (this.y - y) + "%"});
+    }
+    doConditions() {
+        // process any conditions this Pokemon may have
+        var activeConditions = {};
+        $.each(this.conditions, (condition) => {
+            if (condition.active) {
+                condition.length --;
+                activeConditions[condition.name] = condition;
+            }
+        });
+        this.conditions = activeConditions;
+    }
+    die() {
+        msgBox('tragedy', this.name + " has died.", dialogButtons([{
+            text: 'ok',
+            function: null
+        }]));
+        this.remove();
+    }
+    remove() {
+        posse.slice(posse.indexOf(this), 1);
+        this.img.remove();
     }
 }
 
@@ -245,7 +281,7 @@ class backGroundImage {
         var offset = prototype.offset || ["-100%", "-100%"];
         var height = prototype.height || prototype.sizeRange.min.y + size * (prototype.sizeRange.max.y - prototype.sizeRange.min.y);
         var width = prototype.width || prototype.sizeRange.min.x + size * (prototype.sizeRange.max.x - prototype.sizeRange.min.x);
-        var imgName = prototype.image || 'assets/images/' + prototype.type + parseInt(Math.random() * (prototype.imgRange.max - prototype.imgRange.min + 1) + prototype.imgRange.min) + ".png";
+        var imgName = prototype.image || 'https://raw.githubusercontent.com/jepidoptera/The-Most-Badass-Project-Evah/master/assets/images/' + prototype.type + parseInt(Math.random() * (prototype.imgRange.max - prototype.imgRange.min + 1) + prototype.imgRange.min) + ".png";
         this.img = $('<img>')
             .attr('src', imgName)
             .css({
@@ -266,9 +302,12 @@ class backGroundImage {
         if (!pause) this.calcPosition();
         // delete when off screen
         if (this.x < 0) {
-            this.img.remove();
-            this.active = false;
+            this.remove();
         }
+    }
+    remove() {
+        this.img.remove();
+        this.active = false;
     }
     calcPosition() {
         // position on screen according to object coordinates
@@ -278,7 +317,7 @@ class backGroundImage {
 var backgroundImages = [];
 
 var you = $('<img>')
-    .attr('src', 'assets/images/walking.gif')
+    .attr('src', 'https://raw.githubusercontent.com/jepidoptera/The-Most-Badass-Project-Evah/master/assets/images/walking.gif')
     .css({'top': "65%", 'left': '25%', 'position': 'absolute', 'height': '50px', 'width': '50px', 'transform': 'translate(-50%, -50%)'})
     .addClass('ordered')
     .attr('z-offset', 25);
@@ -291,11 +330,10 @@ var trailHeight = 65;
 // when frames / framerate * speed = 75
 // so frames / framerate / speed = 1%, * 75 = ...whatever.  it works, right?
 var yourPosition = 15 * frameRate;
-var atHorizon = 0;
-// this is the only active location to start with
-var activeLocations = [trail[atHorizon]];
-var currentLocation = trail[0];
-var nextLocation = trail[1];
+var atHorizon = 1;
+var activeLocations;
+var currentLocation;
+var nextLocation;
 var scrollSpeed = 1;
 var timeSpeed = 0.05;
 var posse = [];
@@ -307,25 +345,26 @@ function firebaseReady() {
     for (i=0; i<12; i++) {
         // TODO
     }
+    pause = true;
     orderZIndex(you);
-    // say hi
-    // if (player.location == null) {
+    if (player.location) {
+        // pick up where we left off
+        loadGame();
+    }
+    else {
         newGame();
+        // say hi
         msgBox('your journey begins', 
         'Leaving behind your beleaguered home city of Orepoke, \
         you look ahead, over many obstacles, to your legendary destination: Pokegonemon.',
         dialogButtons([{
             text: "let's go",
             function: () => {
-                pause = false;
+                unPause();
                 gameLoop();    
             }
         }]));
-    // }
-    // else {
-    //     // pick up where we left off
-    //     loadGame();
-    // }
+    }
 }
 
 function newGame() {
@@ -336,8 +375,22 @@ function newGame() {
     player.pokeballs = 27;
     player.speed = 4;
     player.pokemon.clear();
+    // reset to beginning of trail
+    player.location = trail[1];
+    atHorizon = 1;
+    currentLocation = trail[atHorizon];
+    // this is the only active location to start with
+    activeLocations = [currentLocation];
+    nextLocation = trail[atHorizon + 1];
+    // remove any existing pokemon
+    posse.forEach((pokemon) => {pokemon.remove();});
+    // remove all background objects
+    backgroundImages.forEach((image) => {image.remove();});
+    // reset frame count
+    trail.forEach((location) => {location.frames = 0;});
+    // construct a new party from scratch
     posse = ['charizard', 'jigglypuff', 'articuno', 'ninetales', 'snorlax'].map((name, i) => {
-        return new pokePosse(name, 25 - i * 4 - 4, 65, i * 0.2);
+        return new pokePosse(name, 10, [], 25 - i * 4 - 4, 65, i * 0.2);
     });
     player.posse = posse;
     player.time = 0;
@@ -348,7 +401,7 @@ function newGame() {
     var walkTo = 18 * frameRate; // so scenery almost takes up the screen
     for (i = 0; i < walkTo; i++) {
         // un-pause it on the last round - so it will draw the scenery
-        if (i == walkTo - 1) pause = false;
+        if (i == walkTo - 1) unPause();
         gameLoop();
     }
     // re-pause
@@ -356,21 +409,40 @@ function newGame() {
 }
 
 function loadGame() {
+    // create posse
+    posse = player.posse.map((poke, i) => {
+        return new pokePosse(poke.name, poke.health, poke.conditions, 25 - i * 4 - 4, 65, i * 0.2);
+    });
     // where were we?
-    currentLocation = trail[trail.map((location) => 
-    {return location.name;}).indexOf(player.location.name)];
+    atHorizon = trail.map((location) => 
+    {return location.name;}).indexOf(player.location.name);
+    currentLocation = trail[atHorizon];
+    activeLocations = [currentLocation];
     // rewind
-    currentLocation.frames = player.location.frames - yourPosition;
+    var screenWidth = 20 * frameRate;
+    currentLocation.frames = player.location.frames - screenWidth;
+    while (currentLocation.frames < 0 && atHorizon > 0) {
+        // rewound past the beginning of the current location - go back by one
+        atHorizon --;
+        currentLocation = trail[atHorizon];
+        currentLocation.frames = currentLocation.length * frameRate + trail[atHorizon + 1].frames;
+        trail[atHorizon + 1].frames = 0;
+        activeLocations = [currentLocation];
+    }
+    nextLocation = trail[atHorizon + 1];
     // play forward
     pause = true;
-    for (i = 0; i < yourPosition; i++) {
+    for (i = 0; i < screenWidth; i++) {
         gameLoop();
     }
-    pause = false;
+    unPause();
     gameLoop();
 }
 
 function gameLoop () {
+    // time the processing time per frame
+    var frameStarted = now();
+
     // move along (for each on-screen location)
     activeLocations.forEach(location => {
         location.frames += scrollSpeed;
@@ -423,7 +495,7 @@ function gameLoop () {
     });
 
     // do random events
-    events.forEach((event) => {
+    $.each(events, (event) => {
         // if (event.occurs) event.function();
     });
 
@@ -434,16 +506,17 @@ function gameLoop () {
     if (currentLocation.frames >= currentLocation.length * frameRate + yourPosition) {
         // we are here!
         arriveAt(nextLocation);
-        if (currentLocation.function) currentLocation.function();
     }
-
+    // set up next iteration here for consistent framerate
+    var frameLength = now() - frameStarted;
     if (!pause && !exit) {
         // set up next frame
         setTimeout(() => {
             gameLoop();
-        }, 1000 / frameRate);
-    } 
+        }, 1000 / frameRate - frameLength);
+    }     
 }
+
 function moveSun() {
     var x = -Math.sin(Math.PI * (0.5 + player.time / 24)) * 50 + 50;
     var y = Math.cos(Math.PI * (0.5 + player.time / 24)) * 45 + 45;
@@ -457,6 +530,10 @@ function nextDay() {
     // eat
     player.food -= 10;
     player.kibble -= 5 * posse.length;
+    // pokemon conditions (ebola and so forth)
+    posse.forEach((pokemon) =>{
+        pokemon.doConditions();
+    });    
 }
 
 function narrate() {
@@ -493,11 +570,18 @@ function orderZIndex(element) {
     element.css({"z-index": zindex + offset});
 }
 
+function unPause() {
+    if (pause) {
+        pause = false;
+        gameLoop();
+    }
+}
+
 function hunt() {
     pause = true;
     window.open('poke-hunt.html?playerID=' + player.ID);
     window.onfocus = () => {
-        pause = false;
+        unPause();
         window.onfocus = null;
         gameLoop();
     };
@@ -511,7 +595,7 @@ function rest() {
         event.preventDefault();
         player.day += parseInt($("#restLength").val());
         $("#rest").hide();
-        pause = false;
+        unPause();
         gameLoop();
     });
 }
@@ -524,11 +608,13 @@ function inventory() {
     $("#inventory").append("Pokeballs: " + player.pokeballs + "<br>");
     $("#inventory").append("Food: " + player.food + "<br>");
     $("#inventory").append("Kibble: " + player.kibble + "<br>");
-    $("#inventory").append("Extra Pokemon: " + "<br>");
-    if (player.pokemon.lenth > 0) {
-        player.pokemon.forEach((pokemon) => {
+    $("#inventory").append("Extra Pokemon:");
+    if (player.pokemon.list.length > 0) {
+        $("#inventory").append("<br> <ul>");
+        player.pokemon.list.forEach((pokemon) => {
             $("#inventory").append(pokemon.name + "<br>");
         });
+        $("#inventory").append("</ul>");
     }
     else $("#inventory").append('none<br>');
     $("#inventory").append($("<button>").text('close').addClass('closeButton').on('click', closeInventory));
@@ -559,15 +645,23 @@ function partyStats() {
     $("#posse").show();
 }
 
+function options () {
+    pause = true;
+    $("#options").show();
+}
+
+function closeOptions() {
+    $("#options").hide();
+    unPause();
+}
+
 function closePosse() {
-    pause = false;
-    gameLoop();
     $("#posse").hide();
+    unPause();
 }
 function closeInventory() {
-    pause = false;
-    gameLoop();
     $("#inventory").hide();
+    unPause();
 }
 
 function win () {
