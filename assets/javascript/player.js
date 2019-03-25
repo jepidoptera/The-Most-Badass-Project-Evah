@@ -50,7 +50,7 @@ var player = {
     get posse() {return this._posse;},
     set posse(value) {
         if (value == undefined) return;
-        this._posse = value.map(value => {return {name: value.name, health: value.health, conditions: value.conditions, hop: value};});
+        this._posse = value.map(value => {return {name: value.name, health: value.health, conditions: value.conditions || []};});
         firebase.database().ref('users/' + player.ID + "/gameInfo/posse").set(this._posse);
     },
     get location() {return this._location;},
@@ -82,10 +82,10 @@ var player = {
             firebase.database().ref('users/' + player.ID + "/gameInfo/pokemon").set(player.pokemon._pokes);
         },
         get list() {
-            return this._pokes;
+            return player.pokemon._pokes;
         },
         set list(listOfPokemon) {
-            if (listOfPokemon) this._pokes = listOfPokemon;
+            if (listOfPokemon) player.pokemon._pokes = listOfPokemon;
         }
     },
 };
@@ -113,10 +113,12 @@ $(document).ready(() => {
         player._kibble = value.val().kibble;
         player._money = value.val().money;
         player._pokeballs = value.val().pokeballs;
-        player.pokemon._pokes = value.val().pokemon;
+        player.pokemon._pokes = value.val().pokemon || [];
         player._speed = value.val().speed;
         player._time = value.val().time;
         player._day = value.val().day;
+        player.posse = value.val().posse;
+        player._location = value.val().location;
         if (firebaseReady && !loaded) {
             loaded = true;
             firebaseReady();

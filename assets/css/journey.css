@@ -54,7 +54,7 @@ html, body {
     border: 1px solid black;
     bottom: 20px;
 }
-#posse, #rest, #inventory{
+#posse, #rest, #inventory, #options{
     position: absolute;
     width: 600px;
     height: 400px;

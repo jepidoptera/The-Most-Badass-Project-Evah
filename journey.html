@@ -29,7 +29,7 @@
         <button id='restButton' class='controlButton' onclick='rest()'>rest</button>
         <button id='invButton' class='controlButton' onclick='inventory()'>inventory</button>
         <button id='partyButton' class='controlButton' onclick='partyStats()'>posse</button>
-        <!-- <button id='optionsButton' class='controlButton' onclick='options()'>options</button> -->
+        <button id='optionsButton' class='controlButton' onclick='options()'>options</button>
     </section>
     <div id='posse'>
         Your Pokemon Posse:
@@ -45,6 +45,10 @@
     <div id='inventory'>
         Your items:
     </div>
-</body>
+    <div id='options'>
+        <button onclick="closeOptions(); newGame(); unPause();">start over</button>
+        <button onclick="closeOptions()">close</button>
+    </div>
+    </body>
 </html>
 
