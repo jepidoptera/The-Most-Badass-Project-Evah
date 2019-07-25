@@ -1,9 +1,13 @@
 // jshint esversion:6
+// player object is set up so that whenever you change a value,
+// that value is automatically uploaded to firebase
 var playerID;
 var player = {
     /**
      * @param {number} value
-     */
+    */
+    // name is read-only
+    get name() { return this._username; },
     get money() {return this._money;},
     set money(value) {
         if (value == undefined) return;
@@ -93,7 +97,7 @@ var player = {
 var loaded = false;
 
 var playerRef;
-$(document).ready(() => {
+$(() => {
     // set up database connection
     var config = {
         apiKey: "AIzaSyAqd2f2a2iFdzSMNqsGzt8ShzjJ_VxSG9w",
@@ -105,20 +109,22 @@ $(document).ready(() => {
     };
     firebase.initializeApp(config);
     player.ID = getUrlParameter('playerID');
-    playerRef = firebase.database().ref('users/' + player.ID + "/gameInfo");
+    playerRef = firebase.database().ref('users/' + player.ID);
     // listen for player value (download entire player object every time anything changes)
     playerRef.on('value', (value) => {
         if (!value.val()) return;
-        player._food = value.val().food;
-        player._kibble = value.val().kibble;
-        player._money = value.val().money;
-        player._pokeballs = value.val().pokeballs;
-        player.pokemon._pokes = value.val().pokemon || [];
-        player._speed = value.val().speed;
-        player._time = value.val().time;
-        player._day = value.val().day;
-        player.posse = value.val().posse;
-        player._location = value.val().location;
+        player._username = value.val().username;
+        let gameInfo = value.val().gameInfo;
+        player._food = gameInfo.food;
+        player._kibble = gameInfo.kibble;
+        player._money = gameInfo.money;
+        player._pokeballs = gameInfo.pokeballs;
+        player.pokemon._pokes = gameInfo.pokemon || [];
+        player._speed = gameInfo.speed;
+        player._time = gameInfo.time;
+        player._day = gameInfo.day;
+        player.posse = gameInfo.posse;
+        player._location = gameInfo.location;
         if (firebaseReady && !loaded) {
             loaded = true;
             firebaseReady();
