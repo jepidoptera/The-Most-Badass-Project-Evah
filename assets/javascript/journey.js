@@ -110,7 +110,8 @@ var trail = [
         type: 'city',
         name: 'Pokegonemon',
         scenery: [{
-            imgRange: { min: 0, max: 0 },
+            type: 'city',
+            imgRange: { min: 1, max: 1 },
             height: 150,
             width: 250,
             distance: 1,
@@ -136,7 +137,7 @@ var trail = [
         length: 0
     }
 ];
-// reset to default params for each trail location
+// establish default params for each trail location
 for (i = 0; i < trail.length; i++) {
     // starting at the beginning, of course
     trail[i].frames = 0; 
@@ -151,9 +152,10 @@ for (i = 0; i < trail.length; i++) {
             // we'll re-set it once that instance appears, and so on
             item.next = Math.random() * item.spacing;
             // load the corresponding images
-            for (let n = item.imgRange.min; n < item.imgRange.max; n++) {
+            item.image = item.image || [];
+            for (let n = item.imgRange.min; n <= item.imgRange.max; n++) {
                 let image = document.createElement('img');
-                image.src = `../images/${item.type + n}.png`;
+                image.src = `./assets/images/${item.type + n}.png`;
                 // push to this scenery item's image array
                 item.image.push(image);
             }
@@ -287,7 +289,7 @@ class pokePosse {
 class backGroundImage {
     constructor (prototype) {
         // position
-        this.x = 110;
+        this.x = 1.1;
         var maxDistance = trailHeight - 45;
         var distance = prototype.distance;
         if (distance > maxDistance) distance = maxDistance;
@@ -296,27 +298,29 @@ class backGroundImage {
         if (this.y > trailHeight) this.y += 10;
         // construct image
         var size = Math.random() / (2 ** (distance / maxDistance));
-        var offset = prototype.offset || ["-100%", "-100%"];
-        var height = prototype.height || prototype.sizeRange.min.y + size * (prototype.sizeRange.max.y - prototype.sizeRange.min.y);
-        var width = prototype.width || prototype.sizeRange.min.x + size * (prototype.sizeRange.max.x - prototype.sizeRange.min.x);
-        var imgName = prototype.image || 'https://raw.githubusercontent.com/jepidoptera/The-Most-Badass-Project-Evah/master/assets/images/' + prototype.type + parseInt(Math.random() * (prototype.imgRange.max - prototype.imgRange.min + 1) + prototype.imgRange.min) + ".png";
-        this.img = $('<img>')
-            .attr('src', imgName)
-            .css({
-                'position': 'absolute', 
-                'left': this.x + "%", 
-                'top': this.y + "%", 
-                'height': height + 'px', 
-                'width': width + 'px', 
-                "transform": "translate(" + offset[0] + ", " + offset[1] + ")"})
-            .addClass('ordered');
-        $('#walkingPath').append(this.img);
+        this.offset = prototype.offset || [1, 1];
+        this.height = prototype.height || prototype.sizeRange.min.y + size * (prototype.sizeRange.max.y - prototype.sizeRange.min.y);
+        this.width = prototype.width || prototype.sizeRange.min.x + size * (prototype.sizeRange.max.x - prototype.sizeRange.min.x);
+        // choose an available image from the prototype
+        this.img = prototype.image[parseInt(Math.random() * prototype.image.length)];
+        
+        //     = $('<img>')
+        //     .attr('src', imgName)
+        //     .css({
+        //         'position': 'absolute', 
+        //         'left': this.x + "%", 
+        //         'top': this.y + "%", 
+        //         'height': height + 'px', 
+        //         'width': width + 'px', 
+        //         "transform": "translate(" + offset[0] + ", " + offset[1] + ")"})
+        //     .addClass('ordered');
+        // $('#walkingPath').append(this.img);
         this.active = true;
         this.ordered = false;
     }
     move() {
         // move one frame
-        this.x -= scrollSpeed * 5 / frameRate;
+        this.x -= scrollSpeed * .05 / frameRate;
         if (!pause) this.calcPosition();
         // delete when off screen
         if (this.x < 0) {
@@ -324,12 +328,12 @@ class backGroundImage {
         }
     }
     remove() {
-        this.img.remove();
+        // this.img.remove();
         this.active = false;
     }
     calcPosition() {
         // position on screen according to object coordinates
-        this.img.css({'left': this.x + "%", 'top': this.y + "%"});
+        // this.img.css({'left': this.x + "%", 'top': this.y + "%"});
     }
 }
 var backgroundImages = [];
@@ -365,16 +369,20 @@ function firebaseReady() {
     }
     pause = true;
     orderZIndex(you);
-    if (player.location) {
+    if (player.location === 'hell') {
         // pick up where we left off
-        loadGame();
+        // loadGame();
     }
     else {
         newGame();
         // say hi
         msgBox('your journey begins', 
-        'Leaving behind your beleaguered home city of Orepoke, \
-        you look ahead, over many obstacles, to your legendary destination: Pokegonemon.',
+        'Your beloved home city of Orepoke lies in ruins. Since 1848, \
+        90% of its people have died from plagues of dysentery and cholera, \
+        and the survivors are beset by a crippling shortage of wagon axles. \
+        There is no future here. You, intrepid adventurer, \
+        look ahead, over many obstacles, to your legendary destination: \
+        the lost city of Pokegonemon.',
         dialogButtons([{
             text: "let's go",
             function: () => {
@@ -384,6 +392,17 @@ function firebaseReady() {
         }]));
     }
 }
+
+var canvas;
+var ctx; // canvas context
+
+// load canvas and its context when ready
+$(function () {
+    canvas = document.getElementById("gameCanvas");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    ctx = canvas.getContext("2d");
+})
 
 function newGame() {
     // give player initial stats
@@ -486,6 +505,7 @@ function gameLoop () {
             else item.next -= scrollSpeed;
         });
     }
+
     // switch edge location when it's run out
     if (trail[atHorizon].frames > (trail[atHorizon].length - 1) * frameRate) {
         atHorizon ++;
@@ -494,18 +514,23 @@ function gameLoop () {
     }
     // keep player info updated
     player.location = currentLocation;
+
     // image animation and garbage collection
     var activeImages = [];
+    
     backgroundImages.forEach((image) => {
         image.move();
-        // give it a z-index according to its y attribute (if that hasn't been done yet)
-        // jquery seems to take one frame to change the css value from 'percent' to 'px'
-        // so it has to be done here, this was, instead of by the constructor
-        if (!image.ordered) orderZIndex(image.img);
-        // still active - keep it on the list
+        // if it's still on the screen after that, add it to the active list
         if (image.active) activeImages.push(image);
     });
-    backgroundImages = activeImages;
+
+    // sort the images according to their vertical position
+    backgroundImages = activeImages.sort((a, b) => {
+        return a.y > b.y ? 1 : -1;
+    });
+
+    // draw images
+    drawCanvas();
 
     // pokemon hop
     posse.forEach((pokemon) =>{
@@ -533,6 +558,60 @@ function gameLoop () {
             gameLoop();
         }, 1000 / frameRate - frameLength);
     }     
+}
+
+function drawCanvas() {
+    // gotta wait til the canvas is loaded
+    if (!canvas) return;
+    // draw in the basics: sky, sun, ground, road
+    // sky blue
+    ctx.beginPath();
+    ctx.fillStyle = "#8888ff";
+    ctx.rect(0, 0, canvas.width, canvas.height / 2);
+    ctx.fill();
+
+    // yellow sun
+    ctx.beginPath();
+    var x = -Math.sin(Math.PI * (0.5 + player.time / 24)) * .5 + .5;
+    var y = Math.cos(Math.PI * (0.5 + player.time / 24)) * .45 + .45;
+    ctx.arc(canvas.width * x, canvas.height * y, 25, 0, 2 * Math.PI);
+    ctx.fillStyle = "#ffff00";
+    ctx.fill();
+    // $("#sun").css({ 'top': y + '%', 'left': x + '%' });
+
+    // green earth
+    ctx.beginPath();
+    ctx.fillStyle = "#00bb00";
+    ctx.rect(0, canvas.height * 0.4, canvas.width, canvas.height * 0.6);
+    ctx.fill();
+
+    // brown path
+    ctx.beginPath();
+    ctx.fillStyle = "#886600";
+    ctx.rect(0, canvas.height * 0.65, canvas.width, canvas.height / 20);
+    ctx.fill();
+
+
+    // save the unrotated context of the canvas so we can restore it later
+    // the alternative is to untranslate & unrotate after drawing
+    // ctx.save();
+
+    backgroundImages.forEach(image => {
+        ctx.drawImage(image.img, image.x * canvas.width, image.y * canvas.height);
+    })
+    // move to the center of the canvas
+    // ctx.translate(canvas.width / 2, canvas.height / 2);
+
+    // // rotate the canvas to the specified degrees
+    // ctx.rotate(degrees * Math.PI / 180);
+
+    // // draw the image
+    // // since the context is rotated, the image will be rotated also
+    // ctx.drawImage(image, canvas.width / 2 - image.width / 2, canvas.height / 2 - image.width / 2);
+    // ctx.drawImage(image, -image.width / 2, -image.width / 2);
+
+    // // we’re done with the rotating so restore the unrotated context
+    // ctx.restore();
 }
 
 function moveSun() {
@@ -585,9 +664,9 @@ function arriveAt(location) {
 
 function orderZIndex(element) {
     // order z-coordinate by y coordinate and optional offset value
-    var zindex = parseInt($(element).css('top'));
-    var offset =  parseInt($(element).attr('z-offset')) || 0;
-    element.css({"z-index": zindex + offset});
+    // var zindex = parseInt($(element).css('top'));
+    // var offset =  parseInt($(element).attr('z-offset')) || 0;
+    // element.css({"z-index": zindex + offset});
 }
 
 function unPause() {
