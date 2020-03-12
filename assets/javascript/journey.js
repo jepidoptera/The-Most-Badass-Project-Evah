@@ -1,12 +1,12 @@
 // jshint esversion: 6
 // jshint multistr: true
-var trail = [
-    {
+const trail = [
+    TrailLocation({
         type: 'nowhere',
         name: 'the beginning of infinity',
         length: 1000000000001
-    },
-    {
+    }),
+    TrailLocation({
         type: 'city',
         name: 'Orepoke',
         scenery: [{
@@ -15,8 +15,8 @@ var trail = [
             width: 250,
             distance: 1,
         }],
-    },
-    {
+    }),
+    TrailLocation({
         type: 'suburb',
         name: 'The Outskirts of Orepoke',
         scenery: [
@@ -29,8 +29,8 @@ var trail = [
             }
         ],
         length: 10
-    },
-    {
+    }),
+    TrailLocation({
         type: 'forest',
         name: 'The Forest of Doom',
         scenery: [
@@ -44,77 +44,42 @@ var trail = [
         ],
         length: 45 // seconds
 
-    },
-    {
+    }),
+    TrailLocation({
         type: 'desert',
         name: 'The Desert of Dryness',
         scenery: [
-            {
-                type: 'cactus',
-                spacing: 100,
-                sizeRange: {min: {x: 25, y: 25}, max: {x: 100, y: 100}},
-                get distance() {return Math.random() * 20 - 2;},
-                imgRange: {min: 0, max: 1}
-            },
-            {
-                type: 'rock',
-                spacing: 145,
-                sizeRange: {min: {x: 10, y: 5}, max: {x: 50, y: 25}},
-                imgRange: {min: 0, max: 3},
-                get distance() {return Math.random() * 20 - 2;}
-            }
+            SceneObject("cactus"),
+            SceneObject("rock")
         ],
         length: 36 // seconds
 
-    },
-    {
+    }),
+    TrailLocation({
         type: 'mountains',
         name: 'The Mainstay Mountains',
         scenery: [
-            {
-                type: 'mountain',
-                spacing: 75,
-                sizeRange: {min: {x: 200, y: 150}, max: {x: 400, y: 300}},
-                imgRange: {min: 0, max: 5},
-                offset: ["-100%", "-75%"],
-                get distance() {return Math.sqrt(Math.random()) * 50;}
-            },
-            {
-                type: 'rock',
-                spacing: 145,
-                sizeRange: {min: {x: 10, y: 5}, max: {x: 50, y: 25}},
-                imgRange: {min: 0, max: 3},
-                get distance() {return Math.random() * 5 - 2;}
-            }
+            SceneObject("mountain"),
+            SceneObject("rock")
         ],
         length: 32 // seconds
 
-    },
-    {
+    }),
+    TrailLocation({
         type: 'forest',
         name: 'The Great Palm Jungle',
         scenery: [
-            {
-                type: 'palmtree',
-                spacing: 8,
-                sizeRange: {min: {x: 25, y: 50}, max: {x: 200, y: 200}},
-                imgRange: {min: 0, max: 4},
-                get distance() {return Math.random() * 50 - 2;}
-            }
+            SceneObject('palm tree')
         ],
         length: 75 // seconds
 
-    },
-    {
+    }),
+    TrailLocation({
         type: 'city',
         name: 'Pokegonemon',
-        scenery: [{
-            image: 'https://raw.githubusercontent.com/jepidoptera/The-Most-Badass-Project-Evah/master/assets/images/pokegonemon.png',
-            height: 150,
-            width: 250,
-            distance: 1,
-            offset: ['-50%', '-100%']
-        }],
+        scenery: [
+            SceneObject("Pokegonemon")
+        ],
         function: () => {
             // you won
             msgBox("Yay", "You have reached the legendary city!  Rejoice!", 
@@ -123,32 +88,80 @@ var trail = [
                 function: win // TODO
             }]));
         }
-    },
-    {
+    }),
+    TrailLocation({
         type: 'nothing',
         name: 'the Great Beyond',
         length: 1000000000001
-    },
-    {
+    }),
+    TrailLocation({
         type: 'the end',
         name: 'infinity',
         length: 0
-    }
+    })
 ];
-// default params
-for (i = 0; i < trail.length; i ++) {
-    trail[i].frames = 0; 
-    trail[i].length = trail[i].length || 0;
-    if (i < trail.length) trail[i].next = trail[i+1];
-    if (trail[i].scenery) {
-        trail[i].scenery.forEach(item => {
-            item.spacing = item.spacing || 0;
-            item.next = Math.random() * item.spacing;
-        });
+
+function TrailLocation(params) {
+    return {
+        ...params,
+        progress: 0,
+        length: params.length || 0,
+        scenery: params.scenery 
+            ? params.scenery.map(item => {
+                return {
+                        ...item,
+                        spacing: item.spacing || 0,
+                        next: Math.random() * item.spacing
+                    }
+                })
+            : undefined
     }
 }
 
-var events = {
+class SceneObject {
+    constructor(type) {
+        this.type = type;
+        if (type == "rock") {
+            this.spacing = 145;
+            this.sizeRange = { min: { x: 10, y: 5 }, max: { x: 50, y: 25 } };
+            this.imgRange = { min: 0, max: 3 };
+            this.distance = () => { return Math.random() * 5 - 2};
+        }
+        if (type == "moutain") {
+            this.spacing = 75;
+            this.sizeRange = { min: { x: 200, y: 150 }, max: { x: 400, y: 300 } };
+            this.imgRange = { min: 0, max: 5 };
+            this.distance = () => { return Math.sqrt(Math.random()) * 50 };
+            this.offset = ["-100%", "-75%"];
+        }
+        if (type == "Pokegonemon") {
+            this.image = 'https://raw.githubusercontent.com/jepidoptera/The-Most-Badass-Project-Evah/master/assets/images/pokegonemon.png';
+            this.height = 150;
+            this.width = 250;
+            this.distance = 1;
+            this.offset = ['-50%', '-100%']
+        }
+        if (type == "palm tree") {
+            this.spacing = 8,
+            this.sizeRange = {min: {x: 25, y: 50}, max: {x: 200, y: 200}},
+            this.imgRange = {min: 0, max: 4},
+            this.distance = () => {return Math.random() * 50 - 2}
+        }
+        if (type == "cactus") {
+            this.spacing = 100,
+            this.sizeRange = {min: {x: 25, y: 25}, max: {x: 100, y: 100}},
+            this.distance = () => { return Math.random() * 20 - 2 },
+            this.imgRange = {min: 0, max: 1}
+        }
+        return this;
+    }
+    /**
+     * @returns {number}
+     */
+    get distance()
+}
+
+const events = {
     ebola: {
         name: "ebola",
         occurrences: 0,
@@ -391,7 +404,7 @@ function newGame() {
     // remove all background objects
     backgroundImages.forEach((image) => {image.remove();});
     // reset frame count
-    trail.forEach((location) => {location.frames = 0;});
+    trail.forEach((location) => {location.progress = 0;});
     // construct a new party from scratch
     posse = ['charizard', 'jigglypuff', 'articuno', 'ninetales', 'snorlax'].map((name, i) => {
         return new pokePosse(name, 10, [], 25 - i * 4 - 4, 65, i * 0.2);
@@ -424,13 +437,13 @@ function loadGame() {
     activeLocations = [currentLocation];
     // rewind
     var screenWidth = 20 * frameRate;
-    currentLocation.frames = player.location.frames - screenWidth;
-    while (currentLocation.frames < 0 && atHorizon > 0) {
+    currentLocation.progress = player.location.progress - screenWidth;
+    while (currentLocation.progress < 0 && atHorizon > 0) {
         // rewound past the beginning of the current location - go back by one
         atHorizon --;
         currentLocation = trail[atHorizon];
-        currentLocation.frames = currentLocation.length * frameRate + trail[atHorizon + 1].frames;
-        trail[atHorizon + 1].frames = 0;
+        currentLocation.progress = currentLocation.length * frameRate + trail[atHorizon + 1].progress;
+        trail[atHorizon + 1].progress = 0;
         activeLocations = [currentLocation];
     }
     nextLocation = trail[atHorizon + 1];
@@ -449,7 +462,7 @@ function gameLoop () {
 
     // move along (for each on-screen location)
     activeLocations.forEach(location => {
-        location.frames += scrollSpeed;
+        location.progress += scrollSpeed;
     });
     // time does pass
     if (!pause) {
@@ -473,7 +486,7 @@ function gameLoop () {
         });
     }
     // switch edge location when it's run out
-    if (trail[atHorizon].frames > (trail[atHorizon].length - 1) * frameRate) {
+    if (trail[atHorizon].progress > (trail[atHorizon].length - 1) * frameRate) {
         atHorizon ++;
         activeLocations.push(trail[atHorizon]);
         console.log(trail[atHorizon].name + " appears on the horizon");
@@ -507,7 +520,7 @@ function gameLoop () {
     narrate();
 
     // are we there yet?
-    if (currentLocation.frames >= currentLocation.length * frameRate + yourPosition) {
+    if (currentLocation.progress >= currentLocation.length * frameRate + yourPosition) {
         // we are here!
         arriveAt(nextLocation);
     }
@@ -545,11 +558,11 @@ function narrate() {
     var distanceTo;
     if (trail[atHorizon] == nextLocation) {
         // a new location is on the horizon, but you aren't there yet
-        distanceTo = parseInt((yourPosition - trail[atHorizon].frames) / frameRate) + 1;
+        distanceTo = parseInt((yourPosition - trail[atHorizon].progress) / frameRate) + 1;
     }
     //                         measured in seconds        in frames      in frames         ---> convert to seconds (miles)    
     else {
-        distanceTo = parseInt(currentLocation.length + (yourPosition - currentLocation.frames) / frameRate) + 1;
+        distanceTo = parseInt(currentLocation.length + (yourPosition - currentLocation.progress) / frameRate) + 1;
         if (distanceTo == 1) distanceTo = 0;
     }
     $("#narrative").html(
