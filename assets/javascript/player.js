@@ -58,7 +58,7 @@ var player = {
         if (value == undefined) return;
         // copy just part of the object, the rest is hardcoded
         this._location = {name: value.name,
-        frames: value.frames};
+        progress: value.progress};
         firebase.database().ref('users/' + player.ID + "/gameInfo/location").set(this._location);
     },
     pokemon: {
