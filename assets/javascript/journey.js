@@ -1,5 +1,51 @@
 // jshint esversion: 6
 // jshint multistr: true
+
+class SceneObject {
+    constructor(type) {
+        this.type = type;
+        if (type == "rock") {
+            this.spacing = 145;
+            this.sizeRange = { min: { x: 10, y: 5 }, max: { x: 50, y: 25 } };
+            this.imgRange = { min: 0, max: 3 };
+            this.distance = () => { return Math.random() * 5 - 2};
+        }
+        if (type == "moutain") {
+            this.spacing = 75;
+            this.sizeRange = { min: { x: 200, y: 150 }, max: { x: 400, y: 300 } };
+            this.imgRange = { min: 0, max: 5 };
+            this.distance = () => { return Math.sqrt(Math.random()) * 50 };
+            this.offset = ["-100%", "-75%"];
+        }
+        if (type == "Pokegonemon") {
+            this.image = 'https://raw.githubusercontent.com/jepidoptera/The-Most-Badass-Project-Evah/master/assets/images/pokegonemon.png';
+            this.height = 150;
+            this.width = 250;
+            this.distance = () => 1;
+            this.offset = ['-50%', '-100%']
+        }
+        if (type == "palm tree") {
+            this.spacing = 8,
+            this.sizeRange = {min: {x: 25, y: 50}, max: {x: 200, y: 200}},
+            this.imgRange = {min: 0, max: 4},
+            this.distance = () => {return Math.random() * 50 - 2}
+        }
+        if (type == "cactus") {
+            this.spacing = 100,
+            this.sizeRange = {min: {x: 25, y: 25}, max: {x: 100, y: 100}},
+            this.distance = () => { return Math.random() * 20 - 2 },
+            this.imgRange = {min: 0, max: 1}
+        }
+        return this;
+    }
+    /**
+     * @returns {number}
+     */
+    get distance() {return this._distance()}
+    set distance(newFunction) {this._distance = newFunction}
+}
+
+
 const trail = [
     TrailLocation({
         type: 'nowhere',
@@ -49,8 +95,8 @@ const trail = [
         type: 'desert',
         name: 'The Desert of Dryness',
         scenery: [
-            SceneObject("cactus"),
-            SceneObject("rock")
+            new SceneObject("cactus"),
+            new SceneObject("rock")
         ],
         length: 36 // seconds
 
@@ -59,8 +105,8 @@ const trail = [
         type: 'mountains',
         name: 'The Mainstay Mountains',
         scenery: [
-            SceneObject("mountain"),
-            SceneObject("rock")
+            new SceneObject("mountain"),
+            new SceneObject("rock")
         ],
         length: 32 // seconds
 
@@ -69,7 +115,7 @@ const trail = [
         type: 'forest',
         name: 'The Great Palm Jungle',
         scenery: [
-            SceneObject('palm tree')
+            new SceneObject('palm tree')
         ],
         length: 75 // seconds
 
@@ -78,7 +124,7 @@ const trail = [
         type: 'city',
         name: 'Pokegonemon',
         scenery: [
-            SceneObject("Pokegonemon")
+            new SceneObject("Pokegonemon")
         ],
         function: () => {
             // you won
@@ -102,63 +148,18 @@ const trail = [
 ];
 
 function TrailLocation(params) {
-    return {
-        ...params,
-        progress: 0,
-        length: params.length || 0,
-        scenery: params.scenery 
+    trailLocation = params;
+    trailLocation.progress= 0;
+        trailLocation.length = params.length || 0;
+        trailLocation.scenery = params.scenery 
             ? params.scenery.map(item => {
-                return {
-                        ...item,
-                        spacing: item.spacing || 0,
-                        next: Math.random() * item.spacing
-                    }
+                    let sceneItem = item;
+                    sceneItem.spacing = item.spacing || 0;
+                    sceneItem.next = Math.random() * item.spacing;
+                    return sceneItem;
                 })
             : undefined
-    }
-}
-
-class SceneObject {
-    constructor(type) {
-        this.type = type;
-        if (type == "rock") {
-            this.spacing = 145;
-            this.sizeRange = { min: { x: 10, y: 5 }, max: { x: 50, y: 25 } };
-            this.imgRange = { min: 0, max: 3 };
-            this.distance = () => { return Math.random() * 5 - 2};
-        }
-        if (type == "moutain") {
-            this.spacing = 75;
-            this.sizeRange = { min: { x: 200, y: 150 }, max: { x: 400, y: 300 } };
-            this.imgRange = { min: 0, max: 5 };
-            this.distance = () => { return Math.sqrt(Math.random()) * 50 };
-            this.offset = ["-100%", "-75%"];
-        }
-        if (type == "Pokegonemon") {
-            this.image = 'https://raw.githubusercontent.com/jepidoptera/The-Most-Badass-Project-Evah/master/assets/images/pokegonemon.png';
-            this.height = 150;
-            this.width = 250;
-            this.distance = 1;
-            this.offset = ['-50%', '-100%']
-        }
-        if (type == "palm tree") {
-            this.spacing = 8,
-            this.sizeRange = {min: {x: 25, y: 50}, max: {x: 200, y: 200}},
-            this.imgRange = {min: 0, max: 4},
-            this.distance = () => {return Math.random() * 50 - 2}
-        }
-        if (type == "cactus") {
-            this.spacing = 100,
-            this.sizeRange = {min: {x: 25, y: 25}, max: {x: 100, y: 100}},
-            this.distance = () => { return Math.random() * 20 - 2 },
-            this.imgRange = {min: 0, max: 1}
-        }
-        return this;
-    }
-    /**
-     * @returns {number}
-     */
-    get distance()
+    return trailLocation;
 }
 
 const events = {
