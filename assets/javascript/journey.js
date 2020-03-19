@@ -116,8 +116,48 @@ const SceneObjects = {
     })
 }
 
-const trail = {
-    locations: [
+class Trail {
+    constructor(locations) {
+        this.locations = locations;
+        this.scenery = [];
+        this.currentLocation = this.locations[0]
+    }
+    updateLocation() {
+        this.currentLocation = this.locationAt(player.progress);
+        this.atHorizon = this.locationAt(player.progress + canvas.metrics.screen_length);
+    }
+    locationAt(progress) {
+        let progressTotal = 0;
+        let location = this.locations[0];
+        for (n in this.locations) {
+            progressTotal += this.locations[n].length;
+            if (progressTotal > progress) {
+                location = this.locations[n];
+                break;
+            }
+        }
+        return location;
+    }
+    travel() {
+        player.progress += 1/ canvas.metrics.frameRate;
+        this.updateLocation();
+        // make new scenery
+        this.atHorizon.scenery.forEach(element => {
+            if (Math.random() * element.spacing < 1) {
+                this.scenery.push(new BackGroundImage(element));
+            }
+        });
+        // move along existing scenery
+        let remainingSceneItems = [];
+        for (n in this.scenery) {
+            this.scenery[n].x -= 100 / canvas.metrics.screen_length / canvas.metrics.frameRate;
+            if (this.scenery[n].x > -10) remainingSceneItems.push(this.scenery[n]);
+        }
+        this.scenery = remainingSceneItems.sort((a, b) => {return a.y > b.y ? -1 : 1})
+    }
+}
+
+const trail = new Trail ([
         TrailLocation({
             type: 'nowhere',
             name: 'what you leave behind',
@@ -204,47 +244,7 @@ const trail = {
             name: 'infinity',
             length: 0
         })
-    ],
-    updateLocation: () => {
-        trail.currentLocation = trail.locationAt(player.progress);
-        trail.atHorizon = trail.locationAt(player.progress + trail.metrics.screen_length);
-    },
-    locationAt: (progress) => {
-        let progressTotal = 0;
-        let location = trail.locations[0];
-        for (n in trail.locations) {
-            progressTotal += trail.locations[n].length;
-            if (progressTotal > progress) {
-                location = trail.locations[n];
-                break;
-            }
-        }
-        return location;
-    },
-    metrics: {
-        frameRate: 30,
-        screen_width: 1000, // arbitrary units
-        screen_length: 10, // seconds
-    },
-    scenery: [],
-    travel: () => {
-        player.progress += 1/ trail.metrics.frameRate;
-        trail.updateLocation();
-        // make new scenery
-        trail.atHorizon.scenery.forEach(element => {
-            if (Math.random() * element.spacing < 1) {
-                trail.scenery.push(new BackGroundImage(element));
-            }
-        });
-        // move along existing scenery
-        let remainingSceneItems = [];
-        for (n in trail.scenery) {
-            trail.scenery[n].x -= 100 / trail.metrics.screen_length / trail.metrics.frameRate;
-            if (trail.scenery[n].x > -10) remainingSceneItems.push(trail.scenery[n]);
-        }
-        trail.scenery = remainingSceneItems.sort((a, b) => {return a.y > b.y ? -1 : 1})
-    }
-};
+    ])
 
 class Canvas {
     constructor () {
@@ -253,6 +253,12 @@ class Canvas {
         this.backGround = document.getElementById("backgroundCanvas");
         this.backgroundCtx = this.backGround.getContext('2d');
     }
+    metrics = {
+        frameRate: 30,
+        screen_width: 1000, // arbitrary units
+        screen_length: 10, // seconds
+    }
+
     draw = () => {
         let foregroundHeight = 100 - trailHeight;
         this.foregroundCtx.clearRect(0, 0, this.foreGround.width, this.foreGround.height);;
