@@ -10,11 +10,8 @@ var you = $('<img>')
 var frameRate = 30;
 var pause = false;
 var exit = false;
-var trailHeight = 65;
-// how many frames does it take for a thing from the right side of the screen
-// to reach your stick figure animation?
-// when frames / framerate * speed = 75
-// so frames / framerate / speed = 1%, * 75 = ...whatever.  it works, right?
+var trailHeight = 30;
+
 var yourPosition = 15 * frameRate;
 var atHorizon = 1;
 var activeLocations;
@@ -47,6 +44,7 @@ class SceneObject {
                 this.images.push($("<img>").attr("src", './assets/images/' + this.type + n + ".png")[0])
             }
         }
+        this.isForeground = params.isForeground || (() => false);
         return this;
     }
     /**
@@ -54,6 +52,11 @@ class SceneObject {
      */
     get distance() {return this._distance()}
     set distance(newFunction) {this._distance = newFunction}
+    /**
+     * @returns {number}
+     */
+    get isForeground() {return this._isForeGround()}
+    set isForeground(newFunction) {this._isForeGround = newFunction}
 }
 
 const SceneObjects = {
@@ -69,7 +72,7 @@ const SceneObjects = {
         spacing: 75,
         sizeRange: { min: { x: 200, y: 150 }, max: { x: 400, y: 300 } },
         imgRange: { min: 0, max: 5 },
-        distance: () => { return 50 + Math.sqrt(Math.random()) * 50 },
+        distance: () => { return 30 + Math.sqrt(Math.random()) * 50 },
         offset: {x: -100, y: -75},
     }),
     pokegonemon: new SceneObject ({
@@ -85,28 +88,32 @@ const SceneObjects = {
         spacing: 8,
         sizeRange: {min: {x: 25, y: 50}, max: {x: 200, y: 200}},
         imgRange: {min: 0, max: 4},
-        distance: () => {return Math.random() * 100}
+        foreground: (Math.random() * 100 < 1.5) ? true : false,
+        distance: () => 100 - Math.random() * Math.random() * 100
     }),
     cactus: new SceneObject ({
         type: "cactus",
         spacing: 100,
         sizeRange: {min: {x: 25, y: 25}, max: {x: 100, y: 100}},
         imgRange: {min: 0, max: 1},
-        distance: () => { return Math.random() * 100 }
+        foreground: (Math.random() * 100 < 1.5) ? true : false,
+        distance: () => 100 - Math.random() * Math.random() * 100
     }),
     house: new SceneObject ({
         type: "house",
         spacing: 28,
         sizeRange: {min: {x: 25, y: 25}, max: {x: 50, y: 50}},
         imgRange: {min: 0, max: 2},
-        distance: () => { return Math.random() * 100 }
+        foreground: (Math.random() * 100 < 1.5) ? true : false,
+        distance: () => 100 - Math.random() * Math.random() * 100
     }),
     tree: new SceneObject ({
         type: 'tree',
-        spacing: 8,
-        sizeRange: {min: {x: 25, y: 50}, max: {x: 200, y: 200}},
+        spacing: 1,
+        sizeRange: {min: {x: 80, y: 160}, max: {x: 360, y: 360}},
         imgRange: {min: 0, max: 4},
-        distance: () => { return Math.random() * 100 }
+        isForeground: () => (Math.random() * 100 < 1.5) ? true : false,
+        distance: () => 100 - Math.random() * Math.random() * Math.random() * 100
     }),
     orepoke: new SceneObject ({
         image: './assets/images/city0.png',
@@ -129,7 +136,7 @@ class Trail {
     locationAt(progress) {
         let progressTotal = 0;
         let location = this.locations[0];
-        for (n in this.locations) {
+        for (let n in this.locations) {
             progressTotal += this.locations[n].length;
             if (progressTotal > progress) {
                 location = this.locations[n];
@@ -144,16 +151,16 @@ class Trail {
         // make new scenery
         this.atHorizon.scenery.forEach(element => {
             if (Math.random() * element.spacing < 1) {
-                this.scenery.push(new BackGroundImage(element));
+                this.scenery.push(new backgroundImage(element));
             }
         });
         // move along existing scenery
         let remainingSceneItems = [];
-        for (n in this.scenery) {
-            this.scenery[n].x -= 100 / canvas.metrics.screen_length / canvas.metrics.frameRate;
-            if (this.scenery[n].x > -10) remainingSceneItems.push(this.scenery[n]);
+        for (let n in this.scenery) {
+            this.scenery[n].x -= canvas.foreground.width / canvas.metrics.screen_length / canvas.metrics.frameRate;
+            if (this.scenery[n].x > -this.scenery[n].width) remainingSceneItems.push(this.scenery[n]);
         }
-        this.scenery = remainingSceneItems.sort((a, b) => {return a.y > b.y ? -1 : 1})
+        this.scenery = remainingSceneItems.sort((a, b) => {return a.distance > b.distance ? -1 : 1})
     }
 }
 
@@ -248,10 +255,10 @@ const trail = new Trail ([
 
 class Canvas {
     constructor () {
-        this.foreGround = document.getElementById("foregroundCanvas");
-        this.foregroundCtx = this.foreGround.getContext('2d');
-        this.backGround = document.getElementById("backgroundCanvas");
-        this.backgroundCtx = this.backGround.getContext('2d');
+        this.foreground = document.getElementById("foregroundCanvas");
+        this.foregroundCtx = this.foreground.getContext('2d');
+        this.background = document.getElementById("backgroundCanvas");
+        this.backgroundCtx = this.background.getContext('2d');
     }
     metrics = {
         frameRate: 30,
@@ -260,20 +267,17 @@ class Canvas {
     }
 
     draw = () => {
-        let foregroundHeight = 100 - trailHeight;
-        this.foregroundCtx.clearRect(0, 0, this.foreGround.width, this.foreGround.height);;
-        this.backgroundCtx.clearRect(0, 0, this.backGround.width, this.backGround.height);;
+        this.foregroundCtx.clearRect(0, 0, this.foreground.width, this.foreground.height);
+        this.backgroundCtx.clearRect(0, 0, this.background.width, this.background.height);
         trail.scenery.forEach(sceneObject => {
-            if (sceneObject.y < foregroundHeight) {
+            if (sceneObject.foreground) {
                 this.foregroundCtx.drawImage(sceneObject.img, 
-                    sceneObject.x / 100 * this.foreGround.width,
-                    sceneObject.y / 100 * this.foreGround.height,
+                    sceneObject.x, sceneObject.y,
                     sceneObject.width, sceneObject.height)
             }
             else {
                 this.backgroundCtx.drawImage(sceneObject.img, 
-                    sceneObject.x / 100 * this.backGround.width,
-                    sceneObject.y / 100 * this.backGround.height,
+                    sceneObject.x, sceneObject.y,
                     sceneObject.width, sceneObject.height)
             }
         })
@@ -351,32 +355,32 @@ class pokePosse {
         this.y = y;
         switch (name) {
         case "articuno":
-            this.height = 40;
-            this.width = 40;
+            this.height = 4;
+            this.width = 4;
             break;
         case "charizard":
-            this.height = 40;
-            this.width = 50;
+            this.height = 4;
+            this.width = 5;
             break;
         case "snorlax":
-            this.height = 40;
-            this.width = 40;
+            this.height = 4;
+            this.width = 4;
             break;
         case "jigglypuff":
-            this.height = 30;
-            this.width = 30;
+            this.height = 3;
+            this.width = 3;
             break;
         case "ninetales":
-            this.height = 40;
-            this.width = 50;
+            this.height = 4;
+            this.width = 5;
             break;
         }
         this.img = $("<img>").
             attr('src', './assets/images/' + this.name + ".png")
             .css({
                 'position': 'absolute', 
-                'height': this.height + 'px', 
-                'width': this.width + 'px', 
+                'height': this.height + 'vh', 
+                'width': this.width + 'vh', 
                 'left': this.x + "%", 
                 'top': this.y + "%", 
                 "transform": "translate(-50%, -50%)"})
@@ -389,7 +393,7 @@ class pokePosse {
     }
     hop() {
         // hoppin' down the trail
-        var y = Math.cos(Math.PI * (0.5 + (player.time + this._hop % 0.5))) * 4;
+        var y = Math.cos(Math.PI * (0.5 + (player.time + this._hop % 0.5))) * 3;
         // position on screen according to object coordinates
         this.img.css({'left': this.x + "%", 'top': (this.y - y) + "%"});
     }
@@ -417,106 +421,36 @@ class pokePosse {
     }
 }
 
-class BackGroundImage {
+class backgroundImage {
     constructor (prototype) {
-        this.x = 100;
+        this.x = canvas.foreground.width;
         this.img = prototype.images[Math.floor(Math.random() * prototype.images.length)];
-        this.y = prototype.distance;
-        let distanceFactor = (100 - this.y) ** 2 / 10000
-        this.width = (prototype.sizeRange.min.x + Math.random() * (prototype.sizeRange.max.x - prototype.sizeRange.min.x)) * distanceFactor;
-        this.height = (prototype.sizeRange.min.y + Math.random() * (prototype.sizeRange.max.y - prototype.sizeRange.min.y)) * distanceFactor;
+        this.distance = prototype.distance;
+        this.foreground = prototype.isForeground;
+        if (this.foreground) {
+            this.distance -= this.distance / .666;
+        }
+
+        let distanceFactor = (100 - this.distance) / 100;
+        this.size = Math.random();
+        this.width = 10 + (prototype.sizeRange.min.x + this.size * (prototype.sizeRange.max.x - prototype.sizeRange.min.x)) * distanceFactor;
+        this.height = 10 + (prototype.sizeRange.min.y + this.size * (prototype.sizeRange.max.y - prototype.sizeRange.min.y)) * distanceFactor;
+
+        let floor = (this.foreground) ? canvas.foreground.height * 2 : canvas.background.height;
+        if (this.foreground) distanceFactor -= 1;
+        this.y = distanceFactor * (floor - this.height);
     }
-    // constructor (prototype) {
-    //     // position
-    //     this.x = 110;
-    //     var maxDistance = trailHeight - 45;
-    //     var distance = prototype.distance;
-    //     if (distance > maxDistance) distance = maxDistance;
-    //     this.y = trailHeight - distance;
-    //     // keep the road clear
-    //     if (this.y > trailHeight) this.y += 10;
-    //     // construct image
-    //     var size = Math.random() / (2 ** (distance / maxDistance));
-    //     var offset = prototype.offset || ["-100%", "-100%"];
-    //     var height = prototype.height || prototype.sizeRange.min.y + size * (prototype.sizeRange.max.y - prototype.sizeRange.min.y);
-    //     var width = prototype.width || prototype.sizeRange.min.x + size * (prototype.sizeRange.max.x - prototype.sizeRange.min.x);
-    //     var imgName = prototype.image || 'https://raw.githubusercontent.com/jepidoptera/The-Most-Badass-Project-Evah/master/assets/images/' + prototype.type + parseInt(Math.random() * (prototype.imgRange.max - prototype.imgRange.min + 1) + prototype.imgRange.min) + ".png";
-    //     this.img = $('<img>')
-    //         .attr('src', imgName)
-    //         .css({
-    //             'position': 'absolute', 
-    //             'left': this.x + "%", 
-    //             'top': this.y + "%", 
-    //             'height': height + 'px', 
-    //             'width': width + 'px', 
-    //             "transform": "translate(" + offset[0] + ", " + offset[1] + ")"})
-    //         .addClass('ordered');
-    //     $('#walkingPath').append(this.img);
-    //     this.active = true;
-    //     this.ordered = false;
-    // }
-    // move() {
-    //     // move one frame
-    //     this.x -= scrollSpeed * 5 / frameRate;
-    //     if (!pause) this.calcPosition();
-    //     // delete when off screen
-    //     if (this.x < 0) {
-    //         this.remove();
-    //     }
-    // }
-    // remove() {
-    //     this.img.remove();
-    //     this.active = false;
-    // }
-    // calcPosition() {
-    //     // position on screen according to object coordinates
-    //     this.img.css({'left': this.x + "%", 'top': this.y + "%"});
-    // }
+
 }
 
 $(document).ready(() => {
     console.log("ready!");
     canvas = new Canvas();
-// })
 
-// $(document).onresize(() => {
-//     canvas.foreGround.width = $(document).width;
-//     canvas.foreGround.height = $(document).height * .30;
-//     canvas.backGround.height = $(document).height * .30;
-//     canvas.backGround.width = $(document).width;
-// })
-
-
-// function firebaseReady() {
-    // here we can append permanent objects to the DOM, after the document has loaded
     $('#walkingPath').append(you);
-    // ground segments, so we can have different terrain colors
-    for (i=0; i<12; i++) {
-        // TODO
-    }
 
     newGame();
     gameLoop();
-    // pause = true;
-    // orderZIndex(you);
-    // if (player.location) {
-    //     // pick up where we left off
-    //     loadGame();
-    // }
-    // else {
-    //     newGame();
-    //     // say hi
-    //     msgBox('your journey begins', 
-    //     'Leaving behind your beleaguered home city of Orepoke, \
-    //     you look ahead, over many obstacles, to your legendary destination: Pokegonemon.',
-    //     dialogButtons([{
-    //         text: "let's go",
-    //         function: () => {
-    //             unPause();
-    //             gameLoop();    
-    //         }
-    //     }]));
-    // }
 })
 
 function newGame() {
@@ -538,12 +472,9 @@ function newGame() {
     posse.forEach((pokemon) => {pokemon.remove();});
     // // remove all background objects
     trail.scenery = [];
-    // backgroundImages.forEach((image) => {image.remove();});
-    // // reset frame count
-    // trail.forEach((location) => {location.progress = 0;});
     // construct a new party from scratch
     posse = ['charizard', 'jigglypuff', 'articuno', 'ninetales', 'snorlax'].map((name, i) => {
-        return new pokePosse(name, 10, [], 25 - i * 4 - 4, 65, i * 0.2);
+        return new pokePosse(name, 10, [], 25 - i * 4 - 4, 78, i * 0.2);
     });
     player.posse = posse;
     player.time = 0;
@@ -608,39 +539,6 @@ function gameLoop () {
         // a new dawn
         if (player.time >= 24) nextDay();
     }
-
-    // bring in new scenery from the location which is currently at the edge of the screen
-    // if (trail.locations[atHorizon].scenery) {
-    //     trail.locations[atHorizon].scenery.forEach (item => {
-    //         // insert a scenery item of this type
-    //         if (item.next <= 0) {
-    //             backgroundImages.push(new backGroundImage(item));
-    //             item.next = parseInt(item.spacing * Math.random());
-    //         }
-    //         // count down to the next one
-    //         else item.next -= scrollSpeed;
-    //     });
-    // }
-    // // switch edge location when it's run out
-    // if (trail.locations[atHorizon].progress > (trail.locations[atHorizon].length - 1) * frameRate) {
-    //     atHorizon ++;
-    //     activeLocations.push(trail.locations[atHorizon]);
-    //     console.log(trail.locations[atHorizon].name + " appears on the horizon");
-    // }
-    // keep player info updated
-    // player.location = currentLocation;
-    // // image animation and garbage collection
-    // var activeImages = [];
-    // backgroundImages.forEach((image) => {
-    //     image.move();
-    //     // give it a z-index according to its y attribute (if that hasn't been done yet)
-    //     // jquery seems to take one frame to change the css value from 'percent' to 'px'
-    //     // so it has to be done here, this was, instead of by the constructor
-    //     if (!image.ordered) orderZIndex(image.img);
-    //     // still active - keep it on the list
-    //     if (image.active) activeImages.push(image);
-    // });
-    // backgroundImages = activeImages;
 
     trail.travel();
     canvas.draw();
