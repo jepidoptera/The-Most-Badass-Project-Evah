@@ -61,6 +61,12 @@ var player = {
         progress: value.progress};
         firebase.database().ref('users/' + player.ID + "/gameInfo/location").set(this._location);
     },
+    get progress() {return this._progress},
+    set progress(value) {
+        if (value == undefined) return;
+        this._progress = value;
+        firebase.database().ref('users/' + player.ID + "/gameInfo/progress").set(this._progress);
+    },
     pokemon: {
         _pokes: [],
         add(pokename, pokestats) {
@@ -133,3 +139,6 @@ function getUrlParameter(name) {
     return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
 }
 
+function firebaseReady() {
+    return;
+}
