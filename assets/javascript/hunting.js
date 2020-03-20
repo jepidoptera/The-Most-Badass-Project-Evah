@@ -23,7 +23,7 @@ class pokeball {
         this.active = false;
         this.size = 15;
         this.img = $("<img>")
-            .attr('src', 'https://raw.githubusercontent.com/jepidoptera/The-Most-Badass-Project-Evah/master/assets/images/pokeball.png')
+            .attr('src', './assets/images/pokeball.png')
             .css({"position": "absolute", "height": this.size + "px", "width": this.size + "px", "transform": "translate (-50%, -50%)"})
             .hide();
     }
@@ -114,7 +114,7 @@ class tree {
         this.size = Math.random() * 150 + 50;
         // construct tree image
         this.img = $('<img>')
-            .attr('src', 'https://raw.githubusercontent.com/jepidoptera/The-Most-Badass-Project-Evah/master/assets/images/tree' + parseInt(Math.random() * numTrees) + ".png")
+            .attr('src', './assets/images/tree' + parseInt(Math.random() * numTrees) + ".png")
             .css({'position': 'absolute', 'left': this.x + "vw", 'top': this.y + "vw", 'height': this.size + 'px', 'width': this.size + 'px', "transform": "translate(-0%, -100%)"})
             .addClass('ordered');
         $("#huntingField").append(this.img);
@@ -137,7 +137,7 @@ class creature {
         this.motion = 1;
         this.active = true;
         this.caught = false;
-        var imgName = 'https://raw.githubusercontent.com/jepidoptera/The-Most-Badass-Project-Evah/master/assets/images/' + type + ".png";
+        var imgName = './assets/images/' + type + ".png";
 
         if (['deer', 'bison', 'squirrel'].includes(this.type)) {
             this.x = Math.random() < 0.5 ? -this.size : xbound + this.size;
@@ -147,7 +147,7 @@ class creature {
             if (this.type == 'deer') this.size = 50;
             if (this.type == 'bison') {this.height = 80; this.width = 100; this.size = 80;}
             if (this.type == 'squirrel') this.size = 25;
-            imgName = "https://raw.githubusercontent.com/jepidoptera/The-Most-Badass-Project-Evah/master/assets/images/animals/" + 
+            imgName = "./assets/images/animals/" + 
                 type + ['_left', '_right'][parseInt((Math.sign(this.direction) + 1) / 2)] + '.png';
         }
         this.img = $("<img>")
@@ -192,13 +192,13 @@ function firebaseReady() {
     // load images
     var ball = new pokeball();
     hunter.img = $("<img>")
-        .attr('src', 'https://raw.githubusercontent.com/jepidoptera/The-Most-Badass-Project-Evah/master/assets/images/hunter.png')
+        .attr('src', './assets/images/hunter.png')
         .css({"position": "absolute", "height": "50px", "width": "50px", "transform": "translate(-25%, -25%)"})
         .addClass('ordered')
         .attr('id', 'you')
         .attr('z-offset', 37);
     hunter.img2 = $("<img>")
-        .attr('src', 'https://raw.githubusercontent.com/jepidoptera/The-Most-Badass-Project-Evah/master/assets/images/arrow.png')
+        .attr('src', './assets/images/arrow.png')
         .css({"position": "absolute", "height": "25px", "width": "25px", "transform": "translate(-50%, -50%)"})
         .addClass('ordered');
     $('#huntingField').append(hunter.img);
