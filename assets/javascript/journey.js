@@ -69,11 +69,10 @@ const SceneObjects = {
     }),
     moutain: new SceneObject ({
         type: "mountain",
-        spacing: 75,
-        sizeRange: { min: { x: 200, y: 150 }, max: { x: 400, y: 300 } },
+        spacing: 25,
+        sizeRange: { min: { x: 300, y: 225 }, max: { x: 600, y: 600 } },
         imgRange: { min: 0, max: 5 },
-        distance: () => { return 30 + Math.sqrt(Math.random()) * 50 },
-        offset: {x: -100, y: -75},
+        distance: () => 100 - Math.random() * Math.random() * 100,
     }),
     pokegonemon: new SceneObject ({
         type: "pokegonemon",
@@ -156,8 +155,9 @@ class Trail {
         });
         // move along existing scenery
         let remainingSceneItems = [];
+        let scrollSpeed = canvas.foreground.width / canvas.metrics.screen_length / canvas.metrics.frameRate;
         for (let n in this.scenery) {
-            this.scenery[n].x -= canvas.foreground.width / canvas.metrics.screen_length / canvas.metrics.frameRate;
+            this.scenery[n].x -= scrollSpeed * (150 - this.scenery[n].distance) / 150;
             if (this.scenery[n].x > -this.scenery[n].width) remainingSceneItems.push(this.scenery[n]);
         }
         this.scenery = remainingSceneItems.sort((a, b) => {return a.distance > b.distance ? -1 : 1})
