@@ -22,13 +22,13 @@ var player = {
         this._kibble = value;
         firebase.database().ref('users/' + player.ID + "/gameInfo/kibble").set(this._kibble);
     },
-    get pokeballs() {return this._pokeballs;},
-    set pokeballs(value) {
+    get mokeballs() {return this._mokeballs;},
+    set mokeballs(value) {
         if (value == undefined) return;
-        this._pokeballs = value;
-        firebase.database().ref('users/' + player.ID + "/gameInfo/pokeballs").set(this._pokeballs);
+        this._mokeballs = value;
+        firebase.database().ref('users/' + player.ID + "/gameInfo/mokeballs").set(this._mokeballs);
     },
-    get speed() {return this._pokeballs;},
+    get speed() {return this._mokeballs;},
     set speed(value) {
         if (value == undefined) return;
         this._speed = value;
@@ -67,31 +67,31 @@ var player = {
         this._progress = value;
         firebase.database().ref('users/' + player.ID + "/gameInfo/progress").set(this._progress);
     },
-    pokemon: {
-        _pokes: [],
-        add(pokename, pokestats) {
-            player.pokemon._pokes.push({name: pokename, stats: pokestats});
+    mokemon: {
+        _mokes: [],
+        add(mokename, mokestats) {
+            player.mokemon._mokes.push({name: mokename, stats: mokestats});
             // set to database
-            player.pokemon.updatePokes();
+            player.mokemon.updateMokes();
         },
         remove(index) {
             // remove at index
-            player.pokemon._pokes.slice(index, 1);
+            player.mokemon._mokes.slice(index, 1);
             // set to database
-            player.pokemon.updatePokes();
+            player.mokemon.updateMokes();
         },
         clear() {
-            player.pokemon._pokes = [];
-            player.pokemon.updatePokes();
+            player.mokemon._mokes = [];
+            player.mokemon.updateMokes();
         },
-        updatePokes() {
-            firebase.database().ref('users/' + player.ID + "/gameInfo/pokemon").set(player.pokemon._pokes);
+        updateMokes() {
+            firebase.database().ref('users/' + player.ID + "/gameInfo/mokemon").set(player.mokemon._mokes);
         },
         get list() {
-            return player.pokemon._pokes;
+            return player.mokemon._mokes;
         },
-        set list(listOfPokemon) {
-            if (listOfPokemon) player.pokemon._pokes = listOfPokemon;
+        set list(listOfMokemon) {
+            if (listOfMokemon) player.mokemon._mokes = listOfMokemon;
         }
     },
 };
@@ -118,8 +118,8 @@ $(document).ready(() => {
         player._food = value.val().food;
         player._kibble = value.val().kibble;
         player._money = value.val().money;
-        player._pokeballs = value.val().pokeballs;
-        player.pokemon._pokes = value.val().pokemon || [];
+        player._mokeballs = value.val().mokeballs;
+        player.mokemon._mokes = value.val().mokemon || [];
         player._speed = value.val().speed;
         player._time = value.val().time;
         player._day = value.val().day;
