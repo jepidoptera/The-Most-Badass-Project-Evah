@@ -1,0 +1,24 @@
+{
+  "name": "the-most-badass-project-evah",
+  "version": "1.0.0",
+  "description": "tbd",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jepidoptera/The-Most-Badass-Project-Evah.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jepidoptera/The-Most-Badass-Project-Evah/issues"
+  },
+  "homepage": "https://github.com/jepidoptera/The-Most-Badass-Project-Evah#readme",
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1"
+  }
+}
