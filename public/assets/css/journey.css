@@ -63,8 +63,8 @@ html, body {
     top: 82%; 
     left: 25%; 
     position: absolute; 
-    height: 5vh; 
-    width: 5vh; 
+    height: 5%; 
+    width: 3.09%; 
     transform: translate(-50%, -50%);
     z-index: 1;
 }
