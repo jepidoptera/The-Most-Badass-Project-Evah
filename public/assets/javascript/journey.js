@@ -26,7 +26,7 @@ class SceneObject {
             }
         }
         else this.sizeRange = params.sizeRange;
-        this.distance = params.distance;
+        this.distance = params.distance || (() => 1);
         this.images = [];
         this.offset = params.offset;
         if (params.image) {
@@ -38,7 +38,7 @@ class SceneObject {
             }
         }
         this.isForeground = params.isForeground || (() => false);
-        this.foregroundDistance = params.foregroundDistance || (() => Math.random() * -50);
+        this.foregroundDistance = params.foregroundDistance || (() => -1);
         return this;
     }
     /**
@@ -84,9 +84,9 @@ const SceneObjects = {
     pokegonemon: new SceneObject ({
         type: "city",
         image: './assets/images/pokegonemon.png',
-        height: 150,
-        width: 250,
-        distance: () => 1,
+        height: 500,
+        width: 1500,
+        isForeground: () => true
     }),
     palm_tree: new SceneObject ({
         type: "palmtree",
@@ -111,7 +111,7 @@ const SceneObjects = {
         sizeRange: {min: {x: 25, y: 25}, max: {x: 50, y: 50}},
         imgRange: {min: 0, max: 2},
         isForeground: () => (Math.random() * 100 < 40) ? true : false,
-        distance: () => 50 - Math.random() * Math.random() * 50,
+        distance: () => Math.random() * 50,
         foregroundDistance: () => Math.random() * -50
     }),
     tree: new SceneObject ({
@@ -142,9 +142,9 @@ const SceneObjects = {
         type: 'city',
         spacing: 0,
         image: './assets/images/city0.png',
-        height: 150,
-        width: 250,
-        distance: () => 1,
+        height: 300,
+        width: 600,
+        isForeground: () => true
     })
 }
 
@@ -208,12 +208,31 @@ class Trail {
             return a.distance > b.distance ? -1 : 1
         })
     }
-    loadFrom(progress) {
+    loadFrom(startingPoint) {
         this.scenery = [];
-        player.progress = progress - canvas.metrics.screen_length * canvas.metrics.frameRate;
-        while (player.progress < progress) {
-            this.travel();
+        let progressRate = 1/ canvas.metrics.frameRate;
+        for (let n = 0; n < canvas.metrics.screen_length * canvas.metrics.frameRate; n ++) {
+            this.currentLocation = this.locationAt(startingPoint - canvas.metrics.screen_length * .2 + n * progressRate);
+            this.atHorizon = this.locationAt(startingPoint + canvas.metrics.screen_length * .8 + n * progressRate);
+            this.currentLocation.scenery.forEach(element => {
+                let newElement = null;
+                if (!element.spacing) {
+                    if (this.currentLocation.progress <= 1 / canvas.metrics.frameRate) {
+                        newElement = new backgroundImage(element);
+                    }
+                } 
+                else if (element.spacing && Math.random() * element.spacing < 1) {
+                    newElement = new backgroundImage(element);
+                }
+                if (newElement) {
+                    newElement.x = n * progressRate / canvas.metrics.screen_length * canvas.width;
+                    this.scenery.push(newElement);
+                }
+            });
         }
+        player.progress = startingPoint;
+        canvas.draw();
+        this.travel();
     }
 }
 
@@ -221,7 +240,7 @@ const trail = new Trail ([
         TrailLocation({
             type: 'nowhere',
             name: 'what you leave behind',
-            length: 2.5,
+            length: -3,
             scenery: [
                 SceneObjects.house,
                 SceneObjects.distantTree
@@ -244,7 +263,7 @@ const trail = new Trail ([
                 SceneObjects.house,
                 SceneObjects.distantTree
             ],
-            length: 15,
+            length: 20,
             function: () => {
                 msgBox('Your journey begins', "Orepoke, once the world's greatest city, is now wracked by devastating epidemics of cholera and dysentery, as well as terrible shortages of food, wagon axles, and bullets.  Taking your surviving Mokemon, you set off on the road, in search of the legendary city of Pokegonemon - hoping to find a better life there.",
                     [{
@@ -316,7 +335,10 @@ const trail = new Trail ([
         TrailLocation({
             type: 'nothing',
             name: 'the Great Beyond',
-            scenery: [],
+            scenery: [
+                SceneObjects.house,
+                SceneObjects.palm_tree
+            ],
             length: 1000000000001
         }),
         TrailLocation({
@@ -385,7 +407,7 @@ const events = [
             // every morning at dawn
             // return posse.length > 0 && player.time === 0;
             // occasionally
-            return posse.length > 0 && parseInt(Math.random() * 5000) == 0;
+            return posse.length > 0 && trail.currentLocation.type != "suburb" && parseInt(Math.random() * 5000) == 0;
         },
         function: () => {
             // strikes randomly
@@ -531,7 +553,7 @@ function newGame() {
     player.speed = 4;
     player.mokemon.clear();
     // reset to beginning of trail
-    player.progress = 2.5;
+    player.progress = 1;
     // remove any existing mokemon
     posse.forEach((mokemon) => {mokemon.remove();});
     // // remove all background objects
