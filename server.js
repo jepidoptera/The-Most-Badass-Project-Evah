@@ -35,4 +35,10 @@ app.get ("/", (req, res) => {
 // app.get ("/journey", (req, res) => {
 //     res.sendFile("journey");
 // })
+
+app.post("/save", (req, res) => {
+    console.log('saving...');
+    
+})
 app.listen(port);
+
