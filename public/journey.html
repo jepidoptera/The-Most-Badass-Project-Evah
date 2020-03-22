@@ -10,7 +10,6 @@
     <script src="assets/javascript/jQueryRotate.js"></script>
     <script src="https://code.jquery.com/ui/1.12.0/jquery-ui.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/5.8.6/firebase.js"></script>
-    <script src="assets/javascript/dialog.js"></script>
     <script src="assets/javascript/player.js"></script>
     <script src="assets/javascript/journey.js"></script>
     <link rel="stylesheet" href="assets/css/normalize.css">
@@ -23,6 +22,7 @@
         <div id='ground'></div>
         <div id='path'></div>
         <canvas id='canvas' width="1920" height="1080"></canvas>
+        <div id="msgbox" class="hidden"><div id="msgbuttons"></div></div>    
     </div>
     <section id='controls'>
         <p id ='narrative'></p>
@@ -41,6 +41,7 @@
             <input id="restLength" type="number"> days
             <br><br>
             <button type="submit">ok</button>
+            <button type="cancel" onclick="$('#restform').hide()"></button>
         </form>        
     </div>
     <div id='inventory'>
