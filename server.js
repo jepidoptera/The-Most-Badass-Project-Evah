@@ -29,7 +29,10 @@ app.use(express.static(__dirname + '/public'));
 console.log('Listening on: http://localhost:' + port);
 
 app.get ("/", (req, res) => {
-    res.sendFile("index");
+    console.log("let's go")
+    res.sendFile(__dirname + "/public/journey.html");
 })
-
+// app.get ("/journey", (req, res) => {
+//     res.sendFile("journey");
+// })
 app.listen(port);
