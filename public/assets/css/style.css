@@ -25,7 +25,7 @@ html, body {
 }
 
 .box-object-gradient-hor {
-    background-image: linear-gradient(270deg,#6298ef,#8bb6f9,#afcbf7);
+    background-image: linear-gradient(360deg,#6298ef,#8bb6f9,#afcbf7,#8bb6f9, #6298ef);
     background-size: 600% 100%
 }
 
