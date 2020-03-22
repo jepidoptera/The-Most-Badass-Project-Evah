@@ -231,7 +231,6 @@ class Trail {
             });
         }
         player.progress = startingPoint;
-        canvas.draw();
         this.travel();
     }
 }
@@ -496,16 +495,13 @@ class mokePosse {
     die() {
         msgBox('tragedy', this.name + " has died.", [{
             text: 'ok',
-            function: () => {} // not much you can do here
+            function: () => {
+                posse.splice(this.index, 1);
+                posse.forEach((moke, n) => {
+                    moke.index = n;
+                })        
+            } // not much you can do here
         }]);
-        posse.splice(this.index, 1);
-        posse.forEach((moke, n) => {
-            moke.index = n;
-        })
-    }
-    remove() {
-        posse.slice(posse.indexOf(this), 1);
-        this.img.remove();
     }
 }
 
@@ -566,6 +562,9 @@ function newGame() {
     player.time = 0;
     player.day = 0;
     trail.loadFrom(player.progress);
+    setTimeout(() => {
+        canvas.draw()
+    }, 500);
     gameInterval = setInterval(gameLoop, 1000 / canvas.metrics.frameRate);
 }
 
