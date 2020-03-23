@@ -11,6 +11,7 @@ var trailHeight;
 var horizonHeight;
 
 var timeSpeed = 0.05;
+const player = {};
 var posse = [];
 var canvas;
 var gameInterval;
@@ -306,7 +307,7 @@ const trail = new Trail ([
 
         }),
         TrailLocation({
-            type: 'forest',
+            type: 'jungle',
             name: 'The Great Palm Jungle',
             scenery: [
                 SceneObjects.signpost,
@@ -332,7 +333,7 @@ const trail = new Trail ([
             }
         }),
         TrailLocation({
-            type: 'nothing',
+            type: 'suburb',
             name: 'the Great Beyond',
             scenery: [
                 SceneObjects.house,
@@ -406,7 +407,7 @@ const events = [
             // every morning at dawn
             // return posse.length > 0 && player.time === 0;
             // occasionally
-            return posse.length > 0 && trail.currentLocation.type != "suburb" && parseInt(Math.random() * 5000) == 0;
+            return posse.length > 0 && trail.currentLocation.type === "jungle" && parseInt(Math.random() * 100) == 0;
         },
         function: () => {
             // strikes randomly
@@ -420,20 +421,33 @@ const events = [
                 name: 'ebola', 
                 function: () => {
                 victim.health -= 3;},
-                length: parseInt(Math.random() * 5)
+                length: 1 + parseInt(Math.random() * 5)
             });
             // there's not much you can do but rest and hope
             msgBox ("Outbreak!", victim.name + " has ebola.", [{
                 text: "stop to rest",
-                function: rest
+                function: nextDay
             },{
                 // or ruthlessly carry forward
                 text: "keep going",
                 function: () => {
                     // which cuts their chances of survival from 2/3 to 1/3, incidentally
-                    victim.health -= 1;
+                    victim.health -= 2;
                 }
             }]);
+        }
+    },
+    {
+        name: "eaten by a bear",
+        get occurs() {
+            return posse.length > 0 && trail.currentLocation.type === "forest" && parseInt(Math.random() * 70) == 0;
+        },
+        function: () => {
+            victim = posse[parseInt(Math.random() * posse.length)];
+            victim.die();
+            msgBox ("Death", victim.name + " was eaten by a bear.", [
+                {text: "damn"}
+            ])
         }
     }
 ];
@@ -486,7 +500,7 @@ class mokePosse {
             if (condition.length > 0) {
                 condition.length --;
                 condition.function();
-                activeConditions.push(condition);
+                if (condition.length > 0) activeConditions.push(condition);
             }
         });
         this.conditions = activeConditions;
@@ -496,12 +510,12 @@ class mokePosse {
         msgBox('tragedy', this.name + " has died.", [{
             text: 'ok',
             function: () => {
-                posse.splice(this.index, 1);
-                posse.forEach((moke, n) => {
-                    moke.index = n;
-                })        
             } // not much you can do here
         }]);
+        posse.splice(this.index, 1);
+        posse.forEach((moke, n) => {
+            moke.index = n;
+        })        
     }
 }
 
@@ -547,7 +561,7 @@ function newGame() {
     player.kibble = 450;
     player.mokeballs = 27;
     player.speed = 4;
-    player.mokemon.clear();
+    player.mokemon = [];
     // reset to beginning of trail
     player.progress = 1;
     // remove any existing mokemon
@@ -572,6 +586,13 @@ function gameLoop () {
     // time does pass
     if (!paused) {
         player.time += timeSpeed;
+        if (player.hour != Math.floor(player.time)) {
+            player.hour = Math.floor(player.time);
+            // do random events once per hour (so it's not dependent on framerate)
+            events.forEach((event) => {
+                if (!paused && event.occurs) event.function();
+            });
+        }
         // move the sun
         moveSun();
         // a new dawn
@@ -584,11 +605,6 @@ function gameLoop () {
     // mokemon hop
     posse.forEach((mokemon) =>{
         mokemon.hop();
-    });
-
-    // do random events
-    events.forEach((event) => {
-        if (!paused && event.occurs) event.function();
     });
 
     // narrate the journey
@@ -749,7 +765,8 @@ function msgBox(title, text, buttons) {
         $("#msgbuttons").append($("<button>")
             .addClass('msgbutton')
             .text(button.text)
-            .click(() => {button.function(); $("#msgbox").hide(); unpause();})
+            .click(() => {if (button.function) button.function(); $("#msgbox").hide(); unpause();})
+            .attr("type", (buttons.length === 1 ? "submit" : "none"))
         )
     })
 }
