@@ -108,43 +108,6 @@ html, body {
     z-index: 999;
 }
 
-#msgbox, #optionsMenu {
-    position: absolute;
-    width: 60%;
-    height: 60%;
-    border: 3px solid white;
-    color: whitesmoke;
-    background-color: black;
-    text-align: justify;
-    padding: 10px;
-    z-index: 99;
-    top: 20%;
-    left: 20%;
-}
-#msgbuttons {
-    position: absolute;
-    display: block;
-    bottom: 0;
-    width: 100%;
-    text-align: center;
-}
-
-.msgTitle {
-    background-color: whitesmoke;
-    color: black;
-    position: relative;
-    display: block;
-    width: 100%;
-    border: 10px solid whitesmoke;
-    margin: -10px -10px 10px;
-    text-align: center;
-    font-size: 12pt;
-}
-
-.msgbutton {
-    margin: 10px;
-    display: inline-block;
-}
 
 .optionButton {
     display: block;
@@ -167,8 +130,4 @@ html, body {
         min-height: 15vh;
     }
 
-}
-
-.hidden {
-    display: none;
 }
