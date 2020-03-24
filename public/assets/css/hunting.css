@@ -24,6 +24,7 @@ body {
 #time, #bullets {
     position: absolute;
     color: white;
+    z-index: 999;
 }
 
 #time {
