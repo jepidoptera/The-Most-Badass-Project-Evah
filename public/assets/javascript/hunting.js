@@ -1,4 +1,6 @@
 // jshint esversion: 6
+let pause = null;
+let unPause = null;
 
 var hunter = {
     x: 50,
@@ -21,7 +23,7 @@ class pokeball {
         this.range = 0;
         this.motion = 1;
         this.active = false;
-        this.size = 15;
+        this.size = 10;
         this.img = $("<img>")
             .attr('src', './assets/images/pokeball.png')
             .css({"position": "absolute", "height": this.size + "px", "width": this.size + "px", "transform": "translate (-50%, -50%)"})
@@ -29,11 +31,11 @@ class pokeball {
     }
     throw (direction) {
         if (this.active) return;
-        if (player.pokeballs <= 0) {
-            message('You are out of pokeballs!');
+        if (player.mokeballs <= 0) {
+            message('You are out of mokeballs!');
             return;
         }
-        player.pokeballs --;
+        player.mokeballs --;
         this.speed = this.topSpeed + hunter.motion * hunter.speed;
         this.x = hunter.x;
         this.y = hunter.y;
@@ -50,7 +52,7 @@ class pokeball {
         this.z = Math.sqrt((this.maxRange / 2  - Math.abs(this.maxRange / 2 - this.range)) * 10 / this.maxRange) * this.motion;
         // set position on the page
         this.img
-            .css({'left': this.x + "vw", 'top': (this.y - this.z) + "vw"})
+            .css({'left': this.x + "vw", 'top': (this.y - this.z) + "vw", 'height': this.size + this.z / 3 + "px", 'width': this.size + this.z / 3 + "px"})
             .show();
         // catch pokemon
         var x = parseInt(this.img.css('left'));
@@ -86,10 +88,10 @@ class pokeball {
             food = 1;
             break;
         case "deer":
-            food = parseInt(Math.random() * 100 + 80);
+            food = parseInt(Math.random() * 80 + 60);
             break;
         case "bison":
-            food = parseInt(Math.random() * 600 + 800);
+            food = parseInt(Math.random() * 600 + 600);
             break;
         default:
             // must be a pokemon
@@ -188,7 +190,9 @@ function message(text) {
     }, 3000);
 }
 
-function firebaseReady() {
+$(document).ready(() => {
+    loadPlayer();
+
     // load images
     var ball = new pokeball();
     hunter.img = $("<img>")
@@ -215,14 +219,15 @@ function firebaseReady() {
     // count down til dark
     function timeDown() {
         player.time += 1;
+        saveGame();
         hoursTilDark = parseInt((24 - player.time) / 2);
         $("#time").text('Hours til dark: '+ hoursTilDark);
         if (hoursTilDark == 0) {
             msgBox('darkness', "The sun has gone down.  You head back to camp with your day's catch.",
-            dialogButtons([{text: "ok", function: window.close}]));
+            [{text: "ok", function: () => {
+                window.location.href = `/journey?username=${player.name}&authtoken=${player.authtoken}`;
+            }}]);
             clearInterval(gameLoop);
-            // it's dark now
-            $("#blackout").show();
         }
         else {
             setTimeout(timeDown, 4000);
@@ -245,12 +250,12 @@ function firebaseReady() {
             ball.fly();
         }
         // pokemon processing and garbage collection
-        var stillActivePokemon = [];
+        var stillActiveCreatures = [];
         activeCreatures.forEach((pokemon) => {
             pokemon.move();
-            if (pokemon.active) stillActivePokemon.push(pokemon);
+            if (pokemon.active) stillActiveCreatures.push(pokemon);
         });
-        activeCreatures = stillActivePokemon;
+        activeCreatures = stillActiveCreatures;
 
         // apply position and rotation for player
         hunter.img.css({'left': hunter.x + "vw", 'top': hunter.y + "vw"});
@@ -259,7 +264,7 @@ function firebaseReady() {
             'left': hunter.x + Math.sin(hunter.direction * Math.PI / 180.0) * 3 + "vw",
             'top': hunter.y - Math.cos(hunter.direction * Math.PI / 180.0) * 3 + "vw"});
         
-        $("#bullets").text("pokeballs remaining: " + player.pokeballs);
+        $("#bullets").text("mokeballs remaining: " + player.mokeballs);
         // keep things ordered    
         orderZIndex();
     }, 30);
@@ -356,4 +361,4 @@ function firebaseReady() {
             $(element).css({"z-index": zindex + offset});
         });
     }
-}
+})
