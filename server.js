@@ -86,12 +86,26 @@ app.get ("/journey", (req, res) => {
             res.render("journey", {name: playerID})
             return;
         }
+        res.render("journey", {...value.val(), authtoken: authtoken});
+    })
+})
+
+app.get ("/hunt", (req, res) => {
+    console.log("going hunting")
+    let playerID = req.query.username;
+    let authtoken = req.query.authtoken;
+    if (!authtoken || authtokens[playerID] != authtoken) {
+        res.sendStatus(403);
+        return;
+    }
+    let playerRef = firebase.database().ref('users/' + playerID + "/gameInfo");
+    playerRef.on('value', value => {
         if (value.val().password) {
             if (password != value.val().password) {
                 res.sendStatus(403);
             }
         }
-        res.render("journey", value.val());
+        res.render("hunt", value.val());
     })
 })
 
