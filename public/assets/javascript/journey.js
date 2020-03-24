@@ -11,7 +11,6 @@ var trailHeight;
 var horizonHeight;
 
 var timeSpeed = 0.05;
-let player = {};
 var canvas;
 var gameInterval;
 const playerName = "{{name}}"
@@ -163,6 +162,21 @@ const SceneObjects = {
         width: 600,
         isForeground: () => true
     })
+}
+
+function TrailLocation(params) {
+    trailLocation = params;
+    trailLocation.progress= 0;
+        trailLocation.length = params.length || 0;
+        trailLocation.scenery = params.scenery 
+            ? params.scenery.map(item => {
+                    let sceneItem = item;
+                    sceneItem.spacing = item.spacing || 0;
+                    sceneItem.next = Math.random() * item.spacing;
+                    return sceneItem;
+                })
+            : undefined
+    return trailLocation;
 }
 
 class Trail {
@@ -393,10 +407,10 @@ class Canvas {
 
             if (!mokesDrawn && (n == trail.scenery.length - 1 || trail.scenery[n+1].foreground)) {
                 this.ctx.globalAlpha = 1;
-                let totalWidth = 0;
+                let totalWidth = 20;
                 player.posse.forEach((mokemon, n) => {
-                    this.ctx.drawImage(mokemon.img, canvas.width / 4.5 - totalWidth - mokemon.width/2, mokemon.y - mokemon.z, mokemon.width, mokemon.height);
                     totalWidth += mokemon.width + 20;
+                    this.ctx.drawImage(mokemon.img, canvas.width / 4 - totalWidth, mokemon.y - mokemon.z, mokemon.width, mokemon.height);
                 })
                 mokesDrawn = true;
             }
@@ -404,20 +418,6 @@ class Canvas {
     }
 }
 
-function TrailLocation(params) {
-    trailLocation = params;
-    trailLocation.progress= 0;
-        trailLocation.length = params.length || 0;
-        trailLocation.scenery = params.scenery 
-            ? params.scenery.map(item => {
-                    let sceneItem = item;
-                    sceneItem.spacing = item.spacing || 0;
-                    sceneItem.next = Math.random() * item.spacing;
-                    return sceneItem;
-                })
-            : undefined
-    return trailLocation;
-}
 
 const events = {
     ebola: {
@@ -563,7 +563,7 @@ class mokePosse {
         this.conditions.forEach((condition) => {
             if (condition.timeRemaining > 0) {
                 condition.timeRemaining --;
-                if (effects[condition]) effects[condition](this);
+                if (effects[condition.name]) effects[condition.name](this);
                 if (condition.timeRemaining > 0) activeConditions.push(condition);
             }
         });
@@ -614,20 +614,16 @@ $(document).ready(() => {
     trailHeight = $("#path").position().top / $("#canvasArea").height();
     horizonHeight = $("#ground").position().top / $("#canvasArea").height();
 
-    try {
-        player = JSON.parse($("#playerInfo").text());
-        let posse = player.posse;
-        player.posse = [];
-        posse.forEach(moke => {
-            player.posse.push(new mokePosse(moke.name, moke.health, moke.conditions));
-        })
-        player.currentLocation = trail.locationAt(player.progress);
-        trail.loadFrom(player.progress);
-    }
-    catch{
-        player.name = $("#playerName").text();
-        newGame();
-    }
+    loadPlayer();
+    if (!player.progress) newGame();
+
+    // construct mokemon class from simplified objects
+    let posse = player.posse;
+    player.posse = [];
+    posse.forEach(moke => {
+        player.posse.push(new mokePosse(moke.name, moke.health, moke.conditions));
+    })
+
     gameInterval = setInterval(gameLoop, 1000 / canvas.metrics.frameRate);
 })
 
@@ -642,15 +638,10 @@ function newGame() {
     player.money = 0;
     // reset to beginning of trail
     player.progress = 1;
-    // remove any existing mokemon
-    player.posse = [];
+    // construct a new party 
+    player.posse = [{name: 'dezzy'}, {name: 'apismanion'}, {name: 'mallowbear'}, {name: 'marlequin'}, {name: 'wingmat'}];
     // // remove all background objects
     trail.scenery = [];
-    // construct a new party from scratch
-    ['dezzy', 'apismanion', 'mallowbear', 'marlequin', 'wingmat'].forEach( name => {
-        player.posse.push(new mokePosse(name))
-    })
-    player.posse = player.posse;
     player.time = 0;
     player.day = 0;
     trail.loadFrom(player.progress);
@@ -841,60 +832,4 @@ function closeInventory() {
 function win () {
     pause();
     // TODO
-}
-
-function msgBox(title, text, buttons) {
-    pause();
-    $("#msgbox").empty().show()
-        .text(text)
-        .prepend($("<div>").addClass('msgTitle').text(title))
-        .append($("<div>").attr('id', 'msgbuttons'));
-    buttons.forEach(button => {
-        $("#msgbuttons").append($("<button>")
-            .addClass('msgbutton')
-            .text(button.text)
-            .click(() => {if (button.function) button.function(); $("#msgbox").hide(); unpause();})
-            .attr("type", (buttons.length === 1 ? "submit" : "none"))
-        )
-    })
-}
-
-function saveGame() {
-    console.log({
-        name: player.name,
-        mokeballs: player.mokeballs,
-        progress: player.progress,
-        food: player.food,
-        speed: player.speed,
-        day: player.day,
-        time: player.time,
-        posse: player.posse.map(moke => {return {
-            type: moke.type,
-            name: moke.name,
-            health: moke.health,
-            conditions: moke.conditions
-        }})
-    })
-    $.ajax({
-        method: "POST",
-        url: '/save',
-        data: {
-            player: JSON.stringify({
-                name: player.name,
-                mokeballs: player.mokeballs,
-                progress: player.progress,
-                food: player.food,
-                speed: player.speed,
-                day: player.day,
-                time: player.time,
-                money: player.money,
-                posse: player.posse.map(moke => {return {
-                    type: moke.type,
-                    name: moke.name,
-                    health: moke.health,
-                    conditions: moke.conditions
-                }})
-            })
-        }
-      });
 }
