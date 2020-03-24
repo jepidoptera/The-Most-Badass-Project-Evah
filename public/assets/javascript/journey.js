@@ -12,7 +12,6 @@ var horizonHeight;
 
 var timeSpeed = 0.05;
 let player = {};
-var player.posse = [];
 var canvas;
 var gameInterval;
 const playerName = "{{name}}"
@@ -75,6 +74,14 @@ const SceneObjects = {
         imgRange: { min: 0, max: 4 },
         distance: () => 100 - Math.random() * Math.random() * 100,
     }),
+    nearMoutain: new SceneObject ({
+        type: "mountain",
+        spacing: 71,
+        sizeRange: { min: { x: 200, y: 112 }, max: { x: 450, y: 300 } },
+        imgRange: { min: 0, max: 4 },
+        isForeground: () => true,
+        foregroundDistance: () => -100,
+    }),
     mountainRange: new SceneObject ({
         type: "mountain range",
         spacing: 100,
@@ -82,6 +89,14 @@ const SceneObjects = {
         width: 1280,
         image: './assets/images/big mountain.png',
         distance: () => Math.random() * 100,
+    }),
+    firstMountain: new SceneObject ({
+        type: "mountain range",
+        spacing: 0,
+        height: 290,
+        width: 1280,
+        image: './assets/images/big mountain.png',
+        distance: () => 2,
     }),
     pokegonemon: new SceneObject ({
         type: "city",
@@ -211,16 +226,17 @@ class Trail {
         })
     }
     loadFrom(startingPoint) {
+        // this.locations.forEach(location => {if (location.scenery) location.scenery.forEach(item => {item.appeared = false})})
         this.scenery = [];
         let progressRate = 1/ canvas.metrics.frameRate;
         for (let n = 0; n < canvas.metrics.screen_length * canvas.metrics.frameRate; n ++) {
             this.currentLocation = this.locationAt(startingPoint - canvas.metrics.screen_length * .2 + n * progressRate);
-            this.atHorizon = this.locationAt(startingPoint + canvas.metrics.screen_length * .8 + n * progressRate);
             this.currentLocation.scenery.forEach(element => {
                 let newElement = null;
                 if (!element.spacing) {
                     if (this.currentLocation.progress <= 1 / canvas.metrics.frameRate) {
                         newElement = new backgroundImage(element);
+                        element.appeared = true;
                     }
                 } 
                 else if (element.spacing && Math.random() * element.spacing < 1) {
@@ -299,10 +315,11 @@ const trail = new Trail ([
             type: 'mountains',
             name: 'The Mainstay Mountains',
             scenery: [
-                SceneObjects.signpost,
+                SceneObjects.firstMountain,
                 SceneObjects.mountainRange,
                 SceneObjects.rock,
-                SceneObjects.moutain
+                SceneObjects.moutain,
+                SceneObjects.nearMoutain
             ],
             length: 82 // seconds
 
@@ -376,8 +393,10 @@ class Canvas {
 
             if (!mokesDrawn && (n == trail.scenery.length - 1 || trail.scenery[n+1].foreground)) {
                 this.ctx.globalAlpha = 1;
-                player.posse.forEach((mokeMon, n) => {
-                    this.ctx.drawImage(mokeMon.img, canvas.width / 4.5 - n * 60 - mokeMon.width/2, mokeMon.y - mokeMon.z, mokeMon.width, mokeMon.height);
+                let totalWidth = 0;
+                player.posse.forEach((mokemon, n) => {
+                    this.ctx.drawImage(mokemon.img, canvas.width / 4.5 - totalWidth - mokemon.width/2, mokemon.y - mokemon.z, mokemon.width, mokemon.height);
+                    totalWidth += mokemon.width + 20;
                 })
                 mokesDrawn = true;
             }
@@ -448,6 +467,30 @@ const events = {
                 {text: "damn"}
             ])
         }
+    },
+    thief: {
+        name: "a thief comes in the night",
+        get occurs() {
+            return player.day > 0 && player.hour === 0 && Math.random() * 10 < 1;
+        },
+        function: () => {
+            let theftType = ["food", "mokeballs", "money", "mokemon"][Math.floor(Math.random() * 4)];
+            let loss = "";
+            if (theftType === "mokemon") {
+                victim = player.posse[parseInt(Math.random() * player.posse.length)];
+                victim.die();    
+                loss = victim.name;
+            }
+            else {
+                lossAmount = Math.floor(Math.random() * player[theftType]);
+                if (lossAmount < 2) return;
+                player[theftType] -= lossAmount;
+                loss = lossAmount + " " + theftType;
+            }
+            msgBox ("Theft", "A thief comes in the night and makes off with: " + loss + ".", [
+                {text: "how unfortunate"}
+            ])
+        }
     }
 };
 
@@ -459,35 +502,52 @@ const effects = {
 class mokePosse {
     constructor (name, health = 10, conditions = []) {
         this._hop = player.posse.length * .37;
-        this.name = name;
+        this.name = name.slice(0, 1).toUpperCase() + name.slice(1).toLowerCase();
         this.health = health;
         this.conditions = conditions;
         // this.x = posse.length * 60 + canvas.width / 12;
-        this.y = (trailHeight - .03) * canvas.height;
-        this.z = 0;
-        switch (name) {
-        case "articuno":
-            this.height = 40;
-            this.width = 40;
-            break;
-        case "charizard":
-            this.height = 40;
-            this.width = 50;
-            break;
-        case "snorlax":
-            this.height = 40;
-            this.width = 40;
-            break;
-        case "jigglypuff":
-            this.height = 30;
+        switch (this.name) {
+        case "Dezzy":
+            this.height = 50;
             this.width = 30;
+            this.foodValue = 160;
             break;
-        case "ninetales":
+        case "Mallowbear":
+            this.height = 50;
+            this.width = 40;
+            this.foodValue = 200;
+            break;
+        case "Apismanion":
             this.height = 40;
-            this.width = 50;
+            this.width = 35;
+            this.foodValue = 160;
             break;
+        case "Marlequin":
+            this.height = 40;
+            this.width = 30;
+            this.foodValue = 90;
+            break;
+        case "Wingmat":
+            this.height = 40;
+            this.width = 70;
+            this.foodValue = 160;
+            break;
+        case "Zyant":
+            this.height = 50;
+            this.width = 60;
+            this.foodValue = 160;
+            break;
+        case "Shadowdragon":
+            this.height = 70;
+            this.width = 70;
+            this.foodValue = 160;
+            break;
+
         }
-        this.img = $("<img>").attr('src', './assets/images/' + this.name + ".png")[0];
+        this.y = trailHeight * canvas.height - this.height;
+        this.z = 0;
+
+        this.img = $("<img>").attr('src', './assets/images/mokemon/' + name.toLowerCase() + ".png")[0];
         this.bounceHeight = this.height / 2;
         this.index = player.posse.length;
     }
@@ -531,7 +591,7 @@ class backgroundImage {
         this.foreground = prototype.isForeground;
         this.type = prototype.type;
         if (this.foreground) {
-            this.distance = prototype.foregroundDistance;
+            if (prototype.foregroundDistance) this.distance = prototype.foregroundDistance;
         }
 
         let distanceFactor = (100 - this.distance) / 100;
@@ -550,21 +610,25 @@ $(document).ready(() => {
     console.log("ready!");
     canvas = new Canvas();
 
-    $('#walkingPath').append(you);
-    trailHeight = $("#path").position().top / $("#walkingPath").height();
-    horizonHeight = $("#ground").position().top / $("#walkingPath").height();
+    $('#canvasArea').append(you);
+    trailHeight = $("#path").position().top / $("#canvasArea").height();
+    horizonHeight = $("#ground").position().top / $("#canvasArea").height();
 
-    player = JSON.parse($("#playerInfo").text());
-    if (!player.progress) {
-        newGame();
-    }
-    else {
-        player.posse.forEach(moke => {
-            moke = new mokePosse(moke.name, moke.health, moke.conditions);
+    try {
+        player = JSON.parse($("#playerInfo").text());
+        let posse = player.posse;
+        player.posse = [];
+        posse.forEach(moke => {
+            player.posse.push(new mokePosse(moke.name, moke.health, moke.conditions));
         })
+        player.currentLocation = trail.locationAt(player.progress);
         trail.loadFrom(player.progress);
     }
-    gameLoop();
+    catch{
+        player.name = $("#playerName").text();
+        newGame();
+    }
+    gameInterval = setInterval(gameLoop, 1000 / canvas.metrics.frameRate);
 })
 
 function newGame() {
@@ -574,7 +638,7 @@ function newGame() {
     player.kibble = 450;
     player.mokeballs = 27;
     player.speed = 4;
-    player.name = 'simone';
+    player.name = player.name || 'simone';
     player.money = 0;
     // reset to beginning of trail
     player.progress = 1;
@@ -583,7 +647,7 @@ function newGame() {
     // // remove all background objects
     trail.scenery = [];
     // construct a new party from scratch
-    ['charizard', 'jigglypuff', 'articuno', 'ninetales', 'snorlax'].forEach( name => {
+    ['dezzy', 'apismanion', 'mallowbear', 'marlequin', 'wingmat'].forEach( name => {
         player.posse.push(new mokePosse(name))
     })
     player.posse = player.posse;
@@ -594,7 +658,6 @@ function newGame() {
     setTimeout(() => {
         canvas.draw()
     }, 100);
-    gameInterval = setInterval(gameLoop, 1000 / canvas.metrics.frameRate);
 }
 
 function gameLoop () {
@@ -659,8 +722,8 @@ function narrate() {
         'Day: ' + player.day + 
         ((distanceTo == 0)  
         ? ('<br>' + 'You have reached: ' + trail.nextLocation.name + '.')
-        : ('<br>Location: ' + trail.currentLocation.name +
-            '<br>' + distanceTo + ' miles to ' + trail.nextLocation.name + '.')));
+        : ('<br>Location: ' + trail.currentLocation.name)) +
+            '<br>' + distanceTo + ' miles to ' + trail.currentLocation.next.name + '.');
 }
 
 function arriveAt(location) {
@@ -746,13 +809,23 @@ function partyStats() {
     $("#posse").show();
 }
 
+$(document).on('keypress', (event) => {
+    if (event.key === "Enter") {
+        options();
+    }
+})
+
 function options () {
+    if (paused) return;
     pause();
-    $("#options").show();
+    $("#optionsMenu").show();
+    $("#foodInfo").text(`food: ${player.food}`);
+    $("#moneyInfo").text(`money: ${player.money}`);
+    $("#ballsInfo").text(`mokeballs: ${player.mokeballs}`);
 }
 
 function closeOptions() {
-    $("#options").hide();
+    $("#optionsMenu").hide();
     unpause();
 }
 
