@@ -1,7 +1,7 @@
 html, body {
     overflow: hidden;
 }
-#walkingPath {
+#canvasArea {
     width: 161.8vh;
     height: 100vh;
     display: block;
@@ -13,8 +13,8 @@ html, body {
     height: 100vh;
     width: Calc(100vw - 161.8vh);
     background-color: lightgray;
-    top: 0;
     left: 161.8vh;
+    z-index: 3;
 }
 #sky {
     background-color: skyblue;
@@ -75,14 +75,25 @@ html, body {
     font-size: 24pt;
     border-radius: 3px;
 }
-#narrative {
-    position: absolute;
+#narrative, #options {
+    position: relative;
     width: 90%;
     margin: 10px 5%;
     border: 1px solid black;
-    bottom: 0;
 }
-#posse, #rest, #inventory, #options{
+#narrative, #options, #controls {
+    cursor: pointer;
+}
+#infoPanel {
+    position: absolute;
+    width: 50%;
+    height: 100%;
+    right: 0;
+    top: 0;
+    border-left: 1px solid white;
+    padding: 10px;
+}
+#posse, #rest, #inventory {
     position: absolute;
     width: 300px;
     height: 200px;
@@ -96,14 +107,8 @@ html, body {
     padding: 20px;
     z-index: 999;
 }
-/* .closeButton {
-    position: relative;
-    display: block;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%)
-} */
-#msgbox {
+
+#msgbox, #optionsMenu {
     position: absolute;
     width: 60%;
     height: 60%;
@@ -141,16 +146,25 @@ html, body {
     display: inline-block;
 }
 
+.optionButton {
+    display: block;
+    position: relative;
+    left: 25%;
+    transform: translate(-50%);
+    margin: 5% 0;
+}
+
 @media (max-aspect-ratio: 34/21) {
-    #walkingPath {
+    #canvasArea {
         width: 100vw;
         height: 61.8vw;
     }
     #controls {
         width: 100vw;
         height: Calc(100vh - 61.8vw);
-        top: 61.8vw;
+        bottom: 0;
         left: 0;
+        min-height: 15vh;
     }
 
 }
