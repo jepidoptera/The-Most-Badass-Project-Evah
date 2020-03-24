@@ -11,10 +11,11 @@ var trailHeight;
 var horizonHeight;
 
 var timeSpeed = 0.05;
-const player = {};
-var posse = [];
+let player = {};
+var player.posse = [];
 var canvas;
 var gameInterval;
+const playerName = "{{name}}"
 
 class SceneObject {
     constructor(params) {
@@ -110,7 +111,7 @@ const SceneObjects = {
         type: "house",
         spacing: 5,
         sizeRange: {min: {x: 25, y: 25}, max: {x: 50, y: 50}},
-        imgRange: {min: 0, max: 2},
+        imgRange: {min: 0, max: 4},
         isForeground: () => (Math.random() * 100 < 40) ? true : false,
         distance: () => Math.random() * 50,
         foregroundDistance: () => Math.random() * -50
@@ -119,7 +120,7 @@ const SceneObjects = {
         type: 'tree',
         spacing: 1.5,
         sizeRange: {min: {x: 80, y: 160}, max: {x: 360, y: 360}},
-        imgRange: {min: 0, max: 4},
+        imgRange: {min: 0, max: 5},
         isForeground: () => (Math.random() * 100 < 2) ? true : false,
         distance: () => Math.max(100 - Math.random() * Math.random() * 110, 0),
         foregroundDistance: () => Math.random() > .5 ? -20 : -50 
@@ -375,7 +376,7 @@ class Canvas {
 
             if (!mokesDrawn && (n == trail.scenery.length - 1 || trail.scenery[n+1].foreground)) {
                 this.ctx.globalAlpha = 1;
-                posse.forEach((mokeMon, n) => {
+                player.posse.forEach((mokeMon, n) => {
                     this.ctx.drawImage(mokeMon.img, canvas.width / 4.5 - n * 60 - mokeMon.width/2, mokeMon.y - mokeMon.z, mokeMon.width, mokeMon.height);
                 })
                 mokesDrawn = true;
@@ -399,19 +400,19 @@ function TrailLocation(params) {
     return trailLocation;
 }
 
-const events = [
-    {
+const events = {
+    ebola: {
         name: "ebola",
         occurrences: 0,
         get occurs() {
             // every morning at dawn
             // return posse.length > 0 && player.time === 0;
             // occasionally
-            return posse.length > 0 && trail.currentLocation.type === "jungle" && parseInt(Math.random() * 100) == 0;
+            return player.posse.length > 0 && trail.currentLocation.type === "jungle" && parseInt(Math.random() * 100) == 0;
         },
         function: () => {
             // strikes randomly
-            victim = posse[parseInt(Math.random() * posse.length)];
+            victim = player.posse[parseInt(Math.random() * player.posse.length)];
             if (victim.conditions.map(c => c.name).includes('ebola')) {
                 // can't get it twice
                 console.log('prevented double occurrence of ebola.');
@@ -419,9 +420,7 @@ const events = [
             } 
             victim.conditions.push ({
                 name: 'ebola', 
-                function: () => {
-                victim.health -= 3;},
-                length: 1 + parseInt(Math.random() * 5)
+                timeRemaining: 1 + parseInt(Math.random() * 5)
             });
             // there's not much you can do but rest and hope
             msgBox ("Outbreak!", victim.name + " has ebola.", [{
@@ -437,27 +436,32 @@ const events = [
             }]);
         }
     },
-    {
+    bear: {
         name: "eaten by a bear",
         get occurs() {
-            return posse.length > 0 && trail.currentLocation.type === "forest" && parseInt(Math.random() * 70) == 0;
+            return player.posse.length > 0 && trail.currentLocation.type === "forest" && parseInt(Math.random() * 100) == 0;
         },
         function: () => {
-            victim = posse[parseInt(Math.random() * posse.length)];
+            victim = player.posse[parseInt(Math.random() * player.posse.length)];
             victim.die();
             msgBox ("Death", victim.name + " was eaten by a bear.", [
                 {text: "damn"}
             ])
         }
     }
-];
+};
+
+const effects = {
+    ebola: (victim) => { victim.health -= 3 },
+    rest: (moke) => { moke.health += 1 }
+}
 
 class mokePosse {
-    constructor (name) {
-        this._hop = posse.length * .37;
+    constructor (name, health = 10, conditions = []) {
+        this._hop = player.posse.length * .37;
         this.name = name;
-        this.health = 10;
-        this.conditions = [];
+        this.health = health;
+        this.conditions = conditions;
         // this.x = posse.length * 60 + canvas.width / 12;
         this.y = (trailHeight - .03) * canvas.height;
         this.z = 0;
@@ -485,7 +489,7 @@ class mokePosse {
         }
         this.img = $("<img>").attr('src', './assets/images/' + this.name + ".png")[0];
         this.bounceHeight = this.height / 2;
-        this.index = posse.length;
+        this.index = player.posse.length;
     }
     hop() {
         // hoppin' down the trail
@@ -497,10 +501,10 @@ class mokePosse {
         // process any conditions this mokemon may have
         var activeConditions = [];
         this.conditions.forEach((condition) => {
-            if (condition.length > 0) {
-                condition.length --;
-                condition.function();
-                if (condition.length > 0) activeConditions.push(condition);
+            if (condition.timeRemaining > 0) {
+                condition.timeRemaining --;
+                if (effects[condition]) effects[condition](this);
+                if (condition.timeRemaining > 0) activeConditions.push(condition);
             }
         });
         this.conditions = activeConditions;
@@ -512,8 +516,8 @@ class mokePosse {
             function: () => {
             } // not much you can do here
         }]);
-        posse.splice(this.index, 1);
-        posse.forEach((moke, n) => {
+        player.posse.splice(this.index, 1);
+        player.posse.forEach((moke, n) => {
             moke.index = n;
         })        
     }
@@ -550,7 +554,16 @@ $(document).ready(() => {
     trailHeight = $("#path").position().top / $("#walkingPath").height();
     horizonHeight = $("#ground").position().top / $("#walkingPath").height();
 
-    newGame();
+    player = JSON.parse($("#playerInfo").text());
+    if (!player.progress) {
+        newGame();
+    }
+    else {
+        player.posse.forEach(moke => {
+            moke = new mokePosse(moke.name, moke.health, moke.conditions);
+        })
+        trail.loadFrom(player.progress);
+    }
     gameLoop();
 })
 
@@ -561,24 +574,26 @@ function newGame() {
     player.kibble = 450;
     player.mokeballs = 27;
     player.speed = 4;
-    player.mokemon = [];
+    player.name = 'simone';
+    player.money = 0;
     // reset to beginning of trail
     player.progress = 1;
     // remove any existing mokemon
-    posse.forEach((mokemon) => {mokemon.remove();});
+    player.posse = [];
     // // remove all background objects
     trail.scenery = [];
     // construct a new party from scratch
     ['charizard', 'jigglypuff', 'articuno', 'ninetales', 'snorlax'].forEach( name => {
-        posse.push(new mokePosse(name))
+        player.posse.push(new mokePosse(name))
     })
-    player.posse = posse;
+    player.posse = player.posse;
     player.time = 0;
     player.day = 0;
     trail.loadFrom(player.progress);
+    // wait a fraction of a second because canvas doesn't work right away
     setTimeout(() => {
         canvas.draw()
-    }, 500);
+    }, 100);
     gameInterval = setInterval(gameLoop, 1000 / canvas.metrics.frameRate);
 }
 
@@ -589,8 +604,8 @@ function gameLoop () {
         if (player.hour != Math.floor(player.time)) {
             player.hour = Math.floor(player.time);
             // do random events once per hour (so it's not dependent on framerate)
-            events.forEach((event) => {
-                if (!paused && event.occurs) event.function();
+            Object.keys(events).forEach((key) => {
+                if (!paused && events[key].occurs) events[key].function();
             });
         }
         // move the sun
@@ -603,7 +618,7 @@ function gameLoop () {
     canvas.draw();
 
     // mokemon hop
-    posse.forEach((mokemon) =>{
+    player.posse.forEach((mokemon) =>{
         mokemon.hop();
     });
 
@@ -629,9 +644,9 @@ function nextDay() {
     player.day += 1;
     // eat
     player.food -= 10;
-    player.kibble -= 5 * posse.length;
+    player.kibble -= 5 * player.posse.length;
     // mokemon conditions (ebola and so forth)
-    posse.forEach((mokemon) =>{
+    player.posse.forEach((mokemon) =>{
         mokemon.doConditions();
     });    
 }
@@ -711,7 +726,7 @@ function partyStats() {
     pause();
     $("#posse").empty();
     $("#posse").html('<h1>Your mokemon Posse:</h1>');
-    posse.forEach((mokemon) => {
+    player.posse.forEach((mokemon) => {
         var health = 'excellent';
         if (mokemon.health <= 9) health = 'good';
         if (mokemon.health <= 7) health = 'fair';
@@ -769,4 +784,44 @@ function msgBox(title, text, buttons) {
             .attr("type", (buttons.length === 1 ? "submit" : "none"))
         )
     })
+}
+
+function saveGame() {
+    console.log({
+        name: player.name,
+        mokeballs: player.mokeballs,
+        progress: player.progress,
+        food: player.food,
+        speed: player.speed,
+        day: player.day,
+        time: player.time,
+        posse: player.posse.map(moke => {return {
+            type: moke.type,
+            name: moke.name,
+            health: moke.health,
+            conditions: moke.conditions
+        }})
+    })
+    $.ajax({
+        method: "POST",
+        url: '/save',
+        data: {
+            player: JSON.stringify({
+                name: player.name,
+                mokeballs: player.mokeballs,
+                progress: player.progress,
+                food: player.food,
+                speed: player.speed,
+                day: player.day,
+                time: player.time,
+                money: player.money,
+                posse: player.posse.map(moke => {return {
+                    type: moke.type,
+                    name: moke.name,
+                    health: moke.health,
+                    conditions: moke.conditions
+                }})
+            })
+        }
+      });
 }
