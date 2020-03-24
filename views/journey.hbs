@@ -2,45 +2,17 @@
     <link rel="stylesheet" href="assets/css/journey.css">
 </head>
 <body>
-    <div id='playerName'>{{name}}</div>
-    <div id='playerInfo' class='hidden'>
-        {
-            "name": "{{name}}",
-            "progress": {{progress}},
-            "mokeballs": {{mokeballs}},
-            "day": {{day}},
-            "time": {{time}},
-            "food": {{food}},
-            "money": {{money}},
-            "posse": [
-                {{#each posse as |moke|}}
-                {{#if @index}},{{/if}}{
-                    "name": "{{moke.name}}",
-                    "health": {{moke.health}},
-                    "conditions": [
-                        {{#each moke.conditions as |condition|}}
-                            {{#if @index}},{{/if}}
-                            {"name": "{{condition.name}}",
-                            "timeRemaining": {{condition.timeRemaining}}
-                            }
-                        {{/each}}
-                    ]
-                }
-                {{/each}}
-            ]
-        }
-    </div>
     <section id='canvasArea'>
         <div id='sky'></div>
         <div id='sun'></div>
         <div id='ground'></div>
         <div id='path'></div>
         <canvas id='canvas' width="1920" height="1080"></canvas>
-        <div id="msgbox" class="hidden"><div id="msgbuttons"></div></div>    
-        <div id='optionsMenu' class='hidden'>
+        <div id="msgbox" class="hidden dialogBox"><div id="msgbuttons"></div></div>    
+        <div id='optionsMenu' class='hidden dialogBox'>
             <button class="optionButton">Rest</button>
-            <button class="optionButton">Hunt</button>
-            <button class="optionButton" onclick="saveGame()">Save</button>
+            <button class="optionButton" onclick="saveGame(); window.location.href=`/hunt?username=${player.name}&authtoken=${player.authtoken}`">Hunt</button>
+            <button class="optionButton" onclick="saveGame(); closeOptions(); msgBox('Game saved.');">Save</button>
             <button class="optionButton" onclick="window.location.href=window.location.href">Reload</button>
             <button class="optionButton" onclick="closeOptions()">Continue</button>
             <section id="infoPanel">
