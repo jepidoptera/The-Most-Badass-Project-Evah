@@ -66,6 +66,7 @@ app.get("/login", (req, res) => {
         authtokens[username] = generateToken();
         console.log(authtokens[username])
         res.redirect(`journey?username=${username}&authtoken=${authtokens[username]}`);
+        res.end();
     })
 })
 
@@ -99,8 +100,12 @@ app.post("/save", (req, res) => {
     req.body = JSON.parse(req.body.player)
     console.log(req.body);
     let playerID = req.body.name;
-    firebase.database().ref('users/' + playerID + "/gameInfo").set(req.body)
-    res.sendStatus(200);
+    let playerRef = firebase.database().ref('users/' + playerID + "/gameInfo");
+    playerRef.off('value');
+    Object.keys(req.body).forEach(key => {
+        firebase.database().ref('users/' + playerID + "/gameInfo/" + key).set(req.body[key])
+    })
+    res.end();
 })
 
 app.get('/load/:playerID', (req, res) => {
