@@ -94,6 +94,7 @@ app.get ("/hunt", (req, res) => {
     console.log("going hunting")
     let playerID = req.query.username;
     let authtoken = req.query.authtoken;
+    console.log("got auth token " + authtoken + " vs expected " + authtokens[playerID]);
     if (!authtoken || authtokens[playerID] != authtoken) {
         res.sendStatus(403);
         return;
@@ -122,9 +123,15 @@ app.post("/save", (req, res) => {
     res.end();
 })
 
-app.get('/load/:playerID', (req, res) => {
+app.get('/load/:playerID/:authtoken', (req, res) => {
     console.log('loading', req.params['playerID'])
     let playerID = req.params['playerID'];
+    let authtoken = req.params['authtoken'];
+    if (authtoken != authtokens[playerID]) {
+        console.log("got auth token " + authtoken + " vs expected " + authtokens[playerID]);
+        res.sendStatus(403);
+        return;
+    }
     let playerRef = firebase.database().ref('users/' + playerID + "/gameInfo");
     // listen for player value (download entire player object every time anything changes)
     playerRef.on('value', (value) => {
@@ -133,22 +140,7 @@ app.get('/load/:playerID', (req, res) => {
             res.sendStatus(404);
             return;
         }
-        let player = {};
-        player._food = value.val().food;
-        player._kibble = value.val().kibble;
-        player._money = value.val().money;
-        player._mokeballs = value.val().mokeballs;
-        player.mokemon._mokes = value.val().mokemon || [];
-        player._speed = value.val().speed;
-        player._time = value.val().time;
-        player._day = value.val().day;
-        player.posse = value.val().posse;
-        player._location = value.val().location;
-        if (firebaseReady && !loaded) {
-            loaded = true;
-            firebaseReady();
-        }
-        res.json(player);
+        res.json({...value.val(), authtoken: authtokens[playerID]});
     });
 })
 app.listen(port);
