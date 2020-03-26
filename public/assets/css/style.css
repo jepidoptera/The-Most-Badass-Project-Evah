@@ -2,6 +2,9 @@ html, body {
     overflow: hidden;
 }
 
+p {
+    padding: 10px;
+}
 .bg-pan-left {
     -webkit-animation: bg-pan-left 8s infinite both;
     animation: bg-pan-left 8s infinite both;
@@ -127,19 +130,20 @@ label.error {
 .dialogBox {
     position: absolute;
     width: 60%;
-    height: 60%;
+    min-width: 400px;
     border: 3px solid white;
     color: whitesmoke;
     background-color: black;
     text-align: justify;
-    padding: 10px;
     z-index: 99;
-    top: 20%;
-    left: 20%;
+    top: 20px;
+    left: 50%;
+    transform: translate(-50%);
+    font-size: 3vmin;
+    padding: 10px;
 }
 #msgbuttons {
-    position: absolute;
-    display: block;
+    display: inline-block;
     bottom: 0;
     width: 100%;
     text-align: center;

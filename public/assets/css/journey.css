@@ -7,14 +7,19 @@ html, body {
     display: block;
     position: absolute;
 }
-#controls{
+#narrative {
     display: block;
     position: absolute;
     height: 100vh;
     width: Calc(100vw - 161.8vh);
-    background-color: lightgray;
     left: 161.8vh;
     z-index: 3;
+    background-color: black;
+    color: #009900;
+    cursor: pointer;
+    font-family: 'VT323', monospace;
+    font-size: 12pt;
+    padding: 10px;
 }
 #sky {
     background-color: skyblue;
@@ -75,15 +80,7 @@ html, body {
     font-size: 24pt;
     border-radius: 3px;
 }
-#narrative, #options {
-    position: relative;
-    width: 90%;
-    margin: 10px 5%;
-    border: 1px solid black;
-}
-#narrative, #options, #controls {
-    cursor: pointer;
-}
+
 #infoPanel {
     position: absolute;
     width: 50%;
@@ -92,6 +89,7 @@ html, body {
     top: 0;
     border-left: 1px solid white;
     padding: 10px;
+    box-sizing: border-box;
 }
 #posse, #rest, #inventory {
     position: absolute;
@@ -122,7 +120,7 @@ html, body {
         width: 100vw;
         height: 61.8vw;
     }
-    #controls {
+    #narrative {
         width: 100vw;
         height: Calc(100vh - 61.8vw);
         bottom: 0;
