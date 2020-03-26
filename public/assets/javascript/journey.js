@@ -491,6 +491,47 @@ const events = {
                 {text: "how unfortunate"}
             ])
         }
+    },
+    foodLow: {
+        get occurs() {
+            return player.hour === 0 && player.food < player.foodPerDay * 3;
+        },
+        function: () => {
+            let daysRemaining = parseInt(player.food / player.foodPerDay) + 1;
+            player.lowFood = true;
+            player.messages.push(`You are low on food.  You will starve in: ${daysRemaining} days.`)
+        }
+    },
+    starve: {
+        get occurs() {
+            return player.food <= 0;
+        },
+        function: () => {
+            if (player.posse.length === 0) {
+                msgBox("death by starvation", "You have no food and no Mokemon.  You have starved to death!", [
+                    {text: "awwwwwww", function: () => window.location.href="/"}
+                ])
+            }
+            else {
+                msgBox("starvation", "You are out of food! Who will you eat to survive?", player.posse.map(moke => {
+                    return {
+                        text: `${moke.name} (${moke.foodValue} food, eats ${moke.hunger}/day)`,
+                        function: () => {
+                            player.food += moke.foodValue;
+                            moke.die(); 
+                        }
+                    }
+                }))
+            }
+        }
+    },
+    dontStarve: {
+        get occurs() {
+            return player.food >= player.foodPerDay * 3;
+        },
+        function () {
+
+        }
     }
 };
 
@@ -511,36 +552,43 @@ class mokePosse {
             this.height = 50;
             this.width = 30;
             this.foodValue = 160;
+            this.hunger = 5;
             break;
         case "Mallowbear":
             this.height = 50;
             this.width = 40;
             this.foodValue = 200;
+            this.hunger = 10;
             break;
         case "Apismanion":
             this.height = 40;
             this.width = 35;
             this.foodValue = 160;
+            this.hunger = 8;
             break;
         case "Marlequin":
             this.height = 40;
             this.width = 30;
             this.foodValue = 90;
+            this.hunger = 6;
             break;
         case "Wingmat":
             this.height = 40;
             this.width = 70;
             this.foodValue = 160;
+            this.hunger = 8;
             break;
         case "Zyant":
             this.height = 50;
             this.width = 60;
             this.foodValue = 160;
+            this.hunger = 7;
             break;
         case "Shadowdragon":
             this.height = 70;
             this.width = 70;
-            this.foodValue = 160;
+            this.foodValue = 350;
+            this.hunger = 20;
             break;
 
         }
@@ -614,17 +662,28 @@ $(document).ready(() => {
     trailHeight = $("#path").position().top / $("#canvasArea").height();
     horizonHeight = $("#ground").position().top / $("#canvasArea").height();
 
-    loadPlayer();
-    if (!player.progress) newGame();
-
-    // construct mokemon class from simplified objects
-    let posse = player.posse;
-    player.posse = [];
-    posse.forEach(moke => {
-        player.posse.push(new mokePosse(moke.name, moke.health, moke.conditions));
-    })
-
-    gameInterval = setInterval(gameLoop, 1000 / canvas.metrics.frameRate);
+    loadPlayer((playerData) => {
+        player = playerData;
+        if (!player.progress) newGame();
+        else {
+            player.currentLocation = trail.locationAt(player.progress);
+            trail.loadFrom(player.progress);
+        }
+        // construct mokemon class from simplified objects
+        let posse = player.posse;
+        player.posse = [];
+        posse.forEach(moke => {
+            player.posse.push(new mokePosse(moke.name, moke.health, moke.conditions));
+        })
+    
+        player = {
+            ...player,
+            get foodPerDay() {
+                return 5 + player.posse.reduce((sum, moke) => sum + moke.hunger, 0)
+            }
+        }
+        gameInterval = setInterval(gameLoop, 1000 / canvas.metrics.frameRate);
+    });
 })
 
 function newGame() {
@@ -638,6 +697,7 @@ function newGame() {
     player.money = 0;
     // reset to beginning of trail
     player.progress = 1;
+    player.messages = [];
     // construct a new party 
     player.posse = [{name: 'dezzy'}, {name: 'apismanion'}, {name: 'mallowbear'}, {name: 'marlequin'}, {name: 'wingmat'}];
     // // remove all background objects
@@ -697,8 +757,10 @@ function nextDay() {
     player.time = 0; 
     player.day += 1;
     // eat
-    player.food -= 10;
-    player.kibble -= 5 * player.posse.length;
+    player.food -= 5;
+    player.posse.forEach(moke => {
+        player.food -= moke.foodValue / 20;
+    })
     // mokemon conditions (ebola and so forth)
     player.posse.forEach((mokemon) =>{
         mokemon.doConditions();
@@ -708,13 +770,17 @@ function nextDay() {
 function narrate() {
     // measure the distance to out next location
     var distanceTo = parseInt(trail.currentLocation.length - trail.currentLocation.progress);
+    let arrived = distanceTo === 0;
+    if (arrived) distanceTo = trail.nextLocation.length;
 
     $("#narrative").html(
+        'tap here or press enter for options <br>' + 
         'Day: ' + player.day + 
-        ((distanceTo == 0)  
-        ? ('<br>' + 'You have reached: ' + trail.nextLocation.name + '.')
-        : ('<br>Location: ' + trail.currentLocation.name)) +
-            '<br>' + distanceTo + ' miles to ' + trail.currentLocation.next.name + '.');
+        ((arrived)  
+        ? (`<br>You have reached: ${trail.nextLocation.name}. <br>${distanceTo} miles until ${trail.currentLocation.next.next.name}.`)
+        : (`<br>Location: ${trail.currentLocation.name}<br>${distanceTo} miles to ${trail.currentLocation.next.name}.`)) + '<br>' +
+        (player.messages.length ? player.messages[player.messages.length - 1] : "")
+    )
 }
 
 function arriveAt(location) {
@@ -810,7 +876,7 @@ function options () {
     if (paused) return;
     pause();
     $("#optionsMenu").show();
-    $("#foodInfo").text(`food: ${player.food}`);
+    $("#foodInfo").text(`food: ${player.food} (-${player.foodPerDay}/day)`);
     $("#moneyInfo").text(`money: ${player.money}`);
     $("#ballsInfo").text(`mokeballs: ${player.mokeballs}`);
 }
