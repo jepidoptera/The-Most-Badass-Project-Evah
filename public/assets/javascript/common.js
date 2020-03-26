@@ -36,21 +36,21 @@ function saveGame() {
                 }})
             })
         }
-    }).then((result) => {
-        this._then(result);
-    });
-
-    return this;
+    })
 }
 
 function loadPlayer(callback) {
     let urlParams = new URLSearchParams(location.search)
-    let authtoken = urlParams.get('authtoken')
+    let authtoken = urlParams.get('auth')
 
     $.ajax({
         method: "GET",
         url: "/load/" + $("#playerName").text() + "/" + authtoken
-    }).done(data => callback({...data, authtoken: authtoken}));
+    }).done(data => callback({...data, messages: data.messages || [], authtoken: authtoken}))
+    .fail(err => {
+        console.log('load error: ', err);
+        callback({name: urlParams.get('name')})
+    });
     // try {
     //     player = JSON.parse($("#playerInfo").text());
     // }
