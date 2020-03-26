@@ -527,10 +527,10 @@ const events = {
     },
     dontStarve: {
         get occurs() {
-            return player.food >= player.foodPerDay * 3;
+            return player.foodLow && player.food >= player.foodPerDay * 3;
         },
         function () {
-
+            player.messages.push("You're doing ok on food for now.")
         }
     }
 };
@@ -664,7 +664,10 @@ $(document).ready(() => {
 
     loadPlayer((playerData) => {
         player = playerData;
-        if (!player.progress) newGame();
+        if (!player.progress) { 
+            newGame();
+            saveGame();
+        }
         else {
             player.currentLocation = trail.locationAt(player.progress);
             trail.loadFrom(player.progress);
@@ -690,11 +693,9 @@ function newGame() {
     // give player initial stats
     player.food = 99;
     player.money = 1000;
-    player.kibble = 450;
     player.mokeballs = 27;
     player.speed = 4;
     player.name = player.name || 'simone';
-    player.money = 0;
     // reset to beginning of trail
     player.progress = 1;
     player.messages = [];
@@ -815,7 +816,6 @@ function rest() {
         player.day += parseInt($("#restLength").val());
         $("#rest").hide();
         unpause();
-        gameLoop();
     });
 }
 
