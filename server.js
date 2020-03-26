@@ -53,11 +53,7 @@ app.get("/login", (req, res) => {
     console.log(req.body);
     res.query = null;
     playerRef.on('value', value => {
-        if (!value.val()) {
-            res.render("journey", {name: username})
-            return;
-        }
-        if (value.val().password) {
+        if (value.val() && value.val().password) {
             if (password != value.val().password) {
                 res.sendStatus(403);
                 return;
@@ -65,21 +61,20 @@ app.get("/login", (req, res) => {
         }
         authtokens[username] = generateToken();
         console.log(authtokens[username])
-        res.redirect(`journey?username=${username}&authtoken=${authtokens[username]}`);
+        res.redirect(`journey?name=${username}&auth=${authtokens[username]}`);
         res.end();
     })
 })
 
 app.get ("/journey", (req, res) => {
     console.log("let's go")
-    let playerID = req.query.username;
-    let authtoken = req.query.authtoken;
+    let playerID = req.query.name;
+    let authtoken = req.query.auth;
     if (!authtoken || authtokens[playerID] != authtoken) {
         res.sendStatus(403);
         return;
     }
     let playerRef = firebase.database().ref('users/' + playerID + "/gameInfo");
-    console.log(req.body);
     res.query = null;
     playerRef.on('value', value => {
         if (!value.val()) {
@@ -92,8 +87,8 @@ app.get ("/journey", (req, res) => {
 
 app.get ("/hunt", (req, res) => {
     console.log("going hunting")
-    let playerID = req.query.username;
-    let authtoken = req.query.authtoken;
+    let playerID = req.query.name;
+    let authtoken = req.query.auth;
     console.log("got auth token " + authtoken + " vs expected " + authtokens[playerID]);
     if (!authtoken || authtokens[playerID] != authtoken) {
         res.sendStatus(403);
