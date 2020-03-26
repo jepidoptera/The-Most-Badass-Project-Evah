@@ -11,33 +11,5 @@
     <title>The Mokemon Trail</title>
     
     <div id='playerName' class='hidden'>{{name}}</div>
-    <div id='playerInfo' class='hidden'>
-        {
-            "name": "{{name}}",
-            "progress": {{progress}},
-            "mokeballs": {{mokeballs}},
-            "day": {{day}},
-            "time": {{time}},
-            "food": {{food}},
-            "money": {{money}},
-            "posse": [
-                {{#each posse as |moke|}}
-                {{#if @index}},{{/if}}{
-                    "name": "{{moke.name}}",
-                    "health": {{moke.health}},
-                    "conditions": [
-                        {{#each moke.conditions as |condition|}}
-                            {{#if @index}},{{/if}}
-                            {"name": "{{condition.name}}",
-                            "timeRemaining": {{condition.timeRemaining}}
-                            }
-                        {{/each}}
-                    ]
-                }
-                {{/each}}
-            ],
-            "authtoken": "{{authtoken}}"
-        }
-    </div>    
     {{{ body }}}
 </html>
