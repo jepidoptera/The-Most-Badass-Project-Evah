@@ -226,7 +226,7 @@ $(document).ready(() => {
                 saveGame();
                 msgBox('darkness', "The sun has gone down.  You head back to camp with your day's catch.",
                 [{text: "ok", function: () => {
-                    window.location.href = `/journey?username=${player.name}&authtoken=${player.authtoken}`;
+                    window.location.href = `/journey?name=${player.name}&auth=${player.authtoken}`;
                 }}]);
                 clearInterval(gameLoop);
             }
