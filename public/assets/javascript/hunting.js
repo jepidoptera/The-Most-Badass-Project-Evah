@@ -95,13 +95,14 @@ class pokeball {
             break;
         default:
             // must be a pokemon
-            player.pokemon.add(creature.type, null);
+            player.pokemon.push({name: creature.type});
             break;
         }
         if (food) {
             player.food += food;
             message("You gained " + food + " food.");
         }
+        saveGame();
     }
 }
 
@@ -191,174 +192,176 @@ function message(text) {
 }
 
 $(document).ready(() => {
-    loadPlayer();
+    loadPlayer((playerData) => {
+        player = playerData
+        // load images
+        var ball = new pokeball();
+        hunter.img = $("<img>")
+            .attr('src', './assets/images/hunter.png')
+            .css({"position": "absolute", "height": "50px", "width": "50px", "transform": "translate(-25%, -25%)"})
+            .addClass('ordered')
+            .attr('id', 'you')
+            .attr('z-offset', 37);
+        hunter.img2 = $("<img>")
+            .attr('src', './assets/images/arrow.png')
+            .css({"position": "absolute", "height": "25px", "width": "25px", "transform": "translate(-50%, -50%)"})
+            .addClass('ordered');
+        $('#huntingField').append(hunter.img);
+        $('#huntingField').append(hunter.img2);
+        $('#huntingField').append(ball.img.hide());
 
-    // load images
-    var ball = new pokeball();
-    hunter.img = $("<img>")
-        .attr('src', './assets/images/hunter.png')
-        .css({"position": "absolute", "height": "50px", "width": "50px", "transform": "translate(-25%, -25%)"})
-        .addClass('ordered')
-        .attr('id', 'you')
-        .attr('z-offset', 37);
-    hunter.img2 = $("<img>")
-        .attr('src', './assets/images/arrow.png')
-        .css({"position": "absolute", "height": "25px", "width": "25px", "transform": "translate(-50%, -50%)"})
-        .addClass('ordered');
-    $('#huntingField').append(hunter.img);
-    $('#huntingField').append(hunter.img2);
-    $('#huntingField').append(ball.img.hide());
-
-    // make a few trees
-    var totalTrees = parseInt(Math.random() * 10) + 5;
-    calculateBounds();
-    for (i = 0; i < totalTrees; i++) {
-        new tree(Math.random() * xbound, (i / totalTrees) * ybound);
-    }
-
-    // count down til dark
-    function timeDown() {
-        player.time += 1;
-        saveGame();
-        hoursTilDark = parseInt((24 - player.time) / 2);
-        $("#time").text('Hours til dark: '+ hoursTilDark);
-        if (hoursTilDark == 0) {
-            msgBox('darkness', "The sun has gone down.  You head back to camp with your day's catch.",
-            [{text: "ok", function: () => {
-                window.location.href = `/journey?username=${player.name}&authtoken=${player.authtoken}`;
-            }}]);
-            clearInterval(gameLoop);
+        // make a few trees
+        var totalTrees = parseInt(Math.random() * 10) + 5;
+        calculateBounds();
+        for (i = 0; i < totalTrees; i++) {
+            new tree(Math.random() * xbound, (i / totalTrees) * ybound);
         }
-        else {
-            setTimeout(timeDown, 4000);
-        }
-    }    
-    timeDown();
 
-    var gameLoop = setInterval(() => {
-        // move if key is down
-        if (hunter.motion != 0) {
-            hunter.x += Math.sin(hunter.direction * Math.PI / 180.0) * hunter.speed * hunter.motion;
-            hunter.y -= Math.cos(hunter.direction * Math.PI / 180.0) * hunter.speed * hunter.motion;
-            // stay in bounds
-            calculateBounds();
-            hunter.x = Math.min(Math.max(hunter.x, 0), xbound);
-            hunter.y = Math.min(Math.max(hunter.y, 0), ybound);
-        }
-        // move pokeball
-        if (ball.active) {
-            ball.fly();
-        }
-        // pokemon processing and garbage collection
-        var stillActiveCreatures = [];
-        activeCreatures.forEach((pokemon) => {
-            pokemon.move();
-            if (pokemon.active) stillActiveCreatures.push(pokemon);
-        });
-        activeCreatures = stillActiveCreatures;
+        // count down til dark
+        function timeDown() {
+            player.time += 1;
+            hoursTilDark = parseInt((24 - player.time) / 2);
+            $("#time").text('Hours til dark: '+ hoursTilDark);
+            if (hoursTilDark == 0) {
+                saveGame();
+                msgBox('darkness', "The sun has gone down.  You head back to camp with your day's catch.",
+                [{text: "ok", function: () => {
+                    window.location.href = `/journey?username=${player.name}&authtoken=${player.authtoken}`;
+                }}]);
+                clearInterval(gameLoop);
+            }
+            else {
+                setTimeout(timeDown, 4000);
+            }
+        }    
+        timeDown();
 
-        // apply position and rotation for player
-        hunter.img.css({'left': hunter.x + "vw", 'top': hunter.y + "vw"});
-        hunter.img2.rotate({angle: hunter.direction, center: ["50%", "50%"]});
-        hunter.img2.css({
-            'left': hunter.x + Math.sin(hunter.direction * Math.PI / 180.0) * 3 + "vw",
-            'top': hunter.y - Math.cos(hunter.direction * Math.PI / 180.0) * 3 + "vw"});
-        
-        $("#bullets").text("mokeballs remaining: " + player.mokeballs);
-        // keep things ordered    
-        orderZIndex();
-    }, 30);
-
-    // keyboard input
-    $(document).on('keydown', (event) => {
-        switch (event.key) {
-        case "ArrowLeft":
-            // turn left
-            hunter.direction -= (360 / turnPositions);
-            break;
-        case "ArrowRight":
-            // turn right
-            hunter.direction += (360 / turnPositions);
-            break;
-        case "ArrowUp":
-            // forward
-            hunter.motion = 1;
-            break;
-        case "ArrowDown":
-            // down
-            hunter.motion = -1;
-            break;
-        }
-    });
-
-    $(document).on('keyup', (event) => {
-        switch (event.key) {
-        case "ArrowUp":
-        case "ArrowDown":
-            // stop
-            hunter.motion = 0;
-            break;
-        case " ":
-            ball.throw(hunter.direction);
-        }
-    });
-
-    // sometimes send out a pokemon or animal
-    function newPokemon () {
-        // wait for next one
-        setTimeout(newPokemon, parseInt(Math.random() * 10000) + 100);
-
-        // but don't appear if the window isn't focused
-        if (!document.hasFocus()) return;
-
-        var preys = [
-            {name: 'snorlax',
-            chance: 1},
-            {name: 'charizard',
-            chance: 1},
-            {name: 'ninetales',
-            chance: 1},
-            {name: 'jigglypuff',
-            chance: 1},
-            {name: 'articuno',
-            chance: 1},
-            {name: 'bison',
-            chance: 6},
-            {name: 'deer',
-            chance: 11},
-            {name: 'squirrel',
-            chance: 32},
-        ];
-        // cast the die
-        var totalChance = preys
-            .map((prey) => {return prey.chance;})
-            .reduce((sum, nextChance, i) => {
-                sum += nextChance; 
-                preys[i].chance = sum; 
-                return sum;
+        var gameLoop = setInterval(() => {
+            // move if key is down
+            if (hunter.motion != 0) {
+                hunter.x += Math.sin(hunter.direction * Math.PI / 180.0) * hunter.speed * hunter.motion;
+                hunter.y -= Math.cos(hunter.direction * Math.PI / 180.0) * hunter.speed * hunter.motion;
+                // stay in bounds
+                calculateBounds();
+                hunter.x = Math.min(Math.max(hunter.x, 0), xbound);
+                hunter.y = Math.min(Math.max(hunter.y, 0), ybound);
+            }
+            // move pokeball
+            if (ball.active) {
+                ball.fly();
+            }
+            // pokemon processing and garbage collection
+            var stillActiveCreatures = [];
+            activeCreatures.forEach((pokemon) => {
+                pokemon.move();
+                if (pokemon.active) stillActiveCreatures.push(pokemon);
             });
-        var chance = Math.random() * totalChance;
-        // see which one we picked
-        for (i = 0; i < preys.length; i++) {
-            if (preys[i].chance > chance) {
-                activeCreatures.push(new creature(preys[i].name));
+            activeCreatures = stillActiveCreatures;
+
+            // apply position and rotation for player
+            hunter.img.css({'left': hunter.x + "vw", 'top': hunter.y + "vw"});
+            hunter.img2.rotate({angle: hunter.direction, center: ["50%", "50%"]});
+            hunter.img2.css({
+                'left': hunter.x + Math.sin(hunter.direction * Math.PI / 180.0) * 3 + "vw",
+                'top': hunter.y - Math.cos(hunter.direction * Math.PI / 180.0) * 3 + "vw"});
+            
+            $("#bullets").text("mokeballs remaining: " + player.mokeballs);
+            // keep things ordered    
+            orderZIndex();
+        }, 30);
+
+        // keyboard input
+        $(document).on('keydown', (event) => {
+            switch (event.key) {
+            case "ArrowLeft":
+                // turn left
+                hunter.direction -= (360 / turnPositions);
+                break;
+            case "ArrowRight":
+                // turn right
+                hunter.direction += (360 / turnPositions);
+                break;
+            case "ArrowUp":
+                // forward
+                hunter.motion = 1;
+                break;
+            case "ArrowDown":
+                // down
+                hunter.motion = -1;
                 break;
             }
-        }
-    }
-    newPokemon();
-
-    function calculateBounds() {
-        ybound = ($(window).height() - hunter.img.height()) / ($(window).width() - hunter.img.width()) * 100 ;
-        xbound = (1 - hunter.img.width() / $(window).width()) * 100;
-    }
-
-    function orderZIndex() {
-        // order things by y coordinate
-        $.each($(".ordered"), (i, element) => {
-            var zindex = parseInt($(element).css('top'));
-            var offset =  parseInt($(element).attr('z-offset')) || 0;
-            $(element).css({"z-index": zindex + offset});
         });
-    }
+
+        $(document).on('keyup', (event) => {
+            switch (event.key) {
+            case "ArrowUp":
+            case "ArrowDown":
+                // stop
+                hunter.motion = 0;
+                break;
+            case " ":
+                ball.throw(hunter.direction);
+            }
+        });
+
+        // sometimes send out a pokemon or animal
+        function newPokemon () {
+            // wait for next one
+            setTimeout(newPokemon, parseInt(Math.random() * 10000) + 100);
+
+            // but don't appear if the window isn't focused
+            if (!document.hasFocus()) return;
+
+            var preys = [
+                {name: 'snorlax',
+                chance: 1},
+                {name: 'charizard',
+                chance: 1},
+                {name: 'ninetales',
+                chance: 1},
+                {name: 'jigglypuff',
+                chance: 1},
+                {name: 'articuno',
+                chance: 1},
+                {name: 'bison',
+                chance: 6},
+                {name: 'deer',
+                chance: 11},
+                {name: 'squirrel',
+                chance: 32},
+            ];
+            // cast the die
+            var totalChance = preys
+                .map((prey) => {return prey.chance;})
+                .reduce((sum, nextChance, i) => {
+                    sum += nextChance; 
+                    preys[i].chance = sum; 
+                    return sum;
+                });
+            var chance = Math.random() * totalChance;
+            // see which one we picked
+            for (i = 0; i < preys.length; i++) {
+                if (preys[i].chance > chance) {
+                    activeCreatures.push(new creature(preys[i].name));
+                    break;
+                }
+            }
+        }
+        newPokemon();
+
+        function calculateBounds() {
+            ybound = ($(window).height() - hunter.img.height()) / ($(window).width() - hunter.img.width()) * 100 ;
+            xbound = (1 - hunter.img.width() / $(window).width()) * 100;
+        }
+
+        function orderZIndex() {
+            // order things by y coordinate
+            $.each($(".ordered"), (i, element) => {
+                var zindex = parseInt($(element).css('top'));
+                var offset =  parseInt($(element).attr('z-offset')) || 0;
+                $(element).css({"z-index": zindex + offset});
+            });
+        }
+    });
+
 })
