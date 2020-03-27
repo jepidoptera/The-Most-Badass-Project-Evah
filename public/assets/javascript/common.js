@@ -25,16 +25,16 @@ function saveGame() {
     $.ajax({
         method: "POST",
         url: '/save',
-        data: {
-            player: JSON.stringify({
-                ...player,
-                posse: player.posse.map(moke => {return {
-                    type: moke.type,
-                    name: moke.name,
-                    health: moke.health,
-                    conditions: moke.conditions
-                }})
-            })
+        data: {data: JSON.stringify({
+            ...player,
+            currentLocation: player.currentLocation.name,
+            posse: player.posse.map(moke => {return {
+                type: moke.type,
+                name: moke.name,
+                health: moke.health,
+                conditions: moke.conditions
+            }})
+        })
         }
     })
 }
