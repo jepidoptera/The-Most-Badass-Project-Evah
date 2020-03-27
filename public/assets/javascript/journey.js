@@ -322,7 +322,7 @@ const trail = new Trail ([
                 SceneObjects.cactus,
                 SceneObjects.rock
             ],
-            length: 56 // seconds
+            length: 96 // seconds
 
         }),
         TrailLocation({
@@ -383,13 +383,14 @@ const trail = new Trail ([
 class Canvas {
     constructor () {
         this._canvas = document.getElementById("canvas");
+        this._canvas.width = Math.max(screen.width, screen.height);
+        this._canvas.height = this._canvas.width * 0.618;
         this.height = this._canvas.height;
         this.width = this._canvas.width;
         this.ctx = this._canvas.getContext('2d');
     }
     metrics = {
         frameRate: 30,
-        screen_width: 1000, // arbitrary units
         screen_length: 20 // seconds
     }
 
@@ -407,9 +408,9 @@ class Canvas {
 
             if (!mokesDrawn && (n == trail.scenery.length - 1 || trail.scenery[n+1].foreground)) {
                 this.ctx.globalAlpha = 1;
-                let totalWidth = 20;
+                let totalWidth = canvas.width/100;
                 player.posse.forEach((mokemon, n) => {
-                    totalWidth += mokemon.width + 20;
+                    totalWidth += mokemon.width + canvas.width/100;
                     this.ctx.drawImage(mokemon.img, canvas.width / 4 - totalWidth, mokemon.y - mokemon.z, mokemon.width, mokemon.height);
                 })
                 mokesDrawn = true;
@@ -644,8 +645,8 @@ class backgroundImage {
 
         let distanceFactor = (100 - this.distance) / 100;
         this.size = Math.random();
-        this.width = 20 + (prototype.sizeRange.min.x + this.size * (prototype.sizeRange.max.x - prototype.sizeRange.min.x)) * distanceFactor;
-        this.height = 20 + (prototype.sizeRange.min.y + this.size * (prototype.sizeRange.max.y - prototype.sizeRange.min.y)) * distanceFactor;
+        this.width = canvas.width/100 + (prototype.sizeRange.min.x + this.size * (prototype.sizeRange.max.x - prototype.sizeRange.min.x)) * distanceFactor;
+        this.height = canvas.width/100 + (prototype.sizeRange.min.y + this.size * (prototype.sizeRange.max.y - prototype.sizeRange.min.y)) * distanceFactor;
 
         let floor = (this.foreground) ? canvas.height * 1.1 : canvas.height * trailHeight;
         let ceiling = this.foreground ? canvas.height * (trailHeight + .05) : canvas.height * horizonHeight ;
