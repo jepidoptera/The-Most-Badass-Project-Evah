@@ -135,7 +135,7 @@ label.error {
     color: whitesmoke;
     background-color: black;
     text-align: justify;
-    z-index: 99;
+    z-index: 999;
     top: 20px;
     left: 50%;
     transform: translate(-50%);
