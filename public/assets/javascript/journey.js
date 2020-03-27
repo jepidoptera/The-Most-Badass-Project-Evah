@@ -595,7 +595,9 @@ class mokePosse {
         }
         this.y = trailHeight * canvas.height - this.height;
         this.z = 0;
-
+        this.width *= canvas.width / 1920;
+        this.height *= canvas.height / 1920;
+        
         this.img = $("<img>").attr('src', './assets/images/mokemon/' + name.toLowerCase() + ".png")[0];
         this.bounceHeight = this.height / 2;
         this.index = player.posse.length;
