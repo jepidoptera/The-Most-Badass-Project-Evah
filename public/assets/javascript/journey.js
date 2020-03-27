@@ -527,7 +527,7 @@ const events = {
     },
     dontStarve: {
         get occurs() {
-            return player.foodLow && player.food >= player.foodPerDay * 3;
+            return player.lowFood && player.food >= player.foodPerDay * 3;
         },
         function () {
             player.messages.push("You're doing ok on food for now.")
@@ -698,7 +698,8 @@ function newGame() {
     player.name = player.name || 'simone';
     // reset to beginning of trail
     player.progress = 1;
-    player.messages = [];
+    player.messages = ["You set off on the trail! Next stop: the forest of doom."];
+    player.currentLocation = trail.locations[1];
     // construct a new party 
     player.posse = [{name: 'dezzy'}, {name: 'apismanion'}, {name: 'mallowbear'}, {name: 'marlequin'}, {name: 'wingmat'}];
     // // remove all background objects
@@ -800,10 +801,6 @@ function unpause() {
         paused = false;
         gameInterval = setInterval(gameLoop, 1000 / canvas.metrics.frameRate);
     }
-}
-
-function hunt() {
-    window.location.href = ('poke-hunt.html?playerID=' + player.ID);
 }
 
 function rest() {
