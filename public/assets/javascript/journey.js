@@ -593,10 +593,10 @@ class mokePosse {
             break;
 
         }
-        this.y = trailHeight * canvas.height - this.height;
-        this.z = 0;
         this.width *= canvas.width / 1920;
         this.height *= canvas.height / 1920;
+        this.y = trailHeight * canvas.height - this.height;
+        this.z = 0;
         
         this.img = $("<img>").attr('src', './assets/images/mokemon/' + name.toLowerCase() + ".png")[0];
         this.bounceHeight = this.height / 2;
@@ -647,8 +647,10 @@ class backgroundImage {
 
         let distanceFactor = (100 - this.distance) / 100;
         this.size = Math.random();
-        this.width = canvas.width/100 + (prototype.sizeRange.min.x + this.size * (prototype.sizeRange.max.x - prototype.sizeRange.min.x)) * distanceFactor;
-        this.height = canvas.width/100 + (prototype.sizeRange.min.y + this.size * (prototype.sizeRange.max.y - prototype.sizeRange.min.y)) * distanceFactor;
+        this.width = 25 + (prototype.sizeRange.min.x + this.size * (prototype.sizeRange.max.x - prototype.sizeRange.min.x)) * distanceFactor;
+        this.height = 25 + (prototype.sizeRange.min.y + this.size * (prototype.sizeRange.max.y - prototype.sizeRange.min.y)) * distanceFactor;
+        this.width *= canvas.width / 1920;
+        this.height *= canvas.width / 1920;
 
         let floor = (this.foreground) ? canvas.height * 1.1 : canvas.height * trailHeight;
         let ceiling = this.foreground ? canvas.height * (trailHeight + .05) : canvas.height * horizonHeight ;
