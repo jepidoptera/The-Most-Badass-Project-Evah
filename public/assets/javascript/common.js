@@ -64,3 +64,16 @@ function loadPlayer(callback) {
     // }
 }
 
+function loadTrail(callback) {
+    $.ajax({
+        method: "GET",
+        url: "/load/trail"
+    }).done(data => {
+        callback(data)
+    }).fail(err => {
+        console.log('load error: ', err);
+        callback({name: urlParams.get('name')})
+    });
+
+}
+
