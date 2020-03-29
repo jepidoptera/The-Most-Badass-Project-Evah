@@ -43,8 +43,8 @@ const trail = [
         name: 'The Desert of Dryness',
         scenery: [
             {type: "signpost", frequency: 0},
-            {type: "cactus", frequency: 5},
-            {type: "rock", frequency: 5}
+            {type: "cactus", frequency: 2},
+            {type: "rock", frequency: 2}
         ],
         length: 96 // seconds
 
