@@ -62,67 +62,81 @@ class Mokeball {
     }
 }
 
-class Hunter {
-    constructor(x, y) {
+class Character {
+    constructor(type, x, y) {
+        this.type = type;
         this.x = x;
         this.y = y;
-        this.currentLocation = "The Forest of Doom";
-        this.destination = {x: this.x, y: this.y};
         this.speed = 2.5;
+        this.destination = {x: this.x, y: this.y};
         this.offset = {x: 0, y: 0};
-        this.travelFrames = 0;
-        this.image = $("<img>").attr('src', './assets/images/hunter.png')[0];
         this.realX = map.nodes[this.x][this.y].x;
         this.realY = map.nodes[this.x][this.y].y;
-        this.moveInterval = setInterval(() => {this.move()}, 1000 / frameRate);
+        this.travelFrames = 0;
     }
     move() {
-            if (this.x !== this.destination.x || this.y !== this.destination.y) {
-                if (this.travelFrames === 0) {
-                    this.offset = {x: 0, y: 0};
-                    this.throwing = false;
-                    if (this.nextNode) {
-                        this.x = this.nextNode.xindex;
-                        this.y = this.nextNode.yindex;
-                        this.realX = map.nodes[this.x][this.y].x;
-                        this.realY = map.nodes[this.x][this.y].y;
+        if (this.x !== this.destination.x || this.y !== this.destination.y) {
+            if (this.travelFrames === 0) {
+                this.offset = {x: 0, y: 0};
+                this.throwing = false;
+                if (this.nextNode) {
+                    this.x = this.nextNode.xindex;
+                    this.y = this.nextNode.yindex;
+                    this.realX = map.nodes[this.x][this.y].x;
+                    this.realY = map.nodes[this.x][this.y].y;
+                }
+                if (this.y === this.destination.y && this.x === this.destination.x) return;
+                else {
+                    this.direction = findPath(this, this.destination);
+                    if (this.direction.x === 0 && this.direction.y === 0) {
+                        this.destination = {x: this.x, y: this.y}
+                        return;
                     }
-                    if (this.y === this.destination.y && this.x === this.destination.x) return;
-                    else {
-                        this.direction = findPath(this, this.destination);
-                        if (this.direction.x === 0 && this.direction.y === 0) {
-                            this.destination = {x: this.x, y: this.y}
-                            return;
-                        }
-                        this.nextNode = map.nodes[this.x + this.direction.x][this.y + this.direction.y];
-                        let xdist = this.nextNode.x - map.nodes[this.x][this.y].x;
-                        let ydist = this.nextNode.y - map.nodes[this.x][this.y].y;
-                        let direction_distance = Math.sqrt(xdist ** 2 + ydist ** 2);
-                        this.travelFrames = Math.ceil(direction_distance / this.speed * frameRate);
-                        this.travelX = xdist / this.travelFrames / .866;
-                        this.travelY = ydist / this.travelFrames;
-                    }
-                }
-                this.travelFrames --;
-                this.offset.x += this.travelX;
-                this.offset.y += this.travelY;
-                this.realY += this.travelY;
-                this.realX += this.travelX;
-                if (this.x + this.offset.x < viewport.x + viewport.width / 3) {
-                    viewport.x = Math.max(this.x + this.offset.x - viewport.width / 3, 1);
-                }
-                if (this.x + this.offset.x > viewport.x + viewport.width * .666) {
-                    viewport.x = Math.min(this.x + this.offset.x - viewport.width * .666, mapWidth - 1 - viewport.width);
-                }
-                if (this.realY < viewport.y + viewport.height / 3) {
-                    viewport.y = Math.max(this.realY - viewport.height / 3, 1);
-                }
-                if (this.realY > viewport.y + viewport.height * .666) {
-                    viewport.y = Math.min(this.realY - viewport.height * .666, mapHeight - 1 - viewport.height);
+                    this.nextNode = map.nodes[this.x + this.direction.x][this.y + this.direction.y];
+                    let xdist = this.nextNode.x - map.nodes[this.x][this.y].x;
+                    let ydist = this.nextNode.y - map.nodes[this.x][this.y].y;
+                    let direction_distance = Math.sqrt(xdist ** 2 + ydist ** 2);
+                    this.travelFrames = Math.ceil(direction_distance / this.speed * frameRate);
+                    this.travelX = xdist / this.travelFrames / .866;
+                    this.travelY = ydist / this.travelFrames;
                 }
             }
+            this.travelFrames --;
+            this.offset.x += this.travelX;
+            this.offset.y += this.travelY;
+            this.realY += this.travelY;
+            this.realX += this.travelX;
+            if (this.x + this.offset.x < viewport.x + viewport.width / 3) {
+                viewport.x = Math.max(this.x + this.offset.x - viewport.width / 3, 1);
+            }
+            if (this.x + this.offset.x > viewport.x + viewport.width * .666) {
+                viewport.x = Math.min(this.x + this.offset.x - viewport.width * .666, mapWidth - 1 - viewport.width);
+            }
+            if (this.realY < viewport.y + viewport.height / 3) {
+                viewport.y = Math.max(this.realY - viewport.height / 3, 1);
+            }
+            if (this.realY > viewport.y + viewport.height * .666) {
+                viewport.y = Math.min(this.realY - viewport.height * .666, mapHeight - 1 - viewport.height);
+            }
+        }
     }
 }
+
+class Hunter extends Character {
+    constructor(x, y) {
+        super('human', x, y);
+        this.image = $("<img>").attr('src', './assets/images/hunter.png')[0];
+        this.moveInterval = setInterval(() => {this.move()}, 1000 / frameRate);
+    }
+}
+
+class Animal extends Character {
+    constructor(type, x, y) {
+
+    }
+}
+
+
 
 $(document).ready(() => {
     const canvas = $("#canvas");
@@ -159,7 +173,7 @@ $(document).ready(() => {
     loadTrail(trail => {
         loadPlayer(player => {
 
-            map = genMap(trail[trail.map(location => location.name).indexOf(player.currentLocation || "The Forest of Doom")]);
+            map = genMap(trail[trail.map(location => location.name).indexOf(player.currentLocation || "The Desert of Dryness")]);
             hunter = new Hunter(mapWidth/2, mapHeight/2);
             window.addEventListener('resize', sizeCanvas);
             sizeCanvas();
@@ -267,15 +281,17 @@ $(document).ready(() => {
 function genMap(terrain) {
     let map = {scenery: {}, backgrounds: [], nodes: []};
     terrain.scenery.forEach((item, i) => {
-        map.scenery[item.type] = [];
-        try {
-            map.scenery[item.type] = {type: item.type, images: [], frequency: item.frequency};
-            for (let n = 0; n < 5; n++) {
-                map.scenery[item.type].images[n] = $("<img>").attr("src", `/assets/images/${item.type}${n}.png`)[0];
+        if (item.frequency > 0) {
+            map.scenery[item.type] = [];
+            try {
+                map.scenery[item.type] = {type: item.type, images: [], frequency: item.frequency};
+                for (let n = 0; n < 5; n++) {
+                    map.scenery[item.type].images[n] = $("<img>").attr("src", `/assets/images/${item.type}${n}.png`)[0];
+                }
             }
-        }
-        catch{
-            map.images[item.type] = undefined;
+            catch{
+                map.images[item.type] = undefined;
+            }
         }
     })
 
