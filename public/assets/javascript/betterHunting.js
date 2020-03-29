@@ -331,8 +331,8 @@ function genMap(terrain) {
                     }
     
                     if (item.type === "rock") {
-                        map.nodes[x][y].object.height = .75;
-                        map.nodes[x][y].object.width = .75;
+                        map.nodes[x][y].object.height = .25 + Math.random() * .5;
+                        map.nodes[x][y].object.width = .25 + Math.random() * .5;
                     }
                     else if (item.type === "cactus") {
                         map.nodes[x][y].object.height = 2;
