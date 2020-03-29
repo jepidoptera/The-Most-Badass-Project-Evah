@@ -2,7 +2,7 @@
 html, body {margin: 0; height: 100%; overflow: hidden}
 
 body {
-    background-color: green;
+    background-color: black;
 }
 
 .msg, #time {
@@ -41,13 +41,32 @@ body {
     background-color: whitesmoke;
     z-index: 1001;
 }
-#blackout {
+#canvas {
+    width: 100vmax;
+    height: 61.8vmax;
+    background-color: green;
     position: absolute;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: black;
-    z-index: 1000;
-    margin: 0;
-    display: none;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+@media (max-aspect-ratio: 1/1) {
+    #canvas {
+        height: 100vmax;
+        width: 61.8vmax;
+    }
+}
+
+@media (max-aspect-ratio: 21/34) {
+    #canvas {
+        height: 161.8vmin;
+        width: 100vmin;
+    }
+}
+
+@media (min-aspect-ratio: 34/21) {
+    #canvas {
+        height: 100vmin;
+        width: 161.8vmin;
+    }
 }
