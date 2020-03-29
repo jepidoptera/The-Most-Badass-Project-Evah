@@ -2,6 +2,8 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
 const firebase = require('firebase/app');
+const trail = require('./trail');
+
 require ('firebase/database')
 require('dotenv').config();
 firebase.initializeApp({
@@ -94,6 +96,9 @@ app.get ("/hunt", (req, res) => {
     res.render("hunt", {...players[username], authtoken: authtoken});
 })
 
+app.get("/betterhunting", (req, res) => {
+    res.render("hunt");
+})
 app.post("/save", (req, res) => {
     req.body = JSON.parse(req.body.data);
     console.log("***saving***", req.body);
@@ -140,6 +145,10 @@ app.get('/load/:username/:authtoken', (req, res) => {
     }
     res.json({...players[username], authtoken: authtokens[username]});
 
+})
+
+app.get("/load/trail", (req, res) => {
+    res.json(trail);
 })
 app.listen(port);
 
