@@ -35,6 +35,9 @@ const trail = [
             {type: "signpost", frequency: 0},
             {type: "tree", frequency: 10}
         ],
+        prey: [
+            {type: "deer", frequency: 100}
+        ],
         length: 75 // seconds
 
     },
