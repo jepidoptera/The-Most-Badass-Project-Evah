@@ -1,11 +1,12 @@
-const mapWidth = 1000;
-const mapHeight = 1000;
+const mapWidth = 500;
+const mapHeight = 500;
 let frameRate = 60;
 
-let viewport = {width: 26, height: 14, innerWindow: {width: 1/4, height: 1/4}, x: 488, y: 494}
+let viewport = {width: 0, height: 0, innerWindow: {width: 1/4, height: 1/4}, x: 488, y: 494}
 let map = {};
 let hunter = {};
 let mokeballs = [];
+let animals = [];
 
 class Mokeball {
     constructor(x, y) {
@@ -67,18 +68,21 @@ class Character {
         this.type = type;
         this.x = x;
         this.y = y;
-        this.speed = 2.5;
         this.destination = {x: this.x, y: this.y};
         this.offset = {x: 0, y: 0};
         this.realX = map.nodes[this.x][this.y].x;
         this.realY = map.nodes[this.x][this.y].y;
         this.travelFrames = 0;
+        this.moving = false;
     }
     move() {
         if (this.x !== this.destination.x || this.y !== this.destination.y) {
+            this.moving = true;
             if (this.travelFrames === 0) {
                 this.offset = {x: 0, y: 0};
                 this.throwing = false;
+                // console.log(this.x, this.y);
+
                 if (this.nextNode) {
                     this.x = this.nextNode.xindex;
                     this.y = this.nextNode.yindex;
@@ -87,7 +91,12 @@ class Character {
                 }
                 if (this.y === this.destination.y && this.x === this.destination.x) return;
                 else {
+                    // let currentDirection = this.direction || {index: -10};
                     this.direction = findPath(this, this.destination);
+                    // don't do a 180 course reversal. just don't. it looks stupid and gets you stuck in a loop.
+                    // if (Math.abs(this.direction.index - currentDirection.index) === 3) {
+                    //     this.direction = currentDirection;
+                    // }
                     if (this.direction.x === 0 && this.direction.y === 0) {
                         this.destination = {x: this.x, y: this.y}
                         return;
@@ -107,12 +116,17 @@ class Character {
             this.realY += this.travelY;
             this.realX += this.travelX;
         }
+        else {
+            this.moving = false;
+            if (this.direction) this.direction.index = -10;
+        }
     }
 }
 
 class Hunter extends Character {
     constructor(x, y) {
         super('human', x, y);
+        this.speed = 2.5;
         this.frameRate = 60;
         this.image = $("<img>").attr('src', './assets/images/hunter.png')[0];
         this.moveInterval = setInterval(() => {this.move()}, 1000 / this.frameRate);
@@ -134,36 +148,83 @@ class Hunter extends Character {
 
 class Animal extends Character {
     constructor(type, x, y) {
+        super(type, x, y);
+        this.frameRate = 60;
+        this.image = $("<img>").attr('src', `./assets/images/animals/${type}.png`)[0];
+        this.imageFrame = {x: 0, y: 0};
+        if (type === "deer") {
+            this.imageHeight = 300;
+            this.imageWidth = 300;
+            this.width = 1;
+            this.height = 1;
+            this.speed = 3.5;
+        }
+        this._onScreen = false;
+        this.rotation = 0;
+        this.frameRate = this.onScreen ? 30 : 1; // keep it here until the animal comes on screen
+        this.move();
+    }
+    move() {
+        // wander around
+        if (!this.moving) {
+            this.destination.x = Math.floor(Math.random() * mapWidth);
+            this.destination.y = Math.floor(Math.random() * mapHeight);
+        }
 
+        super.move();
+        // maintain a reasonable framerate only when visible
+        if (this.travelFrames === 0) {
+            this.frameRate = this.onScreen ? 30 : this.speed;
+        }
+        setTimeout(() => {
+            this.move();
+        }, 1000 / this.frameRate);
+
+        // face the correct direction
+        if (this.direction.x > 0 || this.direction.x === 0 && this.direction.y > 0) {
+            this.imageFrame.y = 1;
+        }
+        else {
+            this.imageFrame.y = 0;
+        }
+    }
+    get onScreen() {
+        this._onScreen = false;
+        if (this.x + this.width > viewport.x && this.y + this.height > viewport.y) {
+            if (this.x < viewport.x + viewport.width && this.y < viewport.y + viewport.height) {
+                this._onScreen = true;
+            }
+        }
+        return this._onScreen;
     }
 }
 
 
-
+var canvas;
+var ctx;
+var mapHexWidth, mapHexHeight;
 $(document).ready(() => {
-    const canvas = $("#canvas");
-    const ctx = canvas[0].getContext("2d");
+    canvas = $("#canvas");
+    ctx = canvas[0].getContext("2d");
     canvas[0].width = canvas.width();
     canvas[0].height = canvas.height();
-    let mapHexHeight = canvas.width() / viewport.width;
-    let mapHexWidth = mapHexHeight * .866;
+    mapHexHeight = canvas.width() / viewport.width;
+    mapHexWidth = mapHexHeight * .866;
 
     function sizeCanvas() {
         canvas[0].width = canvas.width();
         canvas[0].height = canvas.height();
-        viewportWidth = viewport.width;
-        viewportHeight = viewport.height;
         playerWithinViewport = {
             x: (hunter.x - viewport.x) / viewport.width,
             y: (hunter.y - viewport.y) / viewport.height
         }
         if (canvas.width() > canvas.height()) {
-            viewport.width = Math.max(viewportWidth, viewportHeight);
-            viewport.height = Math.min(viewportWidth, viewportHeight);
+            viewport.width = 26;
+            viewport.height = 14;
         }
         else {
-            viewport.height = Math.max(viewportWidth, viewportHeight);
-            viewport.width = Math.min(viewportWidth, viewportHeight);
+            viewport.height = 23;
+            viewport.width = 16;
         }
         // viewport.width /= .866;
 
@@ -177,8 +238,13 @@ $(document).ready(() => {
     loadTrail(trail => {
         loadPlayer(player => {
 
-            map = genMap(trail[trail.map(location => location.name).indexOf(player.currentLocation || "The Desert of Dryness")]);
+            map = genMap(trail[trail.map(location => location.name).indexOf(player.currentLocation || "The Forest of Doom")]);
             hunter = new Hunter(mapWidth/2, mapHeight/2);
+            trail.prey.forEach(prey => {
+                for (let n = 0; n < prey.frequency; n++) {
+                    animals.push(new Animal(prey.type, Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight)));
+                }
+            })
             window.addEventListener('resize', sizeCanvas);
             sizeCanvas();
         
@@ -207,74 +273,6 @@ $(document).ready(() => {
                 hunter.destination.y = hunter.nextNode.yindex;
             })
     
-            function drawCanvas() {
-                ctx.clearRect(0,0,canvas.width(), canvas.height())
-
-                for (let x = -1; x < viewport.width + 1; x++) {
-                    for (let y = -1; y < viewport.height + 1; y++) {
-                        ctx.drawImage(map.nodes[x + Math.floor(viewport.x)][y + Math.floor(viewport.y)].land.image, 
-                            (x - viewport.x % 1) * mapHexWidth, 
-                            (y + (map.nodes[x + Math.floor(viewport.x)][y + Math.floor(viewport.y)].xindex % 2 === 0 ? 0.5 : 0) - viewport.y % 1) * mapHexHeight, 
-                            mapHexHeight * 1.1547, mapHexHeight)
-                    }
-                }
-
-                for (let y = Math.floor(viewport.y) - 1; y < Math.min(viewport.y + viewport.height + 2, mapHeight); y++) {
-                    for (let x = Math.floor(viewport.x / 2) * 2 - 1; x < viewport.x + viewport.width + 1; x+= 2) {
-                        if (map.nodes[x][y].object) {
-                            drawMapObject(map.nodes[x][y].object);
-                        }
-                    }
-                    for (let x = Math.floor(viewport.x / 2) * 2; x < viewport.x + viewport.width + 1; x+= 2) {
-                        if (map.nodes[x][y].object) {
-                            drawMapObject(map.nodes[x][y].object);
-                        }
-                    }
-                }
-                drawHunter();
-                drawMokeballs();
-                if (frameRate >= 60) requestAnimationFrame(drawCanvas);
-
-            }
-
-            function drawHunter() {
-                let hunterImgSize = 360;
-                let hunterFrame = 0;
-                if (hunter.travelFrames)  hunterFrame = ((hunter.travelFrames % 10 < 5) ? 1 : 2)
-                if (hunter.throwing) hunterFrame = 3
-                ctx.drawImage(hunter.image, hunterFrame * hunterImgSize, 0, hunterImgSize, hunterImgSize,
-                    (hunter.x - viewport.x + hunter.offset.x) * mapHexWidth, 
-                    (hunter.y - viewport.y + hunter.offset.y + (hunter.x % 2 === 0 ? 0.25 : -0.25)) * mapHexHeight,
-                    mapHexHeight * 1.1547, mapHexHeight);
-            }
-
-            function drawMapObject(mapObject) {
-                if (mapObject.image) {
-                    if (mapObject.realX - mapObject.width / 2 < hunter.realX && mapObject.realX + mapObject.width / 2 > hunter.realX) {
-                        if (mapObject.realY > hunter.realY && mapObject.realY - mapObject.height < hunter.realY) {
-                            ctx.globalAlpha = 0.5;
-                        }
-                    }
-                    ctx.drawImage(mapObject.image, 
-                        (mapObject.x - viewport.x - mapObject.width/ 2 + 0.5) * mapHexWidth, 
-                        (mapObject.y - viewport.y - mapObject.height + (mapObject.x % 2 === 0 ? 1.25 : 0.75)) * mapHexHeight, 
-                        mapHexHeight * mapObject.width, mapHexHeight * mapObject.height)
-                    ctx.globalAlpha = 1;
-                }
-            }
-
-            function drawMokeballs() {
-                remainingBalls = [];
-                mokeballs.forEach(ball => {
-                    if (!ball.visible) return;
-                    ctx.drawImage(ball.image, 
-                        (ball.x - viewport.x) * mapHexWidth - ball.apparentSize/2, 
-                        (ball.y - ball.z - viewport.y) * mapHexHeight - ball.apparentSize/2, 
-                        ball.apparentSize, ball.apparentSize)
-                    remainingBalls.push(ball)
-                })
-                mokeballs = remainingBalls;
-            }
 
             if (Math.max(canvas.width(), canvas.height()) > 1000 ) requestAnimationFrame(drawCanvas);
             else {
@@ -287,6 +285,87 @@ $(document).ready(() => {
         })
     })
 })
+
+function drawCanvas() {
+    ctx.clearRect(0,0,canvas.width(), canvas.height())
+
+    for (let x = -1; x < viewport.width + 1; x++) {
+        for (let y = -1; y < viewport.height + 1; y++) {
+            ctx.drawImage(map.nodes[x + Math.floor(viewport.x)][y + Math.floor(viewport.y)].land.image, 
+                (x - viewport.x % 1) * mapHexWidth, 
+                (y + (map.nodes[x + Math.floor(viewport.x)][y + Math.floor(viewport.y)].xindex % 2 === 0 ? 0.5 : 0) - viewport.y % 1) * mapHexHeight, 
+                mapHexHeight * 1.1547, mapHexHeight)
+        }
+    }
+
+    for (let y = Math.floor(viewport.y) - 1; y < Math.min(viewport.y + viewport.height + 3, mapHeight); y++) {
+        for (let x = Math.floor(viewport.x / 2) * 2 - 1; x < viewport.x + viewport.width + 1; x+= 2) {
+            if (map.nodes[x][y].object) {
+                drawMapObject(map.nodes[x][y].object);
+            }
+        }
+        for (let x = Math.floor(viewport.x / 2) * 2; x < viewport.x + viewport.width + 1; x+= 2) {
+            if (map.nodes[x][y].object) {
+                drawMapObject(map.nodes[x][y].object);
+            }
+        }
+    }
+    drawHunter();
+    drawMokeballs();
+    drawAnimals();
+    if (frameRate >= 60) requestAnimationFrame(drawCanvas);
+
+}
+
+function drawHunter() {
+    let hunterImgSize = 360;
+    let hunterFrame = 0;
+    if (hunter.travelFrames)  hunterFrame = ((hunter.travelFrames % 10 < 5) ? 1 : 2)
+    if (hunter.throwing) hunterFrame = 3
+    ctx.drawImage(hunter.image, hunterFrame * hunterImgSize, 0, hunterImgSize, hunterImgSize,
+        (hunter.x - viewport.x + hunter.offset.x) * mapHexWidth, 
+        (hunter.y - viewport.y + hunter.offset.y + (hunter.x % 2 === 0 ? 0.25 : -0.25)) * mapHexHeight,
+        mapHexHeight * 1.1547, mapHexHeight);
+}
+
+function drawMapObject(mapObject) {
+    if (mapObject.image) {
+        if (mapObject.realX - mapObject.width / 2 < hunter.realX && mapObject.realX + mapObject.width / 2 > hunter.realX) {
+            if (mapObject.realY > hunter.realY && mapObject.realY - mapObject.height < hunter.realY) {
+                ctx.globalAlpha = 0.5;
+            }
+        }
+        ctx.drawImage(mapObject.image, 
+            (mapObject.x - viewport.x - mapObject.width/ 2 + 0.5) * mapHexWidth, 
+            (mapObject.y - viewport.y - mapObject.height + (mapObject.x % 2 === 0 ? 1.25 : 0.75)) * mapHexHeight, 
+            mapHexHeight * mapObject.width, mapHexHeight * mapObject.height)
+        ctx.globalAlpha = 1;
+    }
+}
+
+function drawAnimals() {
+    animals.forEach(animal => {
+        if (animal.onScreen) {
+            ctx.drawImage(animal.image, animal.imageFrame.x * animal.imageWidth, animal.imageFrame.y * animal.imageHeight, animal.imageWidth, animal.imageHeight,
+                (animal.x - viewport.x + animal.offset.x) * mapHexWidth, 
+                (animal.y - viewport.y + animal.offset.y + (animal.x % 2 === 0 ? 0.25 : -0.25)) * mapHexHeight,
+                animal.width * mapHexHeight, animal.height * mapHexHeight);
+        }
+    })
+}
+
+function drawMokeballs() {
+    remainingBalls = [];
+    mokeballs.forEach(ball => {
+        if (!ball.visible) return;
+        ctx.drawImage(ball.image, 
+            (ball.x - viewport.x) * mapHexWidth - ball.apparentSize/2, 
+            (ball.y - ball.z - viewport.y) * mapHexHeight - ball.apparentSize/2, 
+            ball.apparentSize, ball.apparentSize)
+        remainingBalls.push(ball)
+    })
+    mokeballs = remainingBalls;
+}
 
 function genMap(terrain) {
     let map = {scenery: {}, backgrounds: [], nodes: []};
@@ -318,7 +397,7 @@ function genMap(terrain) {
         for (let y = -1; y < mapHeight; y++) {
             map.nodes[x][y] = {
                 land: {
-                    image: landImage //map.backgrounds[Math.floor(Math.random() * map.backgrounds.length)]
+                    image: map.backgrounds[Math.floor(Math.random() * map.backgrounds.length)]
                 },
                 x: x * .866,
                 y: y + (x % 2 === 0 ? 0.5 : 0),
@@ -328,7 +407,10 @@ function genMap(terrain) {
 
             Object.keys(map.scenery).forEach(index => {
                 let item = map.scenery[index];
-                if (!map.nodes[Math.max(x-1, -1)][y].object && !map.nodes[x][Math.max(y-1,-1)].object && Math.random() * 100 < item.frequency) {
+                if (!map.nodes[Math.max(x-1, -1)][y].object 
+                && !map.nodes[x][Math.max(y-1,-1)].object 
+                && !map.nodes[Math.max(x-1, -1)][Math.max(x-1, -1)].object 
+                && Math.random() * 100 < item.frequency) {
                     map.nodes[x][y].object = {
                         image: item.images[Math.floor(Math.random() * 5)],
                         type: item.type,
@@ -412,8 +494,12 @@ function findPath(startingNode, destinationNode) {
                 let blocked = false;
                 if (directions[n].blockers) {
                     directions[n].blockers.forEach(d => {
-                        if (map.nodes[startingNode.x + directions[d].x][startingNode.y + directions[d].y].object){
-                            blocked = true;
+                        let x = startingNode.x + directions[d].x;
+                        let y = startingNode.y + directions[d].y;
+                        if (x >= 0 && x < mapWidth && y >= 0 && y < mapHeight) {
+                            if (map.nodes[startingNode.x + directions[d].x][startingNode.y + directions[d].y].object){
+                                blocked = true;
+                            }
                         }
                     })
                 }
@@ -437,5 +523,5 @@ function findPath(startingNode, destinationNode) {
             }
         }
     }
-    return directions[bestDirection];
+    return {...directions[bestDirection], index: bestDirection};
 }
