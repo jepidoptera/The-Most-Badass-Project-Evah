@@ -33,7 +33,7 @@ const trail = [
         name: 'The Forest of Doom',
         scenery: [
             {type: "signpost", frequency: 0},
-            {type: "tree", frequency: 10}
+            {type: "tree", frequency: 5}
         ],
         prey: [
             {type: "deer", frequency: 100}
