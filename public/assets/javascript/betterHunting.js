@@ -1,8 +1,8 @@
 const mapWidth = 1000;
 const mapHeight = 1000;
-const frameRate = 60;
+let frameRate = 60;
 
-let viewport = {width: 26, height: 14, x: 488, y: 494}
+let viewport = {width: 26, height: 14, innerWindow: {width: 1/4, height: 1/4}, x: 488, y: 494}
 let map = {};
 let hunter = {};
 let mokeballs = [];
@@ -96,7 +96,7 @@ class Character {
                     let xdist = this.nextNode.x - map.nodes[this.x][this.y].x;
                     let ydist = this.nextNode.y - map.nodes[this.x][this.y].y;
                     let direction_distance = Math.sqrt(xdist ** 2 + ydist ** 2);
-                    this.travelFrames = Math.ceil(direction_distance / this.speed * frameRate);
+                    this.travelFrames = Math.ceil(direction_distance / this.speed * this.frameRate);
                     this.travelX = xdist / this.travelFrames / .866;
                     this.travelY = ydist / this.travelFrames;
                 }
@@ -106,18 +106,6 @@ class Character {
             this.offset.y += this.travelY;
             this.realY += this.travelY;
             this.realX += this.travelX;
-            if (this.x + this.offset.x < viewport.x + viewport.width / 3) {
-                viewport.x = Math.max(this.x + this.offset.x - viewport.width / 3, 1);
-            }
-            if (this.x + this.offset.x > viewport.x + viewport.width * .666) {
-                viewport.x = Math.min(this.x + this.offset.x - viewport.width * .666, mapWidth - 1 - viewport.width);
-            }
-            if (this.realY < viewport.y + viewport.height / 3) {
-                viewport.y = Math.max(this.realY - viewport.height / 3, 1);
-            }
-            if (this.realY > viewport.y + viewport.height * .666) {
-                viewport.y = Math.min(this.realY - viewport.height * .666, mapHeight - 1 - viewport.height);
-            }
         }
     }
 }
@@ -125,8 +113,22 @@ class Character {
 class Hunter extends Character {
     constructor(x, y) {
         super('human', x, y);
+        this.frameRate = 60;
         this.image = $("<img>").attr('src', './assets/images/hunter.png')[0];
-        this.moveInterval = setInterval(() => {this.move()}, 1000 / frameRate);
+        this.moveInterval = setInterval(() => {this.move()}, 1000 / this.frameRate);
+    }
+    move() {
+        super.move();
+        viewport.upperbound = {
+            x: this.x + this.offset.x - viewport.width / 2 + viewport.width * viewport.innerWindow.width / 2,
+            y: this.realY - viewport.height / 2 + viewport.height * viewport.innerWindow.height / 2
+        }
+        viewport.lowerbound = {
+            x: this.x + this.offset.x - viewport.width / 2 - viewport.width * viewport.innerWindow.width / 2,
+            y: this.realY - viewport.height / 2 - viewport.height * viewport.innerWindow.height / 2
+        }
+        viewport.x = Math.max(Math.min(viewport.x, viewport.upperbound.x, mapWidth - 1), viewport.lowerbound.x, 1)
+        viewport.y = Math.max(Math.min(viewport.y, viewport.upperbound.y, mapWidth - 1), viewport.lowerbound.y, 1)
     }
 }
 
@@ -149,17 +151,19 @@ $(document).ready(() => {
     function sizeCanvas() {
         canvas[0].width = canvas.width();
         canvas[0].height = canvas.height();
+        viewportWidth = viewport.width;
+        viewportHeight = viewport.height;
         playerWithinViewport = {
             x: (hunter.x - viewport.x) / viewport.width,
             y: (hunter.y - viewport.y) / viewport.height
         }
         if (canvas.width() > canvas.height()) {
-            viewport.width = 39;
-            viewport.height = 21;
+            viewport.width = Math.max(viewportWidth, viewportHeight);
+            viewport.height = Math.min(viewportWidth, viewportHeight);
         }
         else {
-            viewport.height = 39;
-            viewport.width = 24;
+            viewport.height = Math.max(viewportWidth, viewportHeight);
+            viewport.width = Math.min(viewportWidth, viewportHeight);
         }
         // viewport.width /= .866;
 
@@ -229,6 +233,8 @@ $(document).ready(() => {
                 }
                 drawHunter();
                 drawMokeballs();
+                if (frameRate >= 60) requestAnimationFrame(drawCanvas);
+
             }
 
             function drawHunter() {
@@ -240,7 +246,6 @@ $(document).ready(() => {
                     (hunter.x - viewport.x + hunter.offset.x) * mapHexWidth, 
                     (hunter.y - viewport.y + hunter.offset.y + (hunter.x % 2 === 0 ? 0.25 : -0.25)) * mapHexHeight,
                     mapHexHeight * 1.1547, mapHexHeight);
-                    requestAnimationFrame(drawCanvas);
             }
 
             function drawMapObject(mapObject) {
@@ -271,8 +276,13 @@ $(document).ready(() => {
                 mokeballs = remainingBalls;
             }
 
-            requestAnimationFrame(drawCanvas);
-
+            if (Math.max(canvas.width(), canvas.height()) > 1000 ) requestAnimationFrame(drawCanvas);
+            else {
+                frameRate = 30
+                setInterval(() => {
+                    drawCanvas();
+                }, 1000 / frameRate);
+            }
         
         })
     })
@@ -308,7 +318,7 @@ function genMap(terrain) {
         for (let y = -1; y < mapHeight; y++) {
             map.nodes[x][y] = {
                 land: {
-                    image: map.backgrounds[Math.floor(Math.random() * map.backgrounds.length)]
+                    image: landImage //map.backgrounds[Math.floor(Math.random() * map.backgrounds.length)]
                 },
                 x: x * .866,
                 y: y + (x % 2 === 0 ? 0.5 : 0),
