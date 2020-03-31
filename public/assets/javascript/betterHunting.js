@@ -5,14 +5,14 @@ let frameRate = 60;
 let viewport = {width: 0, height: 0, innerWindow: {width: 0, height: 0}, x: 488, y: 494}
 let map = {};
 let hunter = {};
-let mokeballs = [];
+let projectiles = [];
 let animals = [];
 var canvas;
 var ctx;
 var mapHexWidth, mapHexHeight;
 var messages = [];
 
-class Mokeball {
+class Projectile {
     constructor(x, y) {
         this.x = x;
         this.y = y;
@@ -28,9 +28,6 @@ class Mokeball {
         this.bounceFactor = 1/3;
     }
     throw(target) {
-        player.mokeballs --;
-        $('#mokeballs').html(`mokeballs (${player.mokeballs})`)
-
         this.visible = true;
         this.target = target;
         this.x = hunter.x + hunter.offset.x + 0.5;
@@ -92,27 +89,101 @@ class Mokeball {
         }
     }
     land() {
+    }
+}
+
+class Mokeball extends Projectile {
+    constructor(x, y) {
+        super(x, y);
+        this.image = document.createElement('img');
+        this.image.src = "./assets/images/mokeball.png";
+    }
+    land() {
         animals.forEach((animal, n) => {
             let margin = 1 / (animal.width + animal.height) * 2;
             if (animal._onScreen && !animal.dead) {
                 let dist = approxDist(this.x, this.y, animal.x + animal.offset.x + animal.width/2, animal.realY + animal.width/2);
                 if (dist < margin) {
-                    let messageText = `You caught: ${animal.type}!` 
-                    if (animal.foodValue > 0) messageText += `  You gain ${animal.foodValue} food.`;
-                    message(messageText);
-                    animal.catch(this.x, this.y - this.z);
-                    // stop bouncing
-                    this.bounced = this.bounces;
-                    this.visible = false;
+                    if (animal.hp > 20) {
+                        // that shit don't work on bears
+                        this.movement.z = -20;
+                        this.bounced--;
+                        this.bounce();
+                    }
+                    else {
+                        let messageText = `You caught: ${animal.type}!` 
+                        if (animal.foodValue > 0) messageText += `  You gain ${animal.foodValue} food.`;
+                        message(messageText);
+                        animal.catch(this.x, this.y - this.z);
+                        // stop bouncing
+                        this.bounced = this.bounces;
+                        this.visible = false;
+                    }
                 }
             }
         })
     }
-    get realX() {
-        return this.x * .866;
+}
+
+class Grenade extends Projectile {
+    constructor(x, y) {
+        super(x, y);
+        this.image = document.createElement('img');
+        this.image.src = "./assets/images/grenade.png";
+        this.altimage = document.createElement('img');
+        this.altimage.src = "./assets/images/explosion.png";
     }
-    get realY() {
-        return this.y;
+    land() {
+        if (this.bounced === this.bounces) setTimeout(() => {
+            this.image = this.altimage;
+            setTimeout(() => {
+                this.visible = false;
+            }, 150);
+            this.apparentSize = 50;
+            animals.forEach((animal, n) => {
+                let margin = 5;
+                if (animal._onScreen && !animal.dead) {
+                    let dist = approxDist(this.x, this.y, animal.x + animal.offset.x + animal.width/2, animal.realY + animal.width/2);
+                    if (dist < margin) {
+                        animal.hp -= Math.min(40 / dist, 40);
+                        if (animal.hp <= 0) {
+                            let messageText = `You killed: ${animal.type}!` 
+                            if (animal.foodValue > 0) messageText += `  You gain ${animal.foodValue} food.`;
+                            message(messageText);
+                            animal.explode(this.x, this.y - this.z);
+                        }
+                    }
+                }
+            })
+        }, 500);
+    }
+}
+
+class Rock extends Projectile {
+    constructor(x, y) {
+        super(x, y);
+        this.image = document.createElement('img');
+        this.image.src = `./assets/images/rock${Math.floor(Math.random() * 5)}.png`;
+    }
+    land() {
+        if (this.bounced === 0) {
+            this.image.src = "./assets/images/explosion.png";
+            animals.forEach((animal, n) => {
+                let margin = animal.size;
+                if (animal._onScreen && !animal.dead) {
+                    let dist = approxDist(this.x, this.y, animal.x + animal.offset.x + animal.width/2, animal.realY + animal.width/2);
+                    if (dist < margin) {
+                        animal.hp -= 1;
+                        if (animal.hp <= 0) {
+                            let messageText = `You killed: ${animal.type}!` 
+                            if (animal.foodValue > 0) messageText += `  You gain ${animal.foodValue} food.`;
+                            message(messageText);
+                            animal.die();
+                        }
+                    }
+                }
+            })
+        }
     }
 }
 
@@ -121,6 +192,7 @@ class Character {
         this.type = type;
         this.x = x;
         this.y = y;
+        this.z = 0;
         this.destination = {x: this.x, y: this.y};
         this.offset = {x: 0, y: 0};
         this.realX = map.nodes[this.x][this.y].x;
@@ -217,6 +289,37 @@ class Animal extends Character {
             this.speed = this.walkSpeed;
             this.fleeRadius = 9;
             this.foodValue = Math.floor(90 * this.size);
+            this.hp = 10 * this.size;
+        }
+        if (type === "bear") {
+            this.imageHeight = 321;
+            this.imageWidth = 400;
+            this.size = Math.random() * .5 + 1.5;
+            this.width = this.size;
+            this.height = this.size;
+            this.walkSpeed = 1;
+            this.runSpeed = 3.5;
+            this.speed = this.walkSpeed;
+            this.fleeRadius = 0;
+            this.foodValue = Math.floor(120 * this.size);
+            this.hp = 20 * this.size;
+        }
+        if (type === "squirrel") {
+            this.imageHeight = 146;
+            this.imageWidth = 200;
+            this.size = Math.random() * .2 + .4;
+            this.width = this.size;
+            this.height = this.size;
+            this.walkSpeed = 2;
+            this.runSpeed = 2.5;
+            this.speed = this.walkSpeed;
+            this.fleeRadius = 5;
+            this.foodValue = Math.floor(6 * this.size);
+            this.hp = 2 * this.size;
+        }
+        else {
+            this.size = 1;
+            this.hp = 10;
         }
         this._onScreen = false;
         this.rotation = 0;
@@ -291,6 +394,32 @@ class Animal extends Character {
             }, 1000 / this.frameRate);
         this.rotation = 180;
     }
+    explode(x, y) {
+        this.dead = 1;
+        this.rotation = 180;
+        let xdist = this.x + this.offset.x - x;
+        let ydist = this.realY - y;
+        let dist = approxDist(this.x + this.offset.x, this.realY, x, y);
+        this.z = 0;
+        this.motion = {
+            x: xdist / Math.min(dist, 2) * 2 / this.size / this.frameRate * 1.155,
+            y: ydist / Math.min(dist, 2) * 2 / this.size / this.frameRate,
+            z: 3 / dist / this.size / this.frameRate
+        }
+        this.dieAnimation = setInterval(() => {
+            this.x += this.motion.x;
+            this.y += this.motion.y;
+            this.z += this.motion.z;
+            this.motion.z -= .5 / frameRate;
+            if (this.z <= 0) {
+                clearInterval(this.dieAnimation);
+            }
+        }, 1000 / this.frameRate);
+    }
+    die() {
+        this.dead = true;
+        this.rotation = 180;
+    }
 }
 
 $(document).ready(() => {
@@ -331,26 +460,24 @@ $(document).ready(() => {
             if (player.mokeballs === undefined) player.mokeballs = 30;
             if (player.grenades === undefined) player.grenades = 12;
             if (player.time === undefined) player.time = 12;
+            hunter.ammo = "mokeballs"
             $("#selectedAmmo").text(`mokeballs (${player.mokeballs}) ▼`)
             $(".ammo").hide();
             $('div[name="mokeballs"').html(`mokeballs (${player.mokeballs})`)
-            $('#grenades').html(`grenades (${player.grenades})`)
-            $('#rocks').html(`rocks (∞)`)
+            $('div[name="grenades"').html(`grenades (${player.grenades})`)
+            $('div[name="rocks"').html(`rocks (∞)`)
             $("#selectedAmmo").click(() => {
                 $(".ammo").show();
             })
             $(".ammo").click(event => {
                 hunter.ammo = $(event.target).attr('name');
-                $("#selectedAmmo").text(hunter.ammo + " (" +
-                    {
-                        grenades: player.grenades,
-                        mokeballs: player.mokeballs,
-                        rocks: "∞"
-                    }[hunter.ammo] + ") ▼"
-                )
+                $('div[name="mokeballs"').html(`mokeballs (${player.mokeballs})`)
+                $('div[name="grenades"').html(`grenades (${player.grenades})`)
+                $('div[name="rocks"').html(`rocks (∞)`)
+                $("#selectedAmmo").text($(`div[name="${hunter.ammo}"`).text() + " ▼")
                 $(".ammo").hide();
             });
-            $("#canvas").on("click", () => {$(".ammo").hide()}, false)
+            $("#canvas").on("click", () => {$(".ammo").hide()})
 
 
             let location = trail[trail.map(location => location.name).indexOf(player.currentLocation || "The Forest of Doom")];
@@ -405,7 +532,17 @@ $(document).ready(() => {
             })
         
             $("#canvas").dblclick(event => {
-                mokeballs.push(new Mokeball().throw({
+                let projectile;
+                if (hunter.ammo === "mokeballs") {
+                    projectile = new Mokeball();
+                }
+                else if (hunter.ammo === "grenades") {
+                    projectile = new Grenade();
+                }
+                else if (hunter.ammo === "rocks") {
+                    projectile = new Rock();
+                }
+                projectiles.push(projectile.throw({
                     x: (event.clientX - $("#canvasFrame").position().left) / mapHexWidth + viewport.x,
                     y: (event.clientY - $("#canvasFrame").position().top) / mapHexHeight + viewport.y
                 }))
@@ -468,7 +605,7 @@ function drawCanvas() {
             }
  
             ctx.translate((mapItems[n].x - viewport.x + mapItems[n].offset.x) * mapHexWidth, 
-            (mapItems[n].y - viewport.y + mapItems[n].offset.y + (mapItems[n].x % 2 === 0 ? 0.25 : -0.25)) * mapHexHeight);
+            (mapItems[n].y - (mapItems[n].z || 0) - viewport.y + mapItems[n].offset.y + (mapItems[n].x % 2 === 0 ? 0.25 : -0.25)) * mapHexHeight);
     
             if (mapItems[n].rotation) {
                 ctx.translate(mapItems[n].width / 2 * mapHexHeight, mapItems[n].height / 2 * mapHexHeight);
@@ -515,7 +652,7 @@ function drawHunter() {
 
 function drawMokeballs() {
     remainingBalls = [];
-    mokeballs.forEach(ball => {
+    projectiles.forEach(ball => {
         if (!ball.visible) return;
         ctx.drawImage(ball.image, 
             (ball.x - viewport.x) * mapHexWidth - ball.apparentSize/2, 
@@ -523,7 +660,7 @@ function drawMokeballs() {
             ball.apparentSize, ball.apparentSize)
         remainingBalls.push(ball)
     })
-    mokeballs = remainingBalls;
+    projectiles = remainingBalls;
 }
 
 function genMap(terrain, callback) {
@@ -693,4 +830,11 @@ function findPath(startingNode, destinationNode) {
 
 function approxDist (x1, y1, x2, y2) {
     return Math.max(Math.max(Math.abs(x1 - x2), Math.abs(y1 - y2)), (Math.abs(x1 - x2) + Math.abs(y1 - y2)) * .707)
+}
+
+function message (text) {
+    messages.push(text);
+    setTimeout(() => {
+        messages.shift();
+    }, 2000);
 }
