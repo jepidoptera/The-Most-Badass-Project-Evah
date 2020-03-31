@@ -103,6 +103,7 @@ class Mokeball extends Projectile {
                         this.movement.max = Infinity;
                         this.bounced--;
                         this.bounce();
+                        if (animal.chaseRadius > 0) animal.attack();
                     }
                     else {
                         let messageText = `You caught: ${animal.type}!` 
@@ -142,9 +143,12 @@ class Grenade extends Projectile {
             animals.forEach((animal, n) => {
                 let margin = 4;
                 if (animal._onScreen && !animal.dead) {
-                    let dist = approxDist(this.x, this.y, animal.x + animal.offset.x, animal.realY);
+                    let dist = approxDist(this.x, this.y, animal.x + animal.offset.x + animal.width / 2, animal.realY + animal.height / 2);
                     if (dist < margin) {
-                        animal.hp -= Math.min(40 / dist, 40);
+                        console.log('blast radius: ', dist);
+                        let damage = Math.min(40 / dist / Math.max(dist - 1, 1), 40);
+                        console.log('damage: ', damage);
+                        animal.hp -= damage;
                         if (animal.hp <= 0) {
                             let messageText = `You killed: ${animal.type}!` 
                             if (animal.foodValue > 0) messageText += `  You gain ${animal.foodValue} food.`;
@@ -152,7 +156,10 @@ class Grenade extends Projectile {
                             message(messageText);
                             animal.explode(this.x, this.y - this.z);
                         }
+                        else if (animal.chaseRadius > 0) animal.attack();
                     }
+                    // all visible animals flee
+                    if (animal.fleeRadius != 0 && !animal.attacking) animal.flee();
                 }
             })
         }, 500);
@@ -332,17 +339,18 @@ class Animal extends Character {
             this.hp = 10 * this.size;
         }
         else if (type === "bear") {
-            this.imageHeight = 321;
-            this.imageWidth = 400;
+            this.imageHeight = 275;
+            this.imageWidth = 342;
             this.size = Math.random() * .3 + 1.2;
             this.width = this.size * 1.4;
             this.height = this.size;
             this.walkSpeed = 1;
-            this.runSpeed = 3.5;
+            this.runSpeed = 3;
             this.speed = this.walkSpeed;
             this.fleeRadius = 0;
             this.chaseRadius = 9;
-            this.foodValue = Math.floor(120 * this.size);
+            this.fleeRadius = -1;
+            this.foodValue = Math.floor(240 * this.size);
             this.hp = 25 * this.size;
         }
         else if (type === "squirrel") {
@@ -426,6 +434,17 @@ class Animal extends Character {
     attack() {
         this.destination.x = hunter.x;
         this.destination.y = hunter.y;
+        this.speed = this.runSpeed;
+        this.attacking = this.attacking || 1;
+        let dist = approxDist(this.x, this.y, hunter.x, hunter.y);
+        if (dist < 1 && this.attacking == 1) {
+            this.attacking = 2
+            this.imageFrame.x = 1;
+            setTimeout(() => {
+                this.imageFrame.x = 0;
+                this.attacking = 1;
+            }, 1000);
+        }
     }
     catch(x, y) {
         this.dead = 1;
@@ -450,7 +469,7 @@ class Animal extends Character {
     }
     explode(x, y) {
         this.dead = 1;
-        this.rotation = 180;
+        // this.rotation = 180;
         let xdist = this.x + this.offset.x - this.width/2 - x;
         let ydist = this.realY - this.height/2 - y;
         let dist = approxDist(this.x + this.offset.x, this.realY, x, y);
@@ -458,7 +477,7 @@ class Animal extends Character {
         this.motion = {
             x: xdist / Math.min(dist, 2) / this.size / this.frameRate * 1.155,
             y: ydist / Math.min(dist, 2) / this.size / this.frameRate,
-            z: 5 / dist / this.size / this.frameRate
+            z: 5 / Math.min(dist, 1) / this.size / this.frameRate
         }
         this.dieAnimation = setInterval(() => {
             this.x += this.motion.x;
@@ -466,8 +485,10 @@ class Animal extends Character {
             this.z += this.motion.z;
             this.realY = this.y;
             this.motion.z -= .5 / frameRate;
+            if (this.rotation < 180) this.rotation += 360/frameRate;
             if (this.z <= 0) {
                 this.z = 0;
+                this.rotation = 180;
                 clearInterval(this.dieAnimation);
             }
         }, 1000 / this.frameRate);
@@ -515,7 +536,7 @@ $(document).ready(() => {
             player = p;
             if (player.mokeballs === undefined) player.mokeballs = 30;
             if (player.grenades === undefined) player.grenades = 12;
-            if (player.time === undefined) player.time = 12;
+            if (player.time === undefined) player.time = 0;
             if (player.food === undefined) player.food = 0;
             hunter.ammo = "mokeballs"
             $("#selectedAmmo").text(`mokeballs (${player.mokeballs}) ▼`)
@@ -624,12 +645,14 @@ function drawCanvas() {
 
     let mapItems = [];
     for (let y = Math.floor(viewport.y) - 1; y < Math.min(viewport.y + viewport.height + 3, mapHeight); y++) {
-        for (let x = Math.floor(viewport.x / 2) * 2 - 1; x < viewport.x + viewport.width + 1; x+= 2) {
-            if (map.nodes[x][y].object) {
-                mapItems.push(map.nodes[x][y].object);
+        for (let x = Math.floor(viewport.x / 2) * 2 - 1; x < viewport.x + viewport.width + 2; x+= 2) {
+            if (map.nodes[x]) {
+                if (map.nodes[x][y].object) {
+                    mapItems.push(map.nodes[x][y].object);
+                }
             }
         }
-        for (let x = Math.floor(viewport.x / 2) * 2 - 2; x < viewport.x + viewport.width + 1; x+= 2) {
+        for (let x = Math.floor(viewport.x / 2) * 2 - 2; x < viewport.x + viewport.width + 2; x+= 2) {
             if (map.nodes[x]) {
                 if (map.nodes[x][y].object) {
                     mapItems.push(map.nodes[x][y].object);
