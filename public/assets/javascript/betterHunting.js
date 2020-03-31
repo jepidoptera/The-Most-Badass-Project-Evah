@@ -113,6 +113,7 @@ class Mokeball extends Projectile {
                     else {
                         let messageText = `You caught: ${animal.type}!` 
                         if (animal.foodValue > 0) messageText += `  You gain ${animal.foodValue} food.`;
+                        player.food += animal.foodValue;
                         message(messageText);
                         animal.catch(this.x, this.y - this.z);
                         // stop bouncing
@@ -136,19 +137,24 @@ class Grenade extends Projectile {
     land() {
         if (this.bounced === this.bounces) setTimeout(() => {
             this.image = this.altimage;
-            setTimeout(() => {
-                this.visible = false;
-            }, 150);
+            this.explodeInterval = setInterval(() => {
+                this.apparentSize += 5;
+                if (this.apparentSize > 100) {
+                    clearInterval(this.explodeInterval);
+                    this.visible = false;
+                }
+            }, 5);
             this.apparentSize = 50;
             animals.forEach((animal, n) => {
-                let margin = 5;
+                let margin = 4;
                 if (animal._onScreen && !animal.dead) {
                     let dist = approxDist(this.x, this.y, animal.x + animal.offset.x + animal.width/2, animal.realY + animal.width/2);
                     if (dist < margin) {
-                        animal.hp -= Math.min(40 / dist, 40);
+                        animal.hp -= Math.min(30 / dist, 40);
                         if (animal.hp <= 0) {
                             let messageText = `You killed: ${animal.type}!` 
                             if (animal.foodValue > 0) messageText += `  You gain ${animal.foodValue} food.`;
+                            player.food += animal.foodValue;
                             message(messageText);
                             animal.explode(this.x, this.y - this.z);
                         }
@@ -164,10 +170,10 @@ class Rock extends Projectile {
         super(x, y);
         this.image = document.createElement('img');
         this.image.src = `./assets/images/rock${Math.floor(Math.random() * 5)}.png`;
+        this.range = 10;
     }
     land() {
         if (this.bounced === 0) {
-            this.image.src = "./assets/images/explosion.png";
             animals.forEach((animal, n) => {
                 let margin = animal.size;
                 if (animal._onScreen && !animal.dead) {
@@ -177,6 +183,7 @@ class Rock extends Projectile {
                         if (animal.hp <= 0) {
                             let messageText = `You killed: ${animal.type}!` 
                             if (animal.foodValue > 0) messageText += `  You gain ${animal.foodValue} food.`;
+                            player.food += animal.foodValue;
                             message(messageText);
                             animal.die();
                         }
@@ -295,12 +302,13 @@ class Animal extends Character {
             this.imageHeight = 321;
             this.imageWidth = 400;
             this.size = Math.random() * .5 + 1.5;
-            this.width = this.size;
+            this.width = this.size * 1.4;
             this.height = this.size;
             this.walkSpeed = 1;
             this.runSpeed = 3.5;
             this.speed = this.walkSpeed;
             this.fleeRadius = 0;
+            this.chaseRadius = 9;
             this.foodValue = Math.floor(120 * this.size);
             this.hp = 20 * this.size;
         }
@@ -316,6 +324,7 @@ class Animal extends Character {
             this.fleeRadius = 5;
             this.foodValue = Math.floor(6 * this.size);
             this.hp = 2 * this.size;
+            this.randomMotion = 3;
         }
         else {
             this.size = 1;
@@ -330,7 +339,7 @@ class Animal extends Character {
     move() {
         if (this.dead) return;
         // wander around
-        if (!this.moving) {
+        if (!this.moving || Math.random() * this.randomMotion * this.frameRate < 1 && this.speed == this.walkSpeed) {
             this.destination.x = Math.floor(Math.random() * mapWidth);
             this.destination.y = Math.floor(Math.random() * mapHeight);
             this.speed = this.walkSpeed;
@@ -397,8 +406,8 @@ class Animal extends Character {
     explode(x, y) {
         this.dead = 1;
         this.rotation = 180;
-        let xdist = this.x + this.offset.x - x;
-        let ydist = this.realY - y;
+        let xdist = this.x + this.offset.x - this.width/2 - x;
+        let ydist = this.realY - this.height/2 - y;
         let dist = approxDist(this.x + this.offset.x, this.realY, x, y);
         this.z = 0;
         this.motion = {
@@ -460,6 +469,7 @@ $(document).ready(() => {
             if (player.mokeballs === undefined) player.mokeballs = 30;
             if (player.grenades === undefined) player.grenades = 12;
             if (player.time === undefined) player.time = 12;
+            if (player.food === undefined) player.food = 0;
             hunter.ammo = "mokeballs"
             $("#selectedAmmo").text(`mokeballs (${player.mokeballs}) ▼`)
             $(".ammo").hide();
