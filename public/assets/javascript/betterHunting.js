@@ -197,11 +197,27 @@ class Rock extends Projectile {
                             message(messageText);
                             animal.die();
                         }
-                        else if (animal.fleeRadius > 0) {
-                            animal.flee();
-                        }
-                        else if (animal.chaseRadius > 0) {
-                            animal.attack();
+                        else {
+                            // didn't die
+                            let xmove = this.movement.x;
+                            let ymove = this.movement.y;
+                            // bounce off at 90 degrees
+                            if (Math.random() > .5) {
+                                xmove = -this.movement.y;
+                                ymove = this.movement.x;
+                            }
+                            else {
+                                xmove = this.movement.y;
+                                ymove = -this.movement.x;
+                            }
+                            this.movement.x = xmove * 2;
+                            this.movement.y = ymove * 2;
+                            if (animal.fleeRadius > 0) {
+                                animal.flee();
+                            }
+                            else if (animal.chaseRadius > 0) {
+                                animal.attack();
+                            }
                         }
                     }
                 }
@@ -404,8 +420,8 @@ class Animal extends Character {
             this.randomMotion = 3;
         }
         else if (type === "coyote") {
-            this.imageHeight = 356;
-            this.imageWidth = 200;
+            this.imageHeight = 200;
+            this.imageWidth = 356;
             this.size = Math.random() * .25 + .7;
             this.width = this.size * 1.75;
             this.height = this.size;
@@ -853,12 +869,12 @@ function genMap(terrain, callback) {
                     }
     
                     if (item.type === "rock") {
-                        mapObject.imageHeight = .25 + Math.random() * .5;
-                        mapObject.imageWidth = .25 + Math.random() * .5;
+                        mapObject.height = .25 + Math.random() * .5;
+                        mapObject.width = .25 + Math.random() * .5;
                     }
                     else if (item.type === "cactus") {
-                        mapObject.imageHeight = 2;
-                        mapObject.imageWidth = 1;
+                        mapObject.height = 2;
+                        mapObject.width = 1;
                     }
                     // (mapItems[n].x - viewport.x - mapItems[n].width/ 2 + 0.5) * mapHexWidth, 
                     // (mapItems[n].y - viewport.y - mapItems[n].height + (mapItems[n].x % 2 === 0 ? 1.25 : 0.75)) * mapHexHeight
