@@ -482,7 +482,7 @@ class mokePosse {
 
         }
         this.width *= canvas.width / 1920;
-        this.height *= canvas.height / 1920;
+        this.height *= canvas.width / 1920;
         this.y = trailHeight * canvas.height - this.height;
         this.z = 0;
         
