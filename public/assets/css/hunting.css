@@ -47,14 +47,7 @@ body {
     text-align: right;
 }
 
-#clickCatcher {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    display: block;
-    z-index: 0;
-    display: none;
-}
+
 .msgBox {
     background-color: whitesmoke;
     z-index: 1001;
