@@ -2,7 +2,7 @@ const mapWidth = 500;
 const mapHeight = 500;
 let frameRate = 60;
 
-let viewport = {width: 0, height: 0, innerWindow: {width: 1/4, height: 1/4}, x: 488, y: 494}
+let viewport = {width: 0, height: 0, innerWindow: {width: 0, height: 0}, x: 488, y: 494}
 let map = {};
 let hunter = {};
 let mokeballs = [];
@@ -10,6 +10,7 @@ let animals = [];
 var canvas;
 var ctx;
 var mapHexWidth, mapHexHeight;
+var messages = [];
 
 class Mokeball {
     constructor(x, y) {
@@ -85,18 +86,23 @@ class Mokeball {
         else {
             this.vanishTimeout = setTimeout(() => {
                 this.visible = false;
-            }, 1000);
+            }, 3000);
             clearInterval(this.throwInterval);
         }
     }
     land() {
         animals.forEach((animal, n) => {
-            let margin = 1 / (animal.width + animal.height) * 2 - .75;
-            if (animal._onScreen) {
-                if (animal.x + animal.offset.x < this.x + margin && animal.realY < this.y + margin) {
-                    if (animal.x + animal.offset.x + animal.width > this.x - margin && animal.realY + animal.height > this.realY - margin) {
-                        console.log("you caught: ", animal.type + "!", `(${n})`)
-                    }
+            let margin = 1 / (animal.width + animal.height) * 2;
+            if (animal._onScreen && !animal.dead) {
+                let dist = approxDist(this.x, this.y, animal.x + animal.offset.x + animal.width/2, animal.realY + animal.width/2);
+                if (dist < margin) {
+                    let messageText = `You caught: ${animal.type}!` 
+                    if (animal.foodValue > 0) messageText += `  You gain ${animal.foodValue} food.`;
+                    message(messageText);
+                    animal.catch(this.x, this.y - this.z);
+                    // stop bouncing
+                    this.bounced = this.bounces;
+                    this.visible = false;
                 }
             }
         })
@@ -187,8 +193,8 @@ class Hunter extends Character {
             x: this.x + this.offset.x - viewport.width / 2 - viewport.width * viewport.innerWindow.width / 2,
             y: this.realY - viewport.height / 2 - viewport.height * viewport.innerWindow.height / 2
         }
-        viewport.x = Math.min(Math.max(Math.min(viewport.x, viewport.upperbound.x), viewport.lowerbound.x, 0), mapWidth - viewport.width - 1)
-        viewport.y = Math.min(Math.max(Math.min(viewport.y, viewport.upperbound.y), viewport.lowerbound.y, 0), mapHeight - viewport.height - 1)
+        viewport.x = Math.min(Math.max(Math.min(viewport.x, viewport.upperbound.x), viewport.lowerbound.x, 0), mapWidth - viewport.width)
+        viewport.y = Math.min(Math.max(Math.min(viewport.y, viewport.upperbound.y), viewport.lowerbound.y, 0), mapHeight - viewport.height)
     }
 }
 
@@ -201,20 +207,28 @@ class Animal extends Character {
         if (type === "deer") {
             this.imageHeight = 300;
             this.imageWidth = 300;
-            this.width = 1;
-            this.height = 1;
-            this.speed = 3.5;
+            this.size = Math.random() * .5 + .75;
+            this.width = this.size;
+            this.height = this.size;
+            this.walkSpeed = 1;
+            this.runSpeed = 3.5;
+            this.speed = this.walkSpeed;
+            this.fleeRadius = 9;
+            this.foodValue = Math.floor(90 * this.size);
         }
         this._onScreen = false;
         this.rotation = 0;
+        this.dead = false;
         this.frameRate = this.onScreen ? 30 : 1; // keep it here until the animal comes on screen
         this.move();
     }
     move() {
+        if (this.dead) return;
         // wander around
         if (!this.moving) {
             this.destination.x = Math.floor(Math.random() * mapWidth);
             this.destination.y = Math.floor(Math.random() * mapHeight);
+            this.speed = this.walkSpeed;
         }
 
         super.move();
@@ -227,21 +241,53 @@ class Animal extends Character {
         }, 1000 / this.frameRate);
 
         // face the correct direction
-        if (this.direction.x > 0 || this.direction.x === 0 && this.direction.y > 0) {
-            this.imageFrame.y = 1;
+        if (this.direction) {
+            if (this.direction.x > 0 || this.direction.x === 0 && this.direction.y > 0) {
+                this.imageFrame.y = 1;
+            }
+            else {
+                this.imageFrame.y = 0;
+            }
         }
-        else {
-            this.imageFrame.y = 0;
+        // flee the player
+        let dist = approxDist(this.x, this.y, hunter.x, hunter.y);
+        if (dist < this.fleeRadius) {
+            let xdist = this.x - hunter.x;
+            let ydist = this.y - hunter.y;
+            this.destination.x = Math.floor(Math.max(Math.min(this.x + xdist / dist * 10, mapWidth - 1), 0));  
+            this.destination.y = Math.floor(Math.max(Math.min(this.y + ydist / dist * 10, mapWidth - 1), 0));  
+            this.speed = this.runSpeed;
         }
     }
     get onScreen() {
         this._onScreen = false;
-        if (this.x + this.width > viewport.x && this.y + this.height > viewport.y) {
-            if (this.x < viewport.x + viewport.width && this.y < viewport.y + viewport.height) {
+        if (this.x + this.width + 1 > viewport.x && this.y + this.height + 1 > viewport.y) {
+            if (this.x - this.width - 1 < viewport.x + viewport.width && this.y - this.height - 1 < viewport.y + viewport.height) {
                 this._onScreen = true;
             }
         }
         return this._onScreen;
+    }
+    catch(x, y) {
+        this.dead = 1;
+        // what we want is 
+        // (this.y + this.offset.y) * mapHexHeight === y
+        // and
+        // (this.x + this.offset.x) * mapHexWidth === x
+        // so
+        this.dieAnimation = setInterval(() => {
+            this.rotation -= 600 / this.frameRate;
+            this.dead ++;
+            this.height *= .96;
+            this.width *= .96;
+            if (this.dead > 100) {
+                this.gone = true;
+                clearInterval(this.dieAnimation);
+            }
+            this.offset.y = this.offset.y * .95 + ((y - (this.x % 2 === 0 ? 0.25 : -0.25) - this.width/ 2) - this.y) * .05;
+            this.offset.x = this.offset.x * .95 + ((x - this.width / 2) - this.x) * .05;
+            }, 1000 / this.frameRate);
+        this.rotation = 180;
     }
 }
 
@@ -261,7 +307,7 @@ $(document).ready(() => {
             y: (hunter.y - viewport.y) / viewport.height
         }
         if (canvas.width() > canvas.height()) {
-            viewport.width = 32;
+            viewport.width = 31;
             viewport.height = 17;
         }
         else {
@@ -270,8 +316,8 @@ $(document).ready(() => {
         }
         // viewport.width /= .866;
 
-        viewport.x = Math.min(Math.max(0, hunter.x - playerWithinViewport.x * viewport.width), mapWidth - 1);
-        viewport.y = Math.min(Math.max(0, hunter.y - playerWithinViewport.y * viewport.height), mapHeight - 1);
+        viewport.x = Math.min(Math.max(0, hunter.x - playerWithinViewport.x * viewport.width), mapWidth - viewport.width);
+        viewport.y = Math.min(Math.max(0, hunter.y - playerWithinViewport.y * viewport.height), mapHeight - viewport.height);
         mapHexHeight = canvas.width() / viewport.width * 1.1547;
         mapHexWidth = mapHexHeight * .866;
     }
@@ -330,31 +376,84 @@ function drawCanvas() {
 
     for (let x = -1; x < viewport.width + 1; x++) {
         for (let y = -1; y < viewport.height + 1; y++) {
-            ctx.drawImage(map.nodes[x + Math.floor(viewport.x)][y + Math.floor(viewport.y)].land.image, 
-                (x - viewport.x % 1) * mapHexWidth, 
-                (y + (map.nodes[x + Math.floor(viewport.x)][y + Math.floor(viewport.y)].xindex % 2 === 0 ? 0.5 : 0) - viewport.y % 1) * mapHexHeight, 
-                mapHexHeight * 1.1547, mapHexHeight)
+            if (map.nodes[x + Math.floor(viewport.x)]){
+                if (map.nodes[x + Math.floor(viewport.x)][y + Math.floor(viewport.y)]) {
+                    ctx.drawImage(map.nodes[x + Math.floor(viewport.x)][y + Math.floor(viewport.y)].land.image, 
+                    (x - viewport.x % 1) * mapHexWidth, 
+                    (y + (map.nodes[x + Math.floor(viewport.x)][y + Math.floor(viewport.y)].xindex % 2 === 0 ? 0.5 : 0) - viewport.y % 1) * mapHexHeight, 
+                    mapHexHeight * 1.1547, mapHexHeight)
+                }
+            }
         }
     }
 
+    let mapItems = [];
     for (let y = Math.floor(viewport.y) - 1; y < Math.min(viewport.y + viewport.height + 3, mapHeight); y++) {
         for (let x = Math.floor(viewport.x / 2) * 2 - 1; x < viewport.x + viewport.width + 1; x+= 2) {
             if (map.nodes[x][y].object) {
-                drawMapObject(map.nodes[x][y].object);
+                mapItems.push(map.nodes[x][y].object);
             }
         }
         for (let x = Math.floor(viewport.x / 2) * 2 - 2; x < viewport.x + viewport.width + 1; x+= 2) {
             if (map.nodes[x]) {
                 if (map.nodes[x][y].object) {
-                    drawMapObject(map.nodes[x][y].object);
+                    mapItems.push(map.nodes[x][y].object);
                 }
             }
         }
     }
+    animals.forEach(animal => {
+        if (animal.onScreen && !animal.gone) {
+            mapItems.push(animal);
+        }
+    })
+
+    mapItems.sort((a, b) => a.realY > b.realY ? 1: -1);
+    // draw all the stuff in sorted order
+    for (let n = 0; n < mapItems.length; n++) {
+        if (mapItems[n].image) {
+            ctx.save();
+
+            // things become semitransparent when they would obscure the hunter
+            if (mapItems[n].realX - mapItems[n].width / 2 < hunter.realX && mapItems[n].realX + mapItems[n].width / 2 > hunter.realX) {
+                if (mapItems[n].realY > hunter.realY && mapItems[n].realY - mapItems[n].height < hunter.realY) {
+                    ctx.globalAlpha = 0.5;
+                }
+            }
+ 
+            ctx.translate((mapItems[n].x - viewport.x + mapItems[n].offset.x) * mapHexWidth, 
+            (mapItems[n].y - viewport.y + mapItems[n].offset.y + (mapItems[n].x % 2 === 0 ? 0.25 : -0.25)) * mapHexHeight);
+    
+            if (mapItems[n].rotation) {
+                ctx.translate(mapItems[n].width / 2 * mapHexHeight, mapItems[n].height / 2 * mapHexHeight);
+
+                ctx.rotate(mapItems[n].rotation*Math.PI/180);
+
+                ctx.translate(-mapItems[n].width / 2 * mapHexHeight, -mapItems[n].height / 2 * mapHexHeight)
+            }
+
+            if (mapItems[n].imageFrame) {
+                ctx.drawImage(mapItems[n].image, mapItems[n].imageFrame.x * mapItems[n].imageWidth, mapItems[n].imageFrame.y * mapItems[n].imageHeight, mapItems[n].imageWidth, mapItems[n].imageHeight,
+                    0, 0,
+                    mapItems[n].width * mapHexHeight, mapItems[n].height * mapHexHeight);
+            }
+            else {
+                // singleton image
+                ctx.drawImage(mapItems[n].image, 
+                    0, 0, 
+                    // (mapItems[n].x - viewport.x - mapItems[n].width/ 2 + 0.5) * mapHexWidth, 
+                    // (mapItems[n].y - viewport.y - mapItems[n].height + (mapItems[n].x % 2 === 0 ? 1.25 : 0.75)) * mapHexHeight
+                    mapHexHeight * mapItems[n].width, mapHexHeight * mapItems[n].height)
+            }
+            ctx.restore();
+        }
+    }
+
     drawHunter();
     drawMokeballs();
-    drawAnimals();
+    // drawAnimals();
     if (frameRate >= 60) requestAnimationFrame(drawCanvas);
+    $('#msg').html(messages.reduce((sum, message) => sum + message + "<br>", ""))
 
 }
 
@@ -367,32 +466,6 @@ function drawHunter() {
         (hunter.x - viewport.x + hunter.offset.x) * mapHexWidth, 
         (hunter.y - viewport.y + hunter.offset.y + (hunter.x % 2 === 0 ? 0.25 : -0.25)) * mapHexHeight,
         mapHexHeight * 1.1547, mapHexHeight);
-}
-
-function drawMapObject(mapObject) {
-    if (mapObject.image) {
-        if (mapObject.realX - mapObject.imageWidth / 2 < hunter.realX && mapObject.realX + mapObject.imageWidth / 2 > hunter.realX) {
-            if (mapObject.realY > hunter.realY && mapObject.realY - mapObject.imageHeight < hunter.realY) {
-                ctx.globalAlpha = 0.5;
-            }
-        }
-        ctx.drawImage(mapObject.image, 
-            (mapObject.x - viewport.x - mapObject.imageWidth/ 2 + 0.5) * mapHexWidth, 
-            (mapObject.y - viewport.y - mapObject.imageHeight + (mapObject.x % 2 === 0 ? 1.25 : 0.75)) * mapHexHeight, 
-            mapHexHeight * mapObject.imageWidth, mapHexHeight * mapObject.imageHeight)
-        ctx.globalAlpha = 1;
-    }
-}
-
-function drawAnimals() {
-    animals.forEach(animal => {
-        if (animal.onScreen) {
-            ctx.drawImage(animal.image, animal.imageFrame.x * animal.imageWidth, animal.imageFrame.y * animal.imageHeight, animal.imageWidth, animal.imageHeight,
-                (animal.x - viewport.x + animal.offset.x) * mapHexWidth, 
-                (animal.y - viewport.y + animal.offset.y + (animal.x % 2 === 0 ? 0.25 : -0.25)) * mapHexHeight,
-                animal.width * mapHexHeight, animal.height * mapHexHeight);
-        }
-    })
 }
 
 function drawMokeballs() {
@@ -452,11 +525,11 @@ function genMap(terrain, callback) {
                 && !map.nodes[x][Math.max(y-1,-1)].object 
                 && !map.nodes[Math.max(x-1, -1)][Math.max(x-1, -1)].object 
                 && Math.random() * 100 < item.frequency) {
-                    map.nodes[x][y].object = {
+                    let mapObject = {
                         image: item.images[Math.floor(Math.random() * 5)],
                         type: item.type,
-                        imageWidth: 4,
-                        imageHeight: 4,
+                        width: 4,
+                        height: 4,
                         x: x,
                         y: y,
                         realX: map.nodes[x][y].x,
@@ -464,13 +537,18 @@ function genMap(terrain, callback) {
                     }
     
                     if (item.type === "rock") {
-                        map.nodes[x][y].object.imageHeight = .25 + Math.random() * .5;
-                        map.nodes[x][y].object.imageWidth = .25 + Math.random() * .5;
+                        mapObject.imageHeight = .25 + Math.random() * .5;
+                        mapObject.imageWidth = .25 + Math.random() * .5;
                     }
                     else if (item.type === "cactus") {
-                        map.nodes[x][y].object.imageHeight = 2;
-                        map.nodes[x][y].object.imageWidth = 1;
+                        mapObject.imageHeight = 2;
+                        mapObject.imageWidth = 1;
                     }
+                    // (mapItems[n].x - viewport.x - mapItems[n].width/ 2 + 0.5) * mapHexWidth, 
+                    // (mapItems[n].y - viewport.y - mapItems[n].height + (mapItems[n].x % 2 === 0 ? 1.25 : 0.75)) * mapHexHeight
+
+                    mapObject.offset = {x: -mapObject.width / 2 + 0.5, y: -mapObject.height + (mapObject.x % 2 === 0 ? 1.25 : 0.75)}
+                    map.nodes[x][y].object = mapObject;
                 }
             })
         }
@@ -566,4 +644,15 @@ function findPath(startingNode, destinationNode) {
         }
     }
     return {...directions[bestDirection], index: bestDirection};
+}
+
+function approxDist (x1, y1, x2, y2) {
+    return Math.max(Math.max(Math.abs(x1 - x2), Math.abs(y1 - y2)), (Math.abs(x1 - x2) + Math.abs(y1 - y2)) * .707)
+}
+
+function message(text) {
+    messages.push(text);
+    setTimeout(() => {
+        messages.pop();
+    }, 2000);
 }
