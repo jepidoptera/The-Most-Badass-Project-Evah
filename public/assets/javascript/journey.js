@@ -720,20 +720,20 @@ function newGame() {
 
 function gameLoop () {
     // time does pass
-    if (!paused) {
-        player.time += timeSpeed;
-        if (player.hour != Math.floor(player.time)) {
-            player.hour = Math.floor(player.time);
-            // do random events once per hour (so it's not dependent on framerate)
-            Object.keys(events).forEach((key) => {
-                if (!paused && events[key].occurs) events[key].function();
-            });
-        }
-        // move the sun
-        moveSun();
-        // a new dawn
-        if (player.time >= 24) nextDay();
+    if (paused) return;
+
+    player.time += timeSpeed;
+    if (player.hour != Math.floor(player.time)) {
+        player.hour = Math.floor(player.time);
+        // do random events once per hour (so it's not dependent on framerate)
+        Object.keys(events).forEach((key) => {
+            if (!paused && events[key].occurs) events[key].function();
+        });
     }
+    // move the sun
+    moveSun();
+    // a new dawn
+    if (player.time >= 24) nextDay();
 
     trail.travel();
     canvas.draw();
@@ -794,18 +794,6 @@ function arriveAt(location) {
     player.currentLocation = location;
     // execute this location's function, if it has one
     if (location.function) location.function();
-}
-
-function pause() {
-    paused = true;
-    clearInterval(gameInterval);
-}
-
-function unpause() {
-    if (paused) {
-        paused = false;
-        gameInterval = setInterval(gameLoop, 1000 / canvas.metrics.frameRate);
-    }
 }
 
 function rest() {
