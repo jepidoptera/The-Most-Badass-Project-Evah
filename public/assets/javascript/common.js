@@ -77,3 +77,13 @@ function loadTrail(callback) {
 
 }
 
+
+function pause() {
+    paused = true;
+}
+
+function unpause() {
+    if (paused) {
+        paused = false;
+    }
+}
