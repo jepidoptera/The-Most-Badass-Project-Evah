@@ -4,13 +4,20 @@
 
 </head>
 <body>
+    <div id="clickCatcher"></div>  
 
-    <div id="huntingField">
+    <div id="canvasFrame">
         <canvas id='canvas'></canvas>
-        <p id="msg"></p>
+        <div id="ammoSelect">
+            <div id="selectedAmmo" class="outline">mokeballs ▼</div>
+            <div name="mokeballs" class="ammo outline">mokeballs</div>
+            <div name="grenades" class="ammo outline">grenades</div>
+            <div name="rocks" class="ammo outline">rocks</div>
+        </div>
         <div id="time" class="outline"></div>
-        <div id="bullets" class="outline"></div>
+        <p id="msg"></p>
     </div>
 
-    <div id="msgbox" class="hidden dialogBox"><div id="msgbuttons"></div></div>    
+    <div id="msgbox" class="hidden dialogBox"><div id="msgbuttons"></div></div>  
+
 </body>
