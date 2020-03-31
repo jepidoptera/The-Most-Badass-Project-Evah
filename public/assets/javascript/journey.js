@@ -5,7 +5,6 @@ var backgroundImages = [];
 const you = $('<img>')
     .attr('src', './assets/images/walking.gif')
     .addClass('you');
-var paused = false;
 var exit = false;
 var trailHeight;
 var horizonHeight;

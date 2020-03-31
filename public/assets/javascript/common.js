@@ -1,4 +1,5 @@
 let player = {};
+let paused = false;
 
 function msgBox(title, text, buttons = [{text: "ok"}]) {
     if (pause) pause();
