@@ -28,8 +28,9 @@ class Mokeball {
         this.bounceFactor = 1/3;
     }
     throw(target) {
-        clearInterval(this.throwInterval);
-        clearTimeout(this.vanishTimeout);
+        player.mokeballs --;
+        $('#mokeballs').html(`mokeballs (${player.mokeballs})`)
+
         this.visible = true;
         this.target = target;
         this.x = hunter.x + hunter.offset.x + 0.5;
@@ -180,6 +181,7 @@ class Hunter extends Character {
         super('human', x, y);
         this.speed = 2.5;
         this.frameRate = 60;
+        this.ammo = "mokeballs";
         this.image = $("<img>").attr('src', './assets/images/hunter.png')[0];
         this.moveInterval = setInterval(() => {this.move()}, 1000 / this.frameRate);
     }
@@ -324,7 +326,33 @@ $(document).ready(() => {
 
 
     loadTrail(trail => {
-        loadPlayer(player => {
+        loadPlayer(p => {
+            player = p;
+            if (player.mokeballs === undefined) player.mokeballs = 30;
+            if (player.grenades === undefined) player.grenades = 12;
+            if (player.time === undefined) player.time = 12;
+            $("#selectedAmmo").text(`mokeballs (${player.mokeballs}) ▼`)
+            $(".ammo").hide();
+            $('div[name="mokeballs"').html(`mokeballs (${player.mokeballs})`)
+            $('#grenades').html(`grenades (${player.grenades})`)
+            $('#rocks').html(`rocks (∞)`)
+            $("#selectedAmmo").click(() => {
+                $(".ammo").show();
+            })
+            $(".ammo").click(event => {
+                hunter.ammo = $(event.target).attr('name');
+                $("#selectedAmmo").text(hunter.ammo + " (" +
+                    {
+                        grenades: player.grenades,
+                        mokeballs: player.mokeballs,
+                        rocks: "∞"
+                    }[hunter.ammo] + ") ▼"
+                )
+                $(".ammo").hide();
+            });
+            $("#canvas").on("click", () => {$(".ammo").hide()}, false)
+
+
             let location = trail[trail.map(location => location.name).indexOf(player.currentLocation || "The Forest of Doom")];
             map = genMap(location, () => {
                 if (Math.max(canvas.width(), canvas.height()) > 1000 ) requestAnimationFrame(drawCanvas);
@@ -335,6 +363,24 @@ $(document).ready(() => {
                     }, 1000 / frameRate);
                 }
             });
+
+            // count down til dark
+            function timeDown() {
+                player.time += 1;
+                hoursTilDark = parseInt((24 - player.time) / 2);
+                $("#time").text('Hours til dark: '+ hoursTilDark);
+                if (hoursTilDark == 0) {
+                    saveGame();
+                    msgBox('darkness', "The sun has gone down.  You head back to camp with your day's catch.",
+                    [{text: "ok", function: () => {
+                        window.location.href = `/journey?name=${player.name}&auth=${player.authtoken}`;
+                    }}]);
+                }
+                else {
+                    setTimeout(timeDown, 10000);
+                }
+            }    
+            if (player.time) timeDown();
 
             hunter = new Hunter(mapWidth/2, mapHeight/2);
             location.prey.forEach(prey => {
@@ -347,10 +393,10 @@ $(document).ready(() => {
         
             // set player controls
 
-            $(document).click(event => {
-                // console.log(event);
-                hunter.destination.x = Math.floor((event.clientX - canvas.position().left) / mapHexWidth + viewport.x);
-                hunter.destination.y = Math.floor((event.clientY - canvas.position().top) / mapHexHeight + viewport.y - (hunter.destination.x % 2 === 0 ? 0.5 : 0))
+            $("#canvas").click(event => {
+                // console.log(event.clientX);
+                hunter.destination.x = Math.floor((event.clientX - $("#canvasFrame").position().left) / mapHexWidth + viewport.x);
+                hunter.destination.y = Math.floor((event.clientY - $("#canvasFrame").position().top) / mapHexHeight + viewport.y - (hunter.destination.x % 2 === 0 ? 0.5 : 0))
     
                 // console.log("x", hunter.destination.x, "y", hunter.destination.y);
                 if (map.nodes[hunter.destination.x][hunter.destination.y].object) console.log(map.nodes[hunter.destination.x][hunter.destination.y].object.type, "x", hunter.destination.x, "y", hunter.destination.y);
@@ -358,10 +404,10 @@ $(document).ready(() => {
                 // console.log(findPath(hunter, hunter.destination));
             })
         
-            $(document).dblclick(event => {
+            $("#canvas").dblclick(event => {
                 mokeballs.push(new Mokeball().throw({
-                    x: (event.clientX - canvas.position().left) / mapHexWidth + viewport.x,
-                    y: (event.clientY - canvas.position().top) / mapHexHeight + viewport.y
+                    x: (event.clientX - $("#canvasFrame").position().left) / mapHexWidth + viewport.x,
+                    y: (event.clientY - $("#canvasFrame").position().top) / mapHexHeight + viewport.y
                 }))
                 hunter.throwing = true;
                 hunter.destination.x = hunter.nextNode.xindex;
@@ -454,13 +500,12 @@ function drawCanvas() {
     // drawAnimals();
     if (frameRate >= 60) requestAnimationFrame(drawCanvas);
     $('#msg').html(messages.reduce((sum, message) => sum + message + "<br>", ""))
-
 }
 
 function drawHunter() {
     let hunterImgSize = 360;
     let hunterFrame = 0;
-    if (hunter.travelFrames)  hunterFrame = ((hunter.travelFrames % 10 < 5) ? 1 : 2)
+    if (hunter.travelFrames)  hunterFrame = ((hunter.travelFrames % (frameRate / 3) < frameRate / 6) ? 1 : 2)
     if (hunter.throwing) hunterFrame = 3
     ctx.drawImage(hunter.image, hunterFrame * hunterImgSize, 0, hunterImgSize, hunterImgSize,
         (hunter.x - viewport.x + hunter.offset.x) * mapHexWidth, 
@@ -547,7 +592,7 @@ function genMap(terrain, callback) {
                     // (mapItems[n].x - viewport.x - mapItems[n].width/ 2 + 0.5) * mapHexWidth, 
                     // (mapItems[n].y - viewport.y - mapItems[n].height + (mapItems[n].x % 2 === 0 ? 1.25 : 0.75)) * mapHexHeight
 
-                    mapObject.offset = {x: -mapObject.width / 2 + 0.5, y: -mapObject.height + (mapObject.x % 2 === 0 ? 1.25 : 0.75)}
+                    mapObject.offset = {x: -mapObject.width / 2 + 0.25, y: -mapObject.height + 1}
                     map.nodes[x][y].object = mapObject;
                 }
             })
@@ -648,11 +693,4 @@ function findPath(startingNode, destinationNode) {
 
 function approxDist (x1, y1, x2, y2) {
     return Math.max(Math.max(Math.abs(x1 - x2), Math.abs(y1 - y2)), (Math.abs(x1 - x2) + Math.abs(y1 - y2)) * .707)
-}
-
-function message(text) {
-    messages.push(text);
-    setTimeout(() => {
-        messages.pop();
-    }, 2000);
 }
