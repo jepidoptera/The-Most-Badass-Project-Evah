@@ -36,7 +36,9 @@ const trail = [
             {type: "tree", frequency: 5}
         ],
         prey: [
-            {type: "deer", frequency: 100}
+            {type: "deer", frequency: 100},
+            {type: "bear", frequency: 20},
+            {type: "squirrel", frequency: 300}
         ],
         length: 75 // seconds
 
