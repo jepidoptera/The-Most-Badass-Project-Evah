@@ -713,53 +713,6 @@ function rest() {
     });
 }
 
-function inventory() {
-    // show your items
-    if (paused) return;
-    pause();
-    $("#inventory").empty().html('<h1>Your Items:</h1>').show()
-        .append("Money: " + player.money + "<br>")
-        .append("mokeballs: " + player.mokeballs + "<br>")
-        .append("Food: " + player.food + "<br>")
-        .append("Kibble: " + player.kibble + "<br>")
-        .append("Extra mokemon:");
-    if (player.mokemon.list.length > 0) {
-        $("#inventory").append("<br> <ul>");
-        player.mokemon.list.forEach((mokemon) => {
-            $("#inventory").append(mokemon.name + "<br>");
-        });
-        $("#inventory").append("</ul>");
-    }
-    else $("#inventory").append('none<br>');
-    $("#inventory").append($("<button>").text('close').addClass('closeButton').on('click', closeInventory));
-}
-
-function partyStats() {
-    // show posse stats
-    if (paused) return;
-    pause();
-    $("#posse").empty();
-    $("#posse").html('<h1>Your mokemon Posse:</h1>');
-    player.posse.forEach((mokemon) => {
-        var health = 'excellent';
-        if (mokemon.health <= 9) health = 'good';
-        if (mokemon.health <= 7) health = 'fair';
-        if (mokemon.health <= 5) health = 'poor';
-        if (mokemon.health <= 3) health = 'terrible';
-        var html = "name: " + mokemon.name +
-        '<br>' + 'health: ' + health + '<br>';
-        if (mokemon.conditions.length > 0) {
-            mokemon.conditions.forEach((condition) => {
-                html += 'has ' + condition.name + '<br>'; 
-            });
-        }
-        var item = $('<p>').html(html).addClass('mokestats');
-        $("#posse").append(item);
-    });
-    $("#posse").append($("<button>").text('close').addClass('closeButton').on('click', closePosse));
-    $("#posse").show();
-}
-
 $(document).on('keypress', (event) => {
     if (event.key === "Enter") {
         options();
@@ -769,24 +722,22 @@ $(document).on('keypress', (event) => {
 function options () {
     if (paused) return;
     pause();
-    $("#optionsMenu").show();
+    $("#optionsMenu").show(); 
     $("#foodInfo").text(`food: ${player.food} (-${player.foodPerDay}/day)`);
     $("#moneyInfo").text(`money: ${player.money}`);
     $("#ammoInfo").text(`mokeballs: ${player.mokeballs}, grenades: ${player.grenades}`);
-    $("#huntButton").attr('disabled', player.currentLocation.prey ? false : true);
+    if (player.currentLocation.prey)
+        $("#huntButton").show();
+    else
+        $("#huntButton").hide()
+    if (player.currentLocation.shop)
+        $("#shopButton").show();
+    else
+        $("#shopButton").hide()
 }
 
 function closeOptions() {
     $("#optionsMenu").hide();
-    unpause();
-}
-
-function closePosse() {
-    $("#posse").hide();
-    unpause();
-}
-function closeInventory() {
-    $("#inventory").hide();
     unpause();
 }
 
