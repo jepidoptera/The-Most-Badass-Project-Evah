@@ -345,7 +345,6 @@ class Animal extends Character {
             this.height = this.size;
             this.walkSpeed = 1;
             this.runSpeed = 3.5;
-            this.speed = this.walkSpeed;
             this.fleeRadius = 9;
             this.foodValue = Math.floor(90 * this.size);
             this.hp = 10 * this.size;
@@ -358,7 +357,6 @@ class Animal extends Character {
             this.height = this.size;
             this.walkSpeed = 1;
             this.runSpeed = 3;
-            this.speed = this.walkSpeed;
             this.fleeRadius = 0;
             this.chaseRadius = 9;
             this.fleeRadius = -1;
@@ -373,16 +371,57 @@ class Animal extends Character {
             this.height = this.size;
             this.walkSpeed = 2;
             this.runSpeed = 2.5;
-            this.speed = this.walkSpeed;
             this.fleeRadius = 5;
             this.foodValue = Math.floor(6 * this.size);
             this.hp = 2 * this.size;
             this.randomMotion = 3;
         }
+        if (type === "scorpion") {
+            this.imageHeight = 200;
+            this.imageWidth = 200;
+            this.size = Math.random() * .1 + .4;
+            this.width = this.size;
+            this.height = this.size;
+            this.walkSpeed = .75;
+            this.runSpeed = 1.5;
+            this.chaseRadius = 4;
+            this.foodValue = 1;
+            this.hp = 1;
+            this.randomMotion = 2;
+        }
+        else if (type === "armadillo") {
+            this.imageHeight = 200;
+            this.imageWidth = 200;
+            this.size = Math.random() * .2 + .5;
+            this.width = this.size;
+            this.height = this.size;
+            this.walkSpeed = 1;
+            this.runSpeed = 2;
+            this.fleeRadius = 0;
+            this.fleeRadius = 7;
+            this.foodValue = Math.floor(20 * this.size);
+            this.hp = 10 * this.size;
+            this.randomMotion = 3;
+        }
+        else if (type === "coyote") {
+            this.imageHeight = 356;
+            this.imageWidth = 200;
+            this.size = Math.random() * .25 + .7;
+            this.width = this.size * 1.75;
+            this.height = this.size;
+            this.walkSpeed = 1;
+            this.runSpeed = 3.5;
+            this.fleeRadius = 10;
+            this.foodValue = Math.floor(60 * this.size);
+            this.hp = 15 * this.size;
+            this.randomMotion = 6;
+        }
         else {
+            console.log('unknown animal:', type);
             this.size = 1;
             this.hp = 10;
         }
+        this.speed = this.walkSpeed;
         this._onScreen = false;
         this.rotation = 0;
         this.dead = false;

@@ -51,6 +51,11 @@ const trail = [
             {type: "cactus", frequency: 2},
             {type: "rock", frequency: 2}
         ],
+        prey: [
+            {type: "scorpion", frequency: 100},
+            {type: "armadillo", frequency: 50},
+            {type: "coyote", frequency: 20}
+        ],
         length: 96 // seconds
 
     },
