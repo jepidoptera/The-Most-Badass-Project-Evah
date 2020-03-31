@@ -32,7 +32,7 @@ class Projectile {
         this.target = target;
         this.x = hunter.x + hunter.offset.x + 0.5;
         this.y = hunter.realY;
-        this.z = -0.5;
+        this.z = 0;
         let xdist = (this.target.x - this.x) * .75;
         let ydist = this.target.y - this.y;
         let dist = Math.sqrt(xdist ** 2 + ydist ** 2);
@@ -45,10 +45,7 @@ class Projectile {
         this.movement = {
             x: (xdist * 1.333) / dist * this.speed / frameRate,
             y: ydist / dist * this.speed / frameRate,
-            z: dist / this.speed / 2 * this.gravity,
-            perFrame: this.speed / frameRate,
-            total: 0,
-            max: dist
+            z: (dist - 0.5) / this.speed / 2 * this.gravity,
         }
 
         this.throwInterval = setInterval(() => {
@@ -57,12 +54,11 @@ class Projectile {
             this.z += this.movement.z;
             this.movement.z -= this.gravity / frameRate;
 
-            this.movement.total += this.movement.perFrame;
-
             // this.z = Math.sqrt((this.movement.max / 2  - Math.abs(this.movement.max / 2 - this.movement.total)) / 2) || 0 ;
             this.apparentSize = (this.size * (this.z + 1) / 2 + 10) * Math.max($(document).width(), $(document).height()) / 1280;
 
-            if (this.movement.total > this.movement.max) {
+            if (this.z <= 0) {
+                this.z = 0;
                 this.land();
                 this.bounce();
             }
@@ -72,12 +68,9 @@ class Projectile {
     bounce() {
         if (this.bounced < this.bounces) {
             this.movement = {
-                ...this.movement,
                 x: this.movement.x * this.bounceFactor,
                 y: this.movement.y * this.bounceFactor,
                 z: -this.movement.z * this.bounceFactor,
-                max: this.movement.max * this.bounceFactor,
-                total: 0,
             }
             this.bounced += 1;
         }
@@ -100,13 +93,14 @@ class Mokeball extends Projectile {
     }
     land() {
         animals.forEach((animal, n) => {
-            let margin = 1 / (animal.width + animal.height) * 2;
+            let margin = 1;
             if (animal._onScreen && !animal.dead) {
                 let dist = approxDist(this.x, this.y, animal.x + animal.offset.x + animal.width/2, animal.realY + animal.width/2);
                 if (dist < margin) {
                     if (animal.hp > 20) {
                         // that shit don't work on bears
-                        this.movement.z = -20;
+                        this.movement.z = 1 / this.bounceFactor;
+                        this.movement.max = Infinity;
                         this.bounced--;
                         this.bounce();
                     }
@@ -148,9 +142,9 @@ class Grenade extends Projectile {
             animals.forEach((animal, n) => {
                 let margin = 4;
                 if (animal._onScreen && !animal.dead) {
-                    let dist = approxDist(this.x, this.y, animal.x + animal.offset.x + animal.width/2, animal.realY + animal.width/2);
+                    let dist = approxDist(this.x, this.y, animal.x + animal.offset.x, animal.realY);
                     if (dist < margin) {
-                        animal.hp -= Math.min(30 / dist, 40);
+                        animal.hp -= Math.min(40 / dist, 40);
                         if (animal.hp <= 0) {
                             let messageText = `You killed: ${animal.type}!` 
                             if (animal.foodValue > 0) messageText += `  You gain ${animal.foodValue} food.`;
@@ -175,7 +169,7 @@ class Rock extends Projectile {
     land() {
         if (this.bounced === 0) {
             animals.forEach((animal, n) => {
-                let margin = animal.size;
+                let margin = animal.size + .15;
                 if (animal._onScreen && !animal.dead) {
                     let dist = approxDist(this.x, this.y, animal.x + animal.offset.x + animal.width/2, animal.realY + animal.width/2);
                     if (dist < margin) {
@@ -186,6 +180,12 @@ class Rock extends Projectile {
                             player.food += animal.foodValue;
                             message(messageText);
                             animal.die();
+                        }
+                        else if (animal.fleeRadius > 0) {
+                            animal.flee();
+                        }
+                        else if (animal.chaseRadius > 0) {
+                            animal.attack();
                         }
                     }
                 }
@@ -206,6 +206,7 @@ class Character {
         this.realY = map.nodes[this.x][this.y].y;
         this.travelFrames = 0;
         this.moving = false;
+        this.nextNode = map.nodes[this.x][this.y];
     }
     move() {
         if (this.x !== this.destination.x || this.y !== this.destination.y) {
@@ -277,6 +278,38 @@ class Hunter extends Character {
         viewport.x = Math.min(Math.max(Math.min(viewport.x, viewport.upperbound.x), viewport.lowerbound.x, 0), mapWidth - viewport.width)
         viewport.y = Math.min(Math.max(Math.min(viewport.y, viewport.upperbound.y), viewport.lowerbound.y, 0), mapHeight - viewport.height)
     }
+    throw(x, y) {
+        if (this.throwDelay) return;
+        let projectile;
+        if (hunter.ammo === "mokeballs") {
+            if (player.mokeballs <= 0) return;
+            player.mokeballs--;
+            projectile = new Mokeball();
+            this.throwDelay = 1;
+        }
+        else if (hunter.ammo === "grenades") {
+            if (player.grenades <= 0) return;
+            player.grenades--;
+            projectile = new Grenade();
+            this.throwDelay = 2;
+        }
+        else if (hunter.ammo === "rocks") {
+            projectile = new Rock();
+            this.throwDelay = .5;
+        }
+        $('div[name="mokeballs"').html(`mokeballs (${player.mokeballs})`)
+        $('div[name="grenades"').html(`grenades (${player.grenades})`)
+        $("#selectedAmmo").text($(`div[name="${hunter.ammo}"`).text() + " ▼")
+
+        projectiles.push(projectile.throw({x, y}))
+        hunter.throwing = true;
+        hunter.destination.x = hunter.nextNode.xindex || hunter.x;
+        hunter.destination.y = hunter.nextNode.yindex || hunter.y;
+        setTimeout(() => {
+            this.throwDelay = 0;
+            this.throwing = false;
+        }, 1000 * this.throwDelay);
+    }
 }
 
 class Animal extends Character {
@@ -298,10 +331,10 @@ class Animal extends Character {
             this.foodValue = Math.floor(90 * this.size);
             this.hp = 10 * this.size;
         }
-        if (type === "bear") {
+        else if (type === "bear") {
             this.imageHeight = 321;
             this.imageWidth = 400;
-            this.size = Math.random() * .5 + 1.5;
+            this.size = Math.random() * .3 + 1.2;
             this.width = this.size * 1.4;
             this.height = this.size;
             this.walkSpeed = 1;
@@ -310,11 +343,11 @@ class Animal extends Character {
             this.fleeRadius = 0;
             this.chaseRadius = 9;
             this.foodValue = Math.floor(120 * this.size);
-            this.hp = 20 * this.size;
+            this.hp = 25 * this.size;
         }
-        if (type === "squirrel") {
+        else if (type === "squirrel") {
             this.imageHeight = 146;
-            this.imageWidth = 200;
+            this.imageWidth = 150;
             this.size = Math.random() * .2 + .4;
             this.width = this.size;
             this.height = this.size;
@@ -340,8 +373,8 @@ class Animal extends Character {
         if (this.dead) return;
         // wander around
         if (!this.moving || Math.random() * this.randomMotion * this.frameRate < 1 && this.speed == this.walkSpeed) {
-            this.destination.x = Math.floor(Math.random() * mapWidth);
-            this.destination.y = Math.floor(Math.random() * mapHeight);
+            this.destination.x = Math.min(Math.max(Math.floor(Math.random() * 50 - 25 + this.x), 0), mapWidth - 1);
+            this.destination.y = Math.min(Math.max(Math.floor(Math.random() * 50 - 25 + this.y), 0), mapHeight - 1);
             this.speed = this.walkSpeed;
         }
 
@@ -363,14 +396,12 @@ class Animal extends Character {
                 this.imageFrame.y = 0;
             }
         }
-        // flee the player
         let dist = approxDist(this.x, this.y, hunter.x, hunter.y);
         if (dist < this.fleeRadius) {
-            let xdist = this.x - hunter.x;
-            let ydist = this.y - hunter.y;
-            this.destination.x = Math.floor(Math.max(Math.min(this.x + xdist / dist * 10, mapWidth - 1), 0));  
-            this.destination.y = Math.floor(Math.max(Math.min(this.y + ydist / dist * 10, mapWidth - 1), 0));  
-            this.speed = this.runSpeed;
+            this.flee()
+        }
+        else if (dist < this.chaseRadius) {
+            this.attack();
         }
     }
     get onScreen() {
@@ -381,6 +412,20 @@ class Animal extends Character {
             }
         }
         return this._onScreen;
+    }
+    flee() {
+        // flee the player
+        let dist = approxDist(this.x, this.y, hunter.x, hunter.y);
+
+        let xdist = this.x - hunter.x;
+        let ydist = this.y - hunter.y;
+        this.destination.x = Math.floor(Math.max(Math.min(this.x + xdist / dist * 10, mapWidth - 1), 0));  
+        this.destination.y = Math.floor(Math.max(Math.min(this.y + ydist / dist * 10, mapWidth - 1), 0));  
+        this.speed = this.runSpeed;
+    }
+    attack() {
+        this.destination.x = hunter.x;
+        this.destination.y = hunter.y;
     }
     catch(x, y) {
         this.dead = 1;
@@ -411,16 +456,18 @@ class Animal extends Character {
         let dist = approxDist(this.x + this.offset.x, this.realY, x, y);
         this.z = 0;
         this.motion = {
-            x: xdist / Math.min(dist, 2) * 2 / this.size / this.frameRate * 1.155,
-            y: ydist / Math.min(dist, 2) * 2 / this.size / this.frameRate,
-            z: 3 / dist / this.size / this.frameRate
+            x: xdist / Math.min(dist, 2) / this.size / this.frameRate * 1.155,
+            y: ydist / Math.min(dist, 2) / this.size / this.frameRate,
+            z: 5 / dist / this.size / this.frameRate
         }
         this.dieAnimation = setInterval(() => {
             this.x += this.motion.x;
             this.y += this.motion.y;
             this.z += this.motion.z;
+            this.realY = this.y;
             this.motion.z -= .5 / frameRate;
             if (this.z <= 0) {
+                this.z = 0;
                 clearInterval(this.dieAnimation);
             }
         }, 1000 / this.frameRate);
@@ -542,24 +589,19 @@ $(document).ready(() => {
             })
         
             $("#canvas").dblclick(event => {
-                let projectile;
-                if (hunter.ammo === "mokeballs") {
-                    projectile = new Mokeball();
-                }
-                else if (hunter.ammo === "grenades") {
-                    projectile = new Grenade();
-                }
-                else if (hunter.ammo === "rocks") {
-                    projectile = new Rock();
-                }
-                projectiles.push(projectile.throw({
-                    x: (event.clientX - $("#canvasFrame").position().left) / mapHexWidth + viewport.x,
-                    y: (event.clientY - $("#canvasFrame").position().top) / mapHexHeight + viewport.y
-                }))
-                hunter.throwing = true;
-                hunter.destination.x = hunter.nextNode.xindex;
-                hunter.destination.y = hunter.nextNode.yindex;
+                hunter.throw(
+                    (event.clientX - $("#canvasFrame").position().left) / mapHexWidth + viewport.x,
+                    (event.clientY - $("#canvasFrame").position().top) / mapHexHeight + viewport.y
+                )
             })        
+            $("#canvas").contextmenu(event => {
+                event.preventDefault();
+                hunter.throw(
+                    (event.clientX - $("#canvasFrame").position().left) / mapHexWidth + viewport.x,
+                    (event.clientY - $("#canvasFrame").position().top) / mapHexHeight + viewport.y
+                )
+            })        
+            $("#msg").contextmenu(event => event.preventDefault())
         })
     })
 })
