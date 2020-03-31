@@ -49,6 +49,7 @@ class Projectile {
         }
 
         this.throwInterval = setInterval(() => {
+            if (paused) return;
             this.x += this.movement.x;
             this.y += this.movement.y;
             this.z += this.movement.z;
@@ -108,8 +109,10 @@ class Mokeball extends Projectile {
                     else {
                         let messageText = `You caught: ${animal.type}!` 
                         if (animal.foodValue > 0) messageText += `  You gain ${animal.foodValue} food.`;
-                        player.food += animal.foodValue;
                         message(messageText);
+                        player.food += animal.foodValue;
+                        hunter.food += animal.foodValue;
+                        saveGame();
                         animal.catch(this.x, this.y - this.z);
                         // stop bouncing
                         this.bounced = this.bounces;
@@ -133,6 +136,8 @@ class Grenade extends Projectile {
         if (this.bounced === this.bounces) setTimeout(() => {
             this.image = this.altimage;
             this.explodeInterval = setInterval(() => {
+                if (paused) return;
+
                 this.apparentSize += 5;
                 if (this.apparentSize > 100) {
                     clearInterval(this.explodeInterval);
@@ -152,8 +157,10 @@ class Grenade extends Projectile {
                         if (animal.hp <= 0) {
                             let messageText = `You killed: ${animal.type}!` 
                             if (animal.foodValue > 0) messageText += `  You gain ${animal.foodValue} food.`;
-                            player.food += animal.foodValue;
                             message(messageText);
+                            player.food += animal.foodValue;
+                            hunter.food += animal.foodValue;
+                            saveGame();
                             animal.explode(this.x, this.y - this.z);
                         }
                         else if (animal.chaseRadius > 0) animal.attack();
@@ -185,6 +192,8 @@ class Rock extends Projectile {
                             let messageText = `You killed: ${animal.type}!` 
                             if (animal.foodValue > 0) messageText += `  You gain ${animal.foodValue} food.`;
                             player.food += animal.foodValue;
+                            hunter.food += animal.foodValue;
+                            saveGame();
                             message(messageText);
                             animal.die();
                         }
@@ -271,8 +280,11 @@ class Hunter extends Character {
         this.ammo = "mokeballs";
         this.image = $("<img>").attr('src', './assets/images/hunter.png')[0];
         this.moveInterval = setInterval(() => {this.move()}, 1000 / this.frameRate);
+        this.food = 0;
     }
     move() {
+        if (paused) return;
+
         super.move();
         viewport.upperbound = {
             x: this.x + this.offset.x - viewport.width / 2 + viewport.width * viewport.innerWindow.width / 2,
@@ -379,6 +391,8 @@ class Animal extends Character {
     }
     move() {
         if (this.dead) return;
+        if (paused) return;
+
         // wander around
         if (!this.moving || Math.random() * this.randomMotion * this.frameRate < 1 && this.speed == this.walkSpeed) {
             this.destination.x = Math.min(Math.max(Math.floor(Math.random() * 50 - 25 + this.x), 0), mapWidth - 1);
@@ -454,6 +468,8 @@ class Animal extends Character {
         // (this.x + this.offset.x) * mapHexWidth === x
         // so
         this.dieAnimation = setInterval(() => {
+            if (paused) return;
+
             this.rotation -= 600 / this.frameRate;
             this.dead ++;
             this.height *= .96;
@@ -480,6 +496,8 @@ class Animal extends Character {
             z: 5 / Math.min(dist, 1) / this.size / this.frameRate
         }
         this.dieAnimation = setInterval(() => {
+            if (paused) return;
+
             this.x += this.motion.x;
             this.y += this.motion.y;
             this.z += this.motion.z;
@@ -564,6 +582,8 @@ $(document).ready(() => {
                 else {
                     frameRate = 30
                     setInterval(() => {
+                        if (paused) return;
+
                         drawCanvas();
                     }, 1000 / frameRate);
                 }
@@ -576,7 +596,7 @@ $(document).ready(() => {
                 $("#time").text('Hours til dark: '+ hoursTilDark);
                 if (hoursTilDark == 0) {
                     saveGame();
-                    msgBox('darkness', "The sun has gone down.  You head back to camp with your day's catch.",
+                    msgBox('darkness', `The sun has gone down.  You head back to camp with your day's catch of ${hunter.food} food.`,
                     [{text: "ok", function: () => {
                         window.location.href = `/journey?name=${player.name}&auth=${player.authtoken}`;
                     }}]);
