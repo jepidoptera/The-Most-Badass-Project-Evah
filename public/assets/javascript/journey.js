@@ -15,6 +15,8 @@ var canvas;
 var gameInterval;
 const playerName = "{{name}}"
 
+var trail;
+
 class SceneObject {
     constructor(params) {
         this.type = params.type;
@@ -66,14 +68,14 @@ const SceneObjects = {
         imgRange: { min: 0, max: 3 },
         distance: () => { return Math.random() * 100 },
     }),
-    moutain: new SceneObject ({
+    far_moutain: new SceneObject ({
         type: "mountain",
         spacing: 31,
         sizeRange: { min: { x: 400, y: 225 }, max: { x: 900, y: 600 } },
         imgRange: { min: 0, max: 4 },
         distance: () => 100 - Math.random() * Math.random() * 100,
     }),
-    nearMoutain: new SceneObject ({
+    near_moutain: new SceneObject ({
         type: "mountain",
         spacing: 71,
         sizeRange: { min: { x: 200, y: 112 }, max: { x: 450, y: 300 } },
@@ -81,7 +83,7 @@ const SceneObjects = {
         isForeground: () => true,
         foregroundDistance: () => -100,
     }),
-    mountainRange: new SceneObject ({
+    mountain_range: new SceneObject ({
         type: "mountain range",
         spacing: 100,
         height: 290,
@@ -89,7 +91,7 @@ const SceneObjects = {
         image: './assets/images/big mountain.png',
         distance: () => Math.random() * 100,
     }),
-    firstMountain: new SceneObject ({
+    first_mountain: new SceneObject ({
         type: "mountain range",
         spacing: 0,
         height: 290,
@@ -139,7 +141,7 @@ const SceneObjects = {
         distance: () => Math.max(100 - Math.random() * Math.random() * 110, 0),
         foregroundDistance: () => Math.random() > .5 ? -20 : -50 
     }),
-    distantTree: new SceneObject ({
+    distant_tree: new SceneObject ({
         type: 'tree',
         spacing: 2,
         sizeRange: {min: {x: 80, y: 160}, max: {x: 360, y: 360}},
@@ -266,119 +268,6 @@ class Trail {
         this.travel();
     }
 }
-
-const trail = new Trail ([
-        TrailLocation({
-            type: 'nowhere',
-            name: 'what you leave behind',
-            length: -3,
-            scenery: [
-                SceneObjects.house,
-                SceneObjects.distantTree
-            ],
-        }),
-        TrailLocation({
-            type: 'city',
-            name: 'Orepoke',
-            length: 1,
-            scenery: [
-                SceneObjects.orepoke,
-                SceneObjects.house,
-                SceneObjects.distantTree
-            ],
-        }),
-        TrailLocation({
-            type: 'suburb',
-            name: 'The Outskirts of Orepoke',
-            scenery: [
-                SceneObjects.house,
-                SceneObjects.distantTree
-            ],
-            length: 20,
-            function: () => {
-                msgBox('Your journey begins', "Orepoke, once the world's greatest city, is now wracked by devastating epidemics of cholera and dysentery, as well as terrible shortages of food, wagon axles, and bullets.  Taking your surviving Mokemon, you set off on the road, in search of the legendary city of Pokegonemon - hoping to find a better life there.",
-                    [{
-                        text: "begin",
-                        function: () => {}
-                    }]
-                )
-            }
-        }),
-        TrailLocation({
-            type: 'forest',
-            name: 'The Forest of Doom',
-            scenery: [
-                SceneObjects.signpost,
-                SceneObjects.tree
-            ],
-            length: 75 // seconds
-
-        }),
-        TrailLocation({
-            type: 'desert',
-            name: 'The Desert of Dryness',
-            scenery: [
-                SceneObjects.signpost,
-                SceneObjects.cactus,
-                SceneObjects.rock
-            ],
-            length: 96 // seconds
-
-        }),
-        TrailLocation({
-            type: 'mountains',
-            name: 'The Mainstay Mountains',
-            scenery: [
-                SceneObjects.firstMountain,
-                SceneObjects.mountainRange,
-                SceneObjects.rock,
-                SceneObjects.moutain,
-                SceneObjects.nearMoutain
-            ],
-            length: 82 // seconds
-
-        }),
-        TrailLocation({
-            type: 'jungle',
-            name: 'The Great Palm Jungle',
-            scenery: [
-                SceneObjects.signpost,
-                SceneObjects.palm_tree
-            ],
-            length: 100 // seconds
-
-        }),
-        TrailLocation({
-            type: 'city',
-            name: 'pokegonemon',
-            length: 1,
-            scenery: [
-                SceneObjects.pokegonemon
-            ],
-            function: () => {
-                // you won
-                msgBox("Yay", "You have reached the legendary city!  Rejoice!", 
-                [{
-                    text: "Celebrate",
-                    function: win // TODO
-                }]);
-            }
-        }),
-        TrailLocation({
-            type: 'suburb',
-            name: 'the Great Beyond',
-            scenery: [
-                SceneObjects.house,
-                SceneObjects.palm_tree
-            ],
-            length: 1000000000001
-        }),
-        TrailLocation({
-            type: 'the end',
-            name: 'infinity',
-            length: 0
-        })
-    ])
 
 class Canvas {
     constructor () {
@@ -668,30 +557,43 @@ $(document).ready(() => {
     horizonHeight = $("#ground").position().top / $("#canvasArea").height();
 
     loadPlayer((playerData) => {
-        player = playerData;
-        if (!player.progress) { 
-            newGame();
-            saveGame();
-        }
-        else {
-            player.currentLocation = trail.locationAt(player.progress);
-            trail.loadFrom(player.progress);
-        }
-        // construct mokemon class from simplified objects
-        let posse = player.posse;
-        player.posse = [];
-        posse.forEach(moke => {
-            player.posse.push(new mokePosse(moke.name, moke.health, moke.conditions));
-        })
-    
-        player = {
-            ...player,
-            get foodPerDay() {
-                return 5 + player.posse.reduce((sum, moke) => sum + moke.hunger, 0)
+        loadTrail(trailData =>{
+
+            trail = new Trail(trailData.map(location => {
+                // console.log(location.name)
+                return new TrailLocation({
+                    ...location,
+                    scenery: (location.scenery ? location.scenery.map(scenery => 
+                            SceneObjects[scenery.type.replace(' ', '_')]
+                        ) : [])
+                })
+            }))
+            player = playerData;
+            if (!player.progress) { 
+                newGame();
+                saveGame();
             }
-        }
-        gameInterval = setInterval(gameLoop, 1000 / canvas.metrics.frameRate);
-    });
+            else {
+                player.currentLocation = trail.locationAt(player.progress);
+                trail.loadFrom(player.progress);
+            }
+            // construct mokemon class from simplified objects
+            let posse = player.posse;
+            player.posse = [];
+            posse.forEach(moke => {
+                player.posse.push(new mokePosse(moke.name, moke.health, moke.conditions));
+            })
+        
+            player = {
+                ...player,
+                get foodPerDay() {
+                    return 5 + player.posse.reduce((sum, moke) => sum + moke.hunger, 0)
+                }
+            }
+            gameInterval = setInterval(gameLoop, 1000 / canvas.metrics.frameRate);
+        });
+    })
+
 })
 
 function newGame() {
@@ -699,6 +601,7 @@ function newGame() {
     player.food = 99;
     player.money = 1000;
     player.mokeballs = 27;
+    player.grenades = 9;
     player.speed = 4;
     player.name = player.name || 'simone';
     // reset to beginning of trail
@@ -793,7 +696,9 @@ function narrate() {
 function arriveAt(location) {
     player.currentLocation = location;
     // execute this location's function, if it has one
-    if (location.function) location.function();
+    if (location.message) {
+        msgBox(location.message.title, location.message.text, [{text: location.message.button}])
+    };
 }
 
 function rest() {
@@ -868,7 +773,8 @@ function options () {
     $("#optionsMenu").show();
     $("#foodInfo").text(`food: ${player.food} (-${player.foodPerDay}/day)`);
     $("#moneyInfo").text(`money: ${player.money}`);
-    $("#ballsInfo").text(`mokeballs: ${player.mokeballs}`);
+    $("#ammoInfo").text(`mokeballs: ${player.mokeballs}, grenades: ${player.grenades}`);
+    $("#huntButton").attr('disabled', player.currentLocation.prey ? false : true);
 }
 
 function closeOptions() {
