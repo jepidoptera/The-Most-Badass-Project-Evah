@@ -5,12 +5,15 @@ body {
     background-color: black;
 }
 
-.msg, #time {
+#msg {
     font-size: 15pt;
     color: white;
     text-align: center;
-    /* sorry */
-    z-index: 999999; 
+    z-index: 1; 
+    user-select: none;
+    position: relative;
+    margin: 0;
+    width: 100%;
 }
 
 .outline {
@@ -21,27 +24,48 @@ body {
         1px 1px 0 #000;
 }
 
-#time, #bullets {
+#time, #ammoSelect {
     position: absolute;
+    display: block;
     color: white;
-    z-index: 999;
+    z-index: 2;
+    background: transparent;
 }
 
 #time {
-    bottom: 0;
     right: 0;
 }
 
-#bullets {
-    bottom: 0;
-    right: 400px;
+#ammoSelect {
+    left: 0;
+    text-shadow: 
+        -1px 1px 0 #000,
+        1px 1px 0 #000,
+        1px -1px 0 #000,
+        -1px -1px 0 #000;
+    cursor: pointer;
+    text-align: right;
 }
 
+#clickCatcher {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: block;
+    z-index: 0;
+    display: none;
+}
 .msgBox {
     background-color: whitesmoke;
     z-index: 1001;
 }
 #canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    position: absolute;
+}
+#canvasFrame {
     width: 100vmax;
     height: 61.8vmax;
     background-color: green;
@@ -51,21 +75,21 @@ body {
     transform: translate(-50%, -50%);
 }
 @media (max-aspect-ratio: 1/1) {
-    #canvas {
+    #canvasFrame {
         height: 100vmax;
         width: 61.8vmax;
     }
 }
 
 @media (max-aspect-ratio: 21/34) {
-    #canvas {
+    #canvasFrame {
         height: 161.8vmin;
         width: 100vmin;
     }
 }
 
 @media (min-aspect-ratio: 34/21) {
-    #canvas {
+    #canvasFrame {
         height: 100vmin;
         width: 161.8vmin;
     }
