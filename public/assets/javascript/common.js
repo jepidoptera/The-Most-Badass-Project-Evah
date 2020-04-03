@@ -8,14 +8,14 @@ function msgBox(title, text, buttons = [{text: "ok"}]) {
         title = "-------"
     }
     $("#msgbox").empty().show()
-        .html(text + "<br>")
-        .prepend($("<div>").addClass('msgTitle').text(title))
-        .append($("<div>").attr('id', 'msgbuttons'));
+        .append($("<div>").addClass('msgTitle').text(title))
+        .append($("<div>").attr('id', 'msgText').html(text + "<br>"))
+        .append($("<div>").attr('id', 'msgbuttons'))
     buttons.forEach(button => {
         $("#msgbuttons").append($("<button>")
             .addClass('msgbutton')
             .text(button.text)
-            .click(() => {if (button.function) button.function(); $("#msgbox").hide(); if (unpause) unpause();})
+            .click(() => {$("#msgbox").hide(); unpause(); if (button.function) button.function();})
             .attr("type", (buttons.length === 1 ? "submit" : "none"))
         )
     })
