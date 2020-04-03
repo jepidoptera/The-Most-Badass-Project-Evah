@@ -162,6 +162,14 @@ const SceneObjects = {
         height: 300,
         width: 600,
         isForeground: () => true
+    }),
+    trading_post: new SceneObject ({
+        type: 'trading post',
+        spacing: 0,
+        image: './assets/images/trading post.png',
+        height: 150,
+        width: 150,
+        distance: () => 1,
     })
 }
 
@@ -419,6 +427,7 @@ const events = {
             return player.lowFood && player.food >= player.foodPerDay * 3;
         },
         function () {
+            player.lowFood = false;
             player.messages.push("You're doing ok on food for now.")
         }
     }
@@ -694,10 +703,19 @@ function narrate() {
 
 function arriveAt(location) {
     player.currentLocation = location;
+    player.nextLocation = location.next;
     // execute this location's function, if it has one
     if (location.message) {
         msgBox(location.message.title, location.message.text, [{text: location.message.button}])
     };
+    if (location.shop) {
+        msgBox("Buy stuff?", `You have reached: ${location.name}.  Stop and buy supplies?`, [
+            {text: "yes, of course", function: () => {
+                shop(location.shop.items);
+            }},
+            {text: "no, I'm good"}
+        ])
+    }
 }
 
 function rest() {
@@ -711,6 +729,76 @@ function rest() {
         $("#rest").hide();
         unpause();
     });
+}
+
+function shop(shopItems) {
+    let buyItems = {};
+    let cost = 0;
+    let shoppingDialog = $("<div>").attr('id', 'shoppingDialog').addClass('dialogBox').appendTo($('#canvasArea'))
+
+    shoppingDialog.prepend($("<div>").addClass('msgTitle').text(player.currentLocation.shop.title || `Shopping at ${player.currentLocation.name}`))
+        .append(
+            $("<div>")
+                .attr('id', 'shoppingText')
+                .html(player.currentLocation.shop.text || "Welcome! Here's what you can buy." + "<br><br>")
+                .append(
+                    ...shopItems.map(item => {
+                        return $("<div>").append(
+                            $("<span>").text(`${item.name}: $${item.price}`),
+                            "      ",
+                            $("<span>").append(
+                                $("<button>").text("+").click(() => {
+                                    if (!(buyItems[item.name] > item.max) && cost + item.price <= player.money) {
+                                        buyItems[item.name] = (buyItems[item.name] || 0) + 1;
+                                        cost += item.price;
+                                        $(`span#${item.name}.quantity`).text(buyItems[item.name]);
+                                        $("p#totalCost").text(`Total: $${cost}`);
+                                        $("p#available").text(`Available: $${player.money - cost}`)
+                                    }
+                                    else if (cost + item.price > player.money) {
+                                        $("p#available").css({border: "3px solid red", "box-sizing": 'border-box'});
+                                        setTimeout(() => {
+                                            $("p#available").css({border: "none"})
+                                        }, 100);
+                                    }
+                                }),
+                                $("<button>").text("-").click(() => {
+                                    if (buyItems[item.name] > 0) {
+                                        buyItems[item.name] -= 1;
+                                        cost -= item.price;
+                                        $(`span#${item.name}.quantity`).text(buyItems[item.name]);
+                                        $("p#totalCost").text(`Total: $${cost}`);
+                                        $("p#available").text(`Available: $${player.money - cost}`)
+                                    }
+                                }),
+                                $("<span>").addClass('quantity').attr('id', item.name).text("0")
+                            )
+            
+                        )
+                    }),
+                    $("<p>").attr('id', "totalCost").text("Total: $0"),
+                    $("<p>").attr('id', "available").text(`Available: $${player.money}`)
+                ),
+            $("<div>")
+                .attr('id', 'msgbuttons')
+                .append(
+                    $("<div>").attr('id', 'msgButtons').append(
+                        $("<button>")
+                            .addClass('msgbutton')
+                            .text("done, pay up")
+                            .click(() => {
+                                Object.keys(buyItems).forEach(item => {
+                                    player[item] = (player[item] || 0) + buyItems[item];
+                                })
+                                player.money -= cost;
+                                unpause();
+                                shoppingDialog.remove(); 
+                            })
+                            .attr("type", "submit")
+                    )
+                )
+        )
+    pause();
 }
 
 $(document).on('keypress', (event) => {
