@@ -3,7 +3,8 @@ html, body {
 }
 
 p {
-    padding: 10px;
+    padding: 1vmin;
+    margin: 0;
 }
 .bg-pan-left {
     -webkit-animation: bg-pan-left 8s infinite both;
@@ -131,6 +132,7 @@ label.error {
     position: absolute;
     width: 60%;
     min-width: 400px;
+    max-width: 100%;
     border: 3px solid white;
     color: whitesmoke;
     background-color: black;
@@ -140,7 +142,7 @@ label.error {
     top: 20px;
     left: 50%;
     transform: translate(-50%);
-    font-size: 3vmin;
+    font-size: 2vmin;
     padding: 10px;
     box-sizing: border-box;
 }
@@ -172,7 +174,7 @@ label.error {
     display: none;
 }
 
-@media screen and (min-width: 400px) {
+@media screen and (max-width: 400px) {
     .dialogBox {
         min-width: 100%;
     }
