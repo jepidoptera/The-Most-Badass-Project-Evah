@@ -648,14 +648,14 @@ $(document).ready(() => {
                     setInterval(() => {
                         if (paused) return;
                         // average over 100 frames
-                        effectiveFrameRate = effectiveFrameRate * .966666666 + 30 / (Date.now() - lastFrame);
-                        lastFrame = Date.now();
-                        if (canvasScaleFactor < .5) canvasScaleFactor += .001
-                        let optimalScale = canvasScaleFactor * effectiveFrameRate / 30;
-                        if (canvasScaleFactor / optimalScale > 1.15 || canvasScaleFactor / optimalScale < .95) {
-                            canvasScaleFactor = optimalScale;
-                            sizeCanvas();
-                        }
+                        // effectiveFrameRate = effectiveFrameRate * .966666666 + 33 / (Date.now() - lastFrame);
+                        // lastFrame = Date.now();
+                        // let optimalScale = canvasScaleFactor * effectiveFrameRate / 30;
+                        // if (canvasScaleFactor / optimalScale > 1.05 || canvasScaleFactor / optimalScale < .99) {
+                        //     canvasScaleFactor = optimalScale;
+                        //     sizeCanvas();
+                        // }
+                        // if (canvasScaleFactor < 1) canvasScaleFactor += .001
                         drawCanvas();
                     }, 1000 / frameRate);
                 // }
@@ -692,8 +692,8 @@ $(document).ready(() => {
 
             $("#canvas").click(event => {
                 // console.log(event.clientX);
-                hunter.destination.x = Math.floor((event.clientX - $("#canvasFrame").position().left) / mapHexWidth + viewport.x);
-                hunter.destination.y = Math.floor((event.clientY - $("#canvasFrame").position().top) / mapHexHeight + viewport.y - (hunter.destination.x % 2 === 0 ? 0.5 : 0))
+                hunter.destination.x = Math.floor((event.clientX - $("#canvasFrame").position().left) * canvasScaleFactor / mapHexWidth + viewport.x);
+                hunter.destination.y = Math.floor((event.clientY - $("#canvasFrame").position().top) * canvasScaleFactor / mapHexHeight + viewport.y - (hunter.destination.x % 2 === 0 ? 0.5 : 0))
     
                 // console.log("x", hunter.destination.x, "y", hunter.destination.y);
                 if (map.nodes[hunter.destination.x][hunter.destination.y].object) console.log(map.nodes[hunter.destination.x][hunter.destination.y].object.type, "x", hunter.destination.x, "y", hunter.destination.y);
@@ -703,15 +703,15 @@ $(document).ready(() => {
         
             $("#canvas").dblclick(event => {
                 hunter.throw(
-                    (event.clientX * canvasScaleFactor - $("#canvasFrame").position().left) / mapHexWidth + viewport.x,
-                    (event.clientY * canvasScaleFactor - $("#canvasFrame").position().top) / mapHexHeight + viewport.y
+                    (event.clientX - $("#canvasFrame").position().left) * canvasScaleFactor / mapHexWidth + viewport.x,
+                    (event.clientY - $("#canvasFrame").position().top) * canvasScaleFactor / mapHexHeight + viewport.y
                 )
             })        
             $("#canvas").contextmenu(event => {
                 event.preventDefault();
                 hunter.throw(
-                    (event.clientX * canvasScaleFactor - $("#canvasFrame").position().left) / mapHexWidth + viewport.x,
-                    (event.clientY * canvasScaleFactor - $("#canvasFrame").position().top) / mapHexHeight + viewport.y
+                    (event.clientX - $("#canvasFrame").position().left) * canvasScaleFactor / mapHexWidth + viewport.x,
+                    (event.clientY - $("#canvasFrame").position().top) * canvasScaleFactor / mapHexHeight + viewport.y
                 )
             })        
             $("#msg").contextmenu(event => event.preventDefault())
