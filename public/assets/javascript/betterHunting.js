@@ -9,8 +9,12 @@ let projectiles = [];
 let animals = [];
 var canvas;
 var ctx;
+var canvasScaleFactor = 1;
+var effectiveFrameRate;
+var lastFrame;
 var mapHexWidth, mapHexHeight;
 var messages = [];
+var landImage;
 
 class Projectile {
     constructor(x, y) {
@@ -112,11 +116,11 @@ class Mokeball extends Projectile {
                         message(messageText);
                         player.food += animal.foodValue;
                         hunter.food += animal.foodValue;
-                        saveGame();
                         animal.catch(this.x, this.y - this.z);
                         // stop bouncing
                         this.bounced = this.bounces;
                         this.visible = false;
+                        saveGame();
                     }
                 }
             }
@@ -160,8 +164,8 @@ class Grenade extends Projectile {
                             message(messageText);
                             player.food += animal.foodValue;
                             hunter.food += animal.foodValue;
-                            saveGame();
                             animal.explode(this.x, this.y - this.z);
+                            saveGame();
                         }
                         else if (animal.chaseRadius > 0) animal.attack();
                     }
@@ -193,9 +197,9 @@ class Rock extends Projectile {
                             if (animal.foodValue > 0) messageText += `  You gain ${animal.foodValue} food.`;
                             player.food += animal.foodValue;
                             hunter.food += animal.foodValue;
-                            saveGame();
                             message(messageText);
                             animal.die();
+                            saveGame();
                         }
                         else {
                             // didn't die
@@ -389,10 +393,10 @@ class Animal extends Character {
             this.runSpeed = 2.5;
             this.fleeRadius = 5;
             this.foodValue = Math.floor(6 * this.size);
-            this.hp = 2 * this.size;
+            this.hp = 1;
             this.randomMotion = 3;
         }
-        if (type === "scorpion") {
+        else if (type === "scorpion") {
             this.imageHeight = 200;
             this.imageWidth = 200;
             this.size = Math.random() * .1 + .4;
@@ -581,8 +585,9 @@ $(document).ready(() => {
     mapHexWidth = mapHexHeight * .866;
 
     function sizeCanvas() {
-        canvas[0].width = canvas.width();
-        canvas[0].height = canvas.height();
+        canvas[0].width = canvas.width() * canvasScaleFactor;
+        canvas[0].height = canvas.height() * canvasScaleFactor;
+        // canvasScaleFactor = 1;
         playerWithinViewport = {
             x: (hunter.x - viewport.x) / viewport.width,
             y: (hunter.y - viewport.y) / viewport.height
@@ -599,7 +604,7 @@ $(document).ready(() => {
 
         viewport.x = Math.min(Math.max(0, hunter.x - playerWithinViewport.x * viewport.width), mapWidth - viewport.width);
         viewport.y = Math.min(Math.max(0, hunter.y - playerWithinViewport.y * viewport.height), mapHeight - viewport.height);
-        mapHexHeight = canvas.width() / viewport.width * 1.1547;
+        mapHexHeight = canvas[0].width / viewport.width * 1.1547;
         mapHexWidth = mapHexHeight * .866;
     }
 
@@ -632,16 +637,28 @@ $(document).ready(() => {
 
 
             let location = trail[trail.map(location => location.name).indexOf(player.currentLocation || "The Forest of Doom")];
+            landImage = $("<img>").attr('src', `./assets/images/land tiles/${location.type}.png`)[0]
+
             map = genMap(location, () => {
-                if (Math.max(canvas.width(), canvas.height()) > 1000 ) requestAnimationFrame(drawCanvas);
-                else {
+                // if (Math.max(canvas.width(), canvas.height()) > 1000 ) requestAnimationFrame(drawCanvas);
+                // else {
                     frameRate = 30
+                    effectiveFrameRate = 30;
+                    lastFrame = Date.now();
                     setInterval(() => {
                         if (paused) return;
-
+                        // average over 100 frames
+                        effectiveFrameRate = effectiveFrameRate * .966666666 + 30 / (Date.now() - lastFrame);
+                        lastFrame = Date.now();
+                        if (canvasScaleFactor < .5) canvasScaleFactor += .001
+                        let optimalScale = canvasScaleFactor * effectiveFrameRate / 30;
+                        if (canvasScaleFactor / optimalScale > 1.15 || canvasScaleFactor / optimalScale < .95) {
+                            canvasScaleFactor = optimalScale;
+                            sizeCanvas();
+                        }
                         drawCanvas();
                     }, 1000 / frameRate);
-                }
+                // }
             });
 
             // count down til dark
@@ -686,15 +703,15 @@ $(document).ready(() => {
         
             $("#canvas").dblclick(event => {
                 hunter.throw(
-                    (event.clientX - $("#canvasFrame").position().left) / mapHexWidth + viewport.x,
-                    (event.clientY - $("#canvasFrame").position().top) / mapHexHeight + viewport.y
+                    (event.clientX * canvasScaleFactor - $("#canvasFrame").position().left) / mapHexWidth + viewport.x,
+                    (event.clientY * canvasScaleFactor - $("#canvasFrame").position().top) / mapHexHeight + viewport.y
                 )
             })        
             $("#canvas").contextmenu(event => {
                 event.preventDefault();
                 hunter.throw(
-                    (event.clientX - $("#canvasFrame").position().left) / mapHexWidth + viewport.x,
-                    (event.clientY - $("#canvasFrame").position().top) / mapHexHeight + viewport.y
+                    (event.clientX * canvasScaleFactor - $("#canvasFrame").position().left) / mapHexWidth + viewport.x,
+                    (event.clientY * canvasScaleFactor - $("#canvasFrame").position().top) / mapHexHeight + viewport.y
                 )
             })        
             $("#msg").contextmenu(event => event.preventDefault())
@@ -703,20 +720,28 @@ $(document).ready(() => {
 })
 
 function drawCanvas() {
-    ctx.clearRect(0,0,canvas.width(), canvas.height())
+    // ctx.clearRect(0,0,canvas[0].width, canvas[0].height)
 
-    for (let x = -1; x < viewport.width + 1; x++) {
-        for (let y = -1; y < viewport.height + 1; y++) {
-            if (map.nodes[x + Math.floor(viewport.x)]){
-                if (map.nodes[x + Math.floor(viewport.x)][y + Math.floor(viewport.y)]) {
-                    ctx.drawImage(map.nodes[x + Math.floor(viewport.x)][y + Math.floor(viewport.y)].land.image, 
-                    (x - viewport.x % 1) * mapHexWidth, 
-                    (y + (map.nodes[x + Math.floor(viewport.x)][y + Math.floor(viewport.y)].xindex % 2 === 0 ? 0.5 : 0) - viewport.y % 1) * mapHexHeight, 
-                    mapHexHeight * 1.1547, mapHexHeight)
-                }
-            }
-        }
+    // for (let x = -1; x < viewport.width + 1; x++) {
+    //     for (let y = -1; y < viewport.height + 1; y++) {
+    //         if (map.nodes[x + Math.floor(viewport.x)]){
+    //             if (map.nodes[x + Math.floor(viewport.x)][y + Math.floor(viewport.y)]) {
+    //                 ctx.drawImage(map.nodes[x + Math.floor(viewport.x)][y + Math.floor(viewport.y)].land.image, 
+    //                 (x - viewport.x % 1) * mapHexWidth, 
+    //                 (y + (map.nodes[x + Math.floor(viewport.x)][y + Math.floor(viewport.y)].xindex % 2 === 0 ? 0.5 : 0) - viewport.y % 1) * mapHexHeight, 
+    //                 mapHexHeight * 1.1547, mapHexHeight)
+    //             }
+    //         }
+    //     }
+    // }
+    let textureOffset = {
+        x: (hunter.x + hunter.offset.x) * mapHexWidth % canvas[0].width,
+        y: hunter.realY * mapHexHeight % canvas[0].height,
     }
+    ctx.drawImage(landImage, -textureOffset.x, -textureOffset.y, canvas[0].width, canvas[0].height);
+    ctx.drawImage(landImage, -textureOffset.x, canvas[0].height - textureOffset.y, canvas[0].width, canvas[0].height);
+    ctx.drawImage(landImage, canvas[0].width - textureOffset.x, -textureOffset.y, canvas[0].width, canvas[0].height);
+    ctx.drawImage(landImage, canvas[0].width - textureOffset.x, canvas[0].height - textureOffset.y, canvas[0].width, canvas[0].height);
 
     let mapItems = [];
     for (let y = Math.floor(viewport.y) - 1; y < Math.min(viewport.y + viewport.height + 3, mapHeight); y++) {
@@ -835,7 +860,7 @@ function genMap(terrain, callback) {
         map.backgrounds[n] = $("<img>").attr("src", `/assets/images/land tiles/${terrain.type}${n}.png`)[0]
     }
     // debug image with clear hex borders
-    let landImage = $("<img>").attr('src', './assets/images/land tiles/image1.png')[0];
+    let landImage = $("<img>").attr('src', `./assets/images/land tiles/image1.png`)[0];
 
 
     for (let x = -1; x < mapWidth; x++) {
