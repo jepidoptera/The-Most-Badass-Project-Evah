@@ -16,17 +16,45 @@ const trail = [
     },
     {
         type: 'suburb',
-        name: 'The Outskirts of Orepoke',
+        name: 'Orepoke',
         scenery: [
             {type: "house", frequency: 5},
             {type: "distant tree", frequency: 10}
         ],
-        length: 20,
+        length: 15,
         message: {
             title: 'Your journey begins', 
             text: "Orepoke, once the world's greatest city, is now wracked by devastating epidemics of cholera and dysentery, as well as terrible shortages of food, wagon axles, and bullets.  Taking your surviving Mokemon, you set off on the road, in search of the legendary city of Pokegonemon - hoping to find a better life there.",
             button: "begin"
         }
+    },
+    {
+        type: 'shop',
+        name: "Trader Moe's",
+        scenery: [
+            {type: "trading post", frequency: 0},
+            {type: "house", frequency: 5},
+            {type: "distant tree", frequency: 10}
+        ],
+        length: 1,
+        shop: {
+            title: "Trader Moe's trading post", 
+            text: "Heading out, eh?  I don't blame you.  Don't forget to stock up on grenades.  There are bears in those woods up ahead.",
+            items: [
+                {name: "mokeballs", price: 20},
+                {name: "grenades", price: 50},
+                {name: "food", price: 1}
+            ]
+        }
+    },
+    {
+        type: 'suburb',
+        name: 'The Outskirts of Orepoke',
+        scenery: [
+            {type: "house", frequency: 5},
+            {type: "distant tree", frequency: 10}
+        ],
+        length: 15,
     },
     {
         type: 'forest',
