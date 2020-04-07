@@ -692,7 +692,7 @@ function narrate() {
     if (arrived) distanceTo = trail.nextLocation.length;
 
     $("#narrative").html(
-        'tap here or press enter for options <br>' + 
+        '<span style="color: yellow">tap here or press enter for options</span> <br>' + 
         'Day: ' + player.day + 
         ((arrived)  
         ? (`<br>You have reached: ${trail.nextLocation.name}. <br>${distanceTo} miles until ${trail.currentLocation.next.next.name}.`)
@@ -740,25 +740,25 @@ function shop(shopItems) {
         .append(
             $("<div>")
                 .attr('id', 'shoppingText')
-                .html(player.currentLocation.shop.text || "Welcome! Here's what you can buy." + "<br><br>")
+                .html((player.currentLocation.shop.text || "Welcome! Here's what you can buy.") + "<br><br>")
                 .append(
                     ...shopItems.map(item => {
                         return $("<div>").append(
-                            $("<span>").text(`${item.name}: $${item.price}`),
-                            "      ",
+                            $("<span>").html(`You have: ${player[item.name]} ${item.name}.  Buy @ $${item.price}:`),
+                            $("<span>").addClass('quantity').attr('id', item.name).text("   0   "),
                             $("<span>").append(
                                 $("<button>").text("+").click(() => {
                                     if (!(buyItems[item.name] > item.max) && cost + item.price <= player.money) {
                                         buyItems[item.name] = (buyItems[item.name] || 0) + 1;
                                         cost += item.price;
-                                        $(`span#${item.name}.quantity`).text(buyItems[item.name]);
+                                        $(`span#${item.name}.quantity`).text(`   ${buyItems[item.name]}   `);
                                         $("p#totalCost").text(`Total: $${cost}`);
                                         $("p#available").text(`Available: $${player.money - cost}`)
                                     }
                                     else if (cost + item.price > player.money) {
-                                        $("p#available").css({border: "3px solid red", "box-sizing": 'border-box'});
+                                        $("p#available").css({color: "red"});
                                         setTimeout(() => {
-                                            $("p#available").css({border: "none"})
+                                            $("p#available").css({color: "white"})
                                         }, 100);
                                     }
                                 }),
@@ -770,8 +770,7 @@ function shop(shopItems) {
                                         $("p#totalCost").text(`Total: $${cost}`);
                                         $("p#available").text(`Available: $${player.money - cost}`)
                                     }
-                                }),
-                                $("<span>").addClass('quantity').attr('id', item.name).text("0")
+                                })
                             )
             
                         )

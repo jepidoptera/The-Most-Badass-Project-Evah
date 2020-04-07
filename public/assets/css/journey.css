@@ -101,6 +101,11 @@ html, body {
     margin: 5% 0;
 }
 
+.quantity {
+    margin: 2vmin;
+    color: skyblue;
+}
+
 @media (max-aspect-ratio: 34/21) {
     #canvasArea {
         width: 100vw;
