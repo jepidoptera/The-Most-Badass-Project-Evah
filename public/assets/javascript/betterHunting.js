@@ -1004,7 +1004,7 @@ function findPath(startingNode, destinationNode) {
 }
 
 function approxDist (x1, y1, x2, y2) {
-    return Math.max(Math.max(Math.abs(x1 - x2), Math.abs(y1 - y2)), (Math.abs(x1 - x2) + Math.abs(y1 - y2)) * .707)
+    return Math.max(Math.abs(x1 - x2), Math.abs(y1 - y2), (Math.abs(x1 - x2) + Math.abs(y1 - y2)) * .707)
 }
 
 function message (text) {
