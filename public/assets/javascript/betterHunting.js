@@ -301,6 +301,7 @@ class Hunter extends Character {
         this.image = $("<img>").attr('src', './assets/images/hunter.png')[0];
         this.moveInterval = setInterval(() => {this.move()}, 1000 / this.frameRate);
         this.food = 0;
+        this.hp = 40;
     }
     move() {
         if (paused) return;
@@ -380,6 +381,8 @@ class Animal extends Character {
             this.fleeRadius = 0;
             this.chaseRadius = 9;
             this.fleeRadius = -1;
+            this.attackVerb = "mauls";
+            this.damage = 20;
             this.foodValue = Math.floor(240 * this.size);
             this.hp = 25 * this.size;
         }
@@ -405,6 +408,8 @@ class Animal extends Character {
             this.walkSpeed = .75;
             this.runSpeed = 1.5;
             this.chaseRadius = 4;
+            this.attackVerb = "stings";
+            this.damage = 1;
             this.foodValue = 1;
             this.hp = 1;
             this.randomMotion = 2;
@@ -417,7 +422,6 @@ class Animal extends Character {
             this.height = this.size;
             this.walkSpeed = 1;
             this.runSpeed = 2;
-            this.fleeRadius = 0;
             this.fleeRadius = 7;
             this.foodValue = Math.floor(20 * this.size);
             this.hp = 10 * this.size;
@@ -435,6 +439,49 @@ class Animal extends Character {
             this.foodValue = Math.floor(60 * this.size);
             this.hp = 15 * this.size;
             this.randomMotion = 6;
+        }
+        else if (type === "goat") {
+            this.imageHeight = 200;
+            this.imageWidth = 241;
+            this.size = Math.random() * .25 + .7;
+            this.width = this.size * 1.2;
+            this.height = this.size;
+            this.walkSpeed = 1;
+            this.runSpeed = 2.5;
+            this.fleeRadius = 8;
+            this.foodValue = Math.floor(80 * this.size);
+            this.hp = 15 * this.size;
+            this.randomMotion = 6;
+        }
+        else if (type === "porcupine") {
+            this.imageHeight = 183;
+            this.imageWidth = 218;
+            this.size = Math.random() * .2 + .5;
+            this.width = this.size * 1.15;
+            this.height = this.size;
+            this.walkSpeed = 1;
+            this.runSpeed = 2;
+            this.fleeRadius = 7;
+            this.chaseRadius = 4;
+            this.damage = 3;
+            this.attackVerb = "pokes";
+            this.foodValue = Math.floor(20 * this.size);
+            this.hp = 5 * this.size;
+            this.randomMotion = 3;
+        }
+        else if (type === "yeti") {
+            this.imageHeight = 377;
+            this.imageWidth = 450;
+            this.size = Math.random() * .5 + 1.5;
+            this.width = this.size * 1.2;
+            this.height = this.size;
+            this.walkSpeed = 1;
+            this.runSpeed = 2.75;
+            this.chaseRadius = 6;
+            this.attackVerb = "mauls";
+            this.damage = 50;
+            this.foodValue = Math.floor(400 * this.size);
+            this.hp = 40 * this.size;
         }
         else {
             console.log('unknown animal:', type);
@@ -469,7 +516,7 @@ class Animal extends Character {
         }, 1000 / this.frameRate);
 
         // face the correct direction
-        if (this.direction) {
+        if (this.direction && !this.attacking) {
             if (this.direction.x > 0 || this.direction.x === 0 && this.direction.y > 0) {
                 this.imageFrame.y = 1;
             }
@@ -487,8 +534,8 @@ class Animal extends Character {
     }
     get onScreen() {
         this._onScreen = false;
-        if (this.x + this.width + 1 > viewport.x && this.y + this.height + 1 > viewport.y) {
-            if (this.x - this.width - 1 < viewport.x + viewport.width && this.y - this.height - 1 < viewport.y + viewport.height) {
+        if (this.x + this.width + 5 > viewport.x && this.y + this.height + 5 > viewport.y) {
+            if (this.x - this.width - 5 < viewport.x + viewport.width && this.y - this.height - 5 < viewport.y + viewport.height) {
                 this._onScreen = true;
             }
         }
@@ -513,6 +560,9 @@ class Animal extends Character {
         if (dist < 1 && this.attacking == 1) {
             this.attacking = 2
             this.imageFrame.x = 1;
+            this.imageFrame.y = (this.x + this.offset.x > hunter.x + hunter.offset.x) ? 0 : 1;
+            let damage = Math.floor((1 - Math.random() * Math.random()) * this.damage + 1);
+            message(`${this.type} ${this.attackVerb} you for ${damage} damage!`)
             setTimeout(() => {
                 this.imageFrame.x = 0;
                 this.attacking = 1;
@@ -735,8 +785,8 @@ function drawCanvas() {
     //     }
     // }
     let textureOffset = {
-        x: (hunter.x + hunter.offset.x) * mapHexWidth % canvas[0].width,
-        y: hunter.realY * mapHexHeight % canvas[0].height,
+        x: viewport.x * mapHexWidth % canvas[0].width,
+        y: viewport.y * mapHexHeight % canvas[0].height,
     }
     ctx.drawImage(landImage, -textureOffset.x, -textureOffset.y, canvas[0].width, canvas[0].height);
     ctx.drawImage(landImage, -textureOffset.x, canvas[0].height - textureOffset.y, canvas[0].width, canvas[0].height);
@@ -846,7 +896,7 @@ function genMap(terrain, callback) {
             try {
                 map.scenery[item.type] = {type: item.type, images: [], frequency: item.frequency};
                 for (let n = 0; n < 5; n++) {
-                    map.scenery[item.type].images[n] = $("<img>").attr("src", `/assets/images/${item.type}${n}.png`)[0];
+                    map.scenery[item.type].images[n] = $("<img>").attr("src", `/assets/images/${item.type.replace(' ', '')}${n}.png`)[0];
                 }
             }
             catch{
@@ -860,7 +910,7 @@ function genMap(terrain, callback) {
         map.backgrounds[n] = $("<img>").attr("src", `/assets/images/land tiles/${terrain.type}${n}.png`)[0]
     }
     // debug image with clear hex borders
-    let landImage = $("<img>").attr('src', `./assets/images/land tiles/image1.png`)[0];
+    // let landImage = $("<img>").attr('src', `./assets/images/land tiles/image1.png`)[0];
 
 
     for (let x = -1; x < mapWidth; x++) {

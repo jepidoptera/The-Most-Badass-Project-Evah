@@ -92,10 +92,16 @@ const trail = [
         name: 'The Mainstay Mountains',
         scenery: [
             {type: "first mountain", frequency: 0},
-            {type: "mountain range", frequency: 0.05},
-            {type: "rock", frequency: 1},
-            {type: "far moutain", frequency: 1},
-            {type: "near moutain", frequency: 0.2}
+            {type: "mountain range", frequency: 0},
+            {type: "rock", frequency: 10},
+            {type: "far moutain", frequency: 0},
+            {type: "near moutain", frequency: 0},
+            {type: "pine tree", frequency: 5}
+        ],
+        prey: [
+            {type: "goat", frequency: 85},
+            {type: "porcupine", frequency: 85},
+            {type: "yeti", frequency: 10}
         ],
         length: 82 // seconds
 
