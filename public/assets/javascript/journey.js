@@ -147,6 +147,13 @@ const SceneObjects = {
         imgRange: {min: 0, max: 4},
         distance: () => 100 - Math.random() * Math.random() * 30
     }),
+    pine_tree: new SceneObject ({
+        type: 'pinetree',
+        spacing: 12,
+        sizeRange: {min: {x: 60, y: 120}, max: {x: 270, y: 270}},
+        imgRange: {min: 0, max: 4},
+        distance: () => Math.max(100 - Math.random() * Math.random() * 110, 0),
+    }),
     signpost: new SceneObject ({
         type: 'signpost',
         height: 50,
