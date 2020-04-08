@@ -326,12 +326,45 @@ class Canvas {
 const events = {
     ebola: {
         name: "ebola",
-        occurrences: 0,
         get occurs() {
             // every morning at dawn
             // return posse.length > 0 && player.time === 0;
             // occasionally
             return player.posse.length > 0 && trail.currentLocation.type === "jungle" && parseInt(Math.random() * 100) == 0;
+        },
+        function: () => {
+            // strikes randomly
+            victim = player.posse[parseInt(Math.random() * player.posse.length)];
+            if (victim.conditions.map(c => c.name).includes('ebola')) {
+                // can't get it twice
+                console.log('prevented double occurrence of ebola.');
+                return;
+            } 
+            victim.conditions.push ({
+                name: 'ebola', 
+                timeRemaining: 1 + parseInt(Math.random() * 5)
+            });
+            // there's not much you can do but rest and hope
+            msgBox ("Outbreak!", victim.name + " has ebola.", [{
+                text: "stop to rest",
+                function: nextDay
+            },{
+                // or ruthlessly carry forward
+                text: "keep going",
+                function: () => {
+                    // which cuts their chances of survival from 2/3 to 1/3, incidentally
+                    victim.health -= 2;
+                }
+            }]);
+        }
+    },
+    sars: {
+        name: "sars",
+        get occurs() {
+            // every morning at dawn
+            // return posse.length > 0 && player.time === 0;
+            // occasionally
+            return player.posse.length > 0 && parseInt(Math.random() * 500) == 0;
         },
         function: () => {
             // strikes randomly
@@ -370,6 +403,17 @@ const events = {
             msgBox ("Death", victim.name + " was eaten by a bear.", [
                 {text: "damn"}
             ])
+        }
+    },
+    tree: {
+        name: "hit by falling tree",
+        get occurs() {
+            return player.posse.length > 0 && trail.currentLocation.type === "forest" && parseInt(Math.random() * 100) == 0;
+        },
+        function: () => {
+            victim = player.posse[parseInt(Math.random() * player.posse.length)];
+            msgBox ("Ouch", `A tree fell on ${victim.name}.`)
+            victim.hurt(Math.random() * 11);
         }
     },
     thief: {
@@ -441,7 +485,7 @@ const events = {
 };
 
 const effects = {
-    ebola: (victim) => { victim.health -= 3 },
+    ebola: (victim) => { victim.hurt(3) },
     rest: (moke) => { moke.health += 1 }
 }
 
@@ -457,43 +501,64 @@ class mokePosse {
             this.height = 50;
             this.width = 30;
             this.foodValue = 160;
-            this.hunger = 5;
+            this.hunger = 4;
+            this.maxHealth = 10;
+            this.immuneResponse = 2;
+            this.description = "A fun-loving flipper-flopper, hardy and disease resistant.  Doesn't eat a whole lot."
             break;
         case "Mallowbear":
             this.height = 50;
             this.width = 40;
             this.foodValue = 200;
             this.hunger = 10;
+            this.maxHealth = 20;
+            this.immuneResponse = .3;
+            this.description = "Strong, sturdy, and stoic.  Eats voraciously.  Susceptible to disease."
             break;
         case "Apismanion":
             this.height = 40;
             this.width = 35;
             this.foodValue = 160;
             this.hunger = 8;
+            this.maxHealth = 10;
+            this.immuneResponse = 1;
+            this.description = "Everyone's first go-to Mokemon.  This guy's been with you a long time.  Its legs don't make sense, but it's cute."
             break;
         case "Marlequin":
             this.height = 40;
             this.width = 30;
             this.foodValue = 90;
-            this.hunger = 6;
+            this.hunger = 5;
+            this.maxHealth = 10;
+            this.immuneResponse = .9;
+            this.description = "Enigmatic and rare.  Might have special powers, or maybe it just wants you to think that."
             break;
         case "Wingmat":
             this.height = 40;
             this.width = 70;
-            this.foodValue = 160;
+            this.foodValue = 210;
             this.hunger = 8;
+            this.maxHealth = 10;
+            this.immuneResponse = 2;
+            this.description = "Looks like it could maybe fly, but can't.  Pretty good to eat in a pinch."
             break;
         case "Zyant":
             this.height = 50;
             this.width = 60;
             this.foodValue = 160;
             this.hunger = 7;
+            this.maxHealth = 10;
+            this.immuneResponse = 2;
+            this.description = "This mysterious deer-thing is found in the woods, lurking behind a tree.  Has antlers and doesn't talk much."
             break;
         case "Shadowdragon":
             this.height = 70;
             this.width = 70;
             this.foodValue = 350;
             this.hunger = 20;
+            this.maxHealth = 20;
+            this.immuneResponse = 1;
+            this.description = "Part dragon, part dog, part mantis, pretty big, definitely worth a lot of money.  Eats a crapload, so make sure you've got food."
             break;
 
         }
@@ -523,6 +588,9 @@ class mokePosse {
             }
         });
         this.conditions = activeConditions;
+    }
+    hurt(damage) {
+        this.health -= damage;
         if (this.health <= 0) this.die();
     }
     die() {
@@ -747,8 +815,9 @@ function shop(shopItems) {
         .append(
             $("<div>")
                 .attr('id', 'shoppingText')
-                .html((player.currentLocation.shop.text || "Welcome! Here's what you can buy.") + "<br><br>")
+                .html((player.currentLocation.shop.text || "Welcome! Here's what you can buy."))
                 .append(
+                    "<br><br><hr>",
                     ...shopItems.map(item => {
                         return $("<div>").append(
                             $("<span>").html(`You have: ${player[item.name]} ${item.name}.  Buy @ $${item.price}:`),
@@ -782,6 +851,7 @@ function shop(shopItems) {
             
                         )
                     }),
+                    "<hr><br>",
                     $("<p>").attr('id', "totalCost").text("Total: $0"),
                     $("<p>").attr('id', "available").text(`Available: $${player.money}`)
                 ),
@@ -817,6 +887,9 @@ function options () {
     if (paused) return;
     pause();
     $("#optionsMenu").show(); 
+    $("#mokePosse").empty().append(player.posse.map(moke => 
+        mokePortrait(moke)
+    ))
     $("#foodInfo").text(`food: ${player.food} (-${player.foodPerDay}/day)`);
     $("#moneyInfo").text(`money: ${player.money}`);
     $("#ammoInfo").text(`mokeballs: ${player.mokeballs}, grenades: ${player.grenades}`);
@@ -830,6 +903,37 @@ function options () {
         $("#shopButton").hide()
 }
 
+function mokePortrait (moke) {
+    let healthColor = `rgb(${768 - moke.health / (moke.maxHealth || 10) * 768}, ${(moke.health / (moke.maxHealth || 10) - 1/3) * 768}, 0)`
+    let portrait = $("<div>").addClass('thumbnailContainer').append(
+        $("<div>")
+            .addClass('mokeIcon')
+            .append(
+                $(moke.img).css({
+                    width: `${(moke.width > moke.height ? 1 : moke.width / moke.height) * 4.5}vmin`, 
+                    height: `${(moke.height > moke.width ? 1 : moke.height / moke.width) * 4.5}vmin`,
+                    display: "block",
+                    position: "relative",
+                    top: "50%",
+                    left: "50%",
+                    transform: "translate(-50%, -50%)"
+                })),
+        $("<div>").css({
+            width: `${moke.health / (moke.maxHealth || 10) * 4.5}vmin`,
+            height: "5px",
+            position: "relative",
+            bottom: 0,
+            "background-color": healthColor,
+        }))
+    return portrait;
+}
+
+function mokeStats (moke) {
+    return [
+        $("<p>").text(`Health: ${Math.floor(moke.health * 10) / 10}/${moke.maxHealth}`)
+    ]
+}
+
 function closeOptions() {
     $("#optionsMenu").hide();
     unpause();
@@ -838,4 +942,14 @@ function closeOptions() {
 function win () {
     pause();
     // TODO
+}
+
+function weightedRandom(nums) {
+    // takes an array of numbers and chooses among them, with bigger numbers having higher odds
+    let r = Math.random() * nums.reduce((sum, n) => n + sum);
+    let s = 0, n = 0;
+    while (s < r) {
+        s += nums[n++];
+    }
+    return n-1;
 }
