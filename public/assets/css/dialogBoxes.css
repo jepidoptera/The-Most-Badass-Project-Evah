@@ -1,0 +1,101 @@
+.dialogBox {
+    position: absolute;
+    width: 60%;
+    min-width: 400px;
+    max-width: 100%;
+    border: 3px solid white;
+    color: whitesmoke;
+    background-color: black;
+    text-align: justify;
+    /* sorry */
+    z-index: 999; 
+    top: 20px;
+    left: 50%;
+    transform: translate(-50%);
+    font-size: 2vmin;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+.msgTitle {
+    background-color: whitesmoke;
+    color: black;
+    position: relative;
+    display: block;
+    width: 100%;
+    border: 10px solid whitesmoke;
+    margin: -10px -10px 10px;
+    text-align: center;
+    font-size: 12pt;
+}
+
+.msgbutton {
+    margin: 10px;
+    display: inline-block;
+}
+
+.controlButton {
+    display: inline;
+    margin: 20px;
+    font-size: 24pt;
+    border-radius: 3px;
+}
+
+.optionButton {
+    display: block;
+    position: relative;
+    left: 12.5%;
+    transform: translate(-50%);
+    margin: 5% 0;
+}
+
+.quantity {
+    margin: 2vmin;
+    color: skyblue;
+}
+
+.thumbnailContainer {
+    display: inline-block;
+    line-height: 0;
+    margin: .5vmin;
+}
+
+.mokeIcon {
+    border: 1px solid white;
+    display: inline-block;
+    width: 4.5vmin;
+    height: 4.5vmin;
+    box-sizing: border-box;
+}
+
+.mokeIcon:hover, .mokeIcon.selected {
+    /* border-width: 5px; */
+    /* border-color: white; */
+    box-shadow: inset 0 0 .5vmin .5vmin white, 0 0 .25vmin .25vmin white;
+    /* border-bottom-color: transparent; */
+}
+
+#msgbuttons {
+    display: inline-block;
+    bottom: 0;
+    width: 100%;
+    text-align: center;
+}
+
+#infoPanel {
+    position: absolute;
+    width: 75%;
+    height: 100%;
+    right: 0;
+    top: 0;
+    border-left: 1px solid white;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+#mokeStats {
+    border: 1px solid white;    
+    position: absolute;
+    background-color: black;
+    width: 90%;
+}

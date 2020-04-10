@@ -74,58 +74,6 @@ html, body {
     z-index: 1;
 }
 
-.controlButton {
-    display: inline;
-    margin: 20px;
-    font-size: 24pt;
-    border-radius: 3px;
-}
-
-#infoPanel {
-    position: absolute;
-    width: 75%;
-    height: 100%;
-    right: 0;
-    top: 0;
-    border-left: 1px solid white;
-    padding: 10px;
-    box-sizing: border-box;
-}
-
-
-.optionButton {
-    display: block;
-    position: relative;
-    left: 12.5%;
-    transform: translate(-50%);
-    margin: 5% 0;
-}
-
-.quantity {
-    margin: 2vmin;
-    color: skyblue;
-}
-
-.thumbnailContainer {
-    display: inline-block;
-    line-height: 0;
-    margin: .5vmin;
-}
-
-.mokeIcon {
-    border: 1px solid white;
-    display: inline-block;
-    width: 4.5vmin;
-    height: 4.5vmin;
-    box-sizing: border-box;
-}
-
-.mokeIcon:hover {
-    border-width: 2px;
-    border-color: white;
-    /* border-bottom-color: transparent; */
-}
-
 @media (max-aspect-ratio: 34/21) {
     #canvasArea {
         width: 100vw;
