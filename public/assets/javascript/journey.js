@@ -890,6 +890,7 @@ function options () {
     $("#mokePosse").empty().append(player.posse.map(moke => 
         mokePortrait(moke)
     ))
+    $("#mokeStats").empty();
     $("#foodInfo").text(`food: ${player.food} (-${player.foodPerDay}/day)`);
     $("#moneyInfo").text(`money: ${player.money}`);
     $("#ammoInfo").text(`mokeballs: ${player.mokeballs}, grenades: ${player.grenades}`);
@@ -917,7 +918,21 @@ function mokePortrait (moke) {
                     top: "50%",
                     left: "50%",
                     transform: "translate(-50%, -50%)"
-                })),
+                }))
+            .click((event) => {
+                $("#mokeStats").empty();
+                $("#mokeStats").append(mokeStats(moke));
+                $(".mokeIcon").removeClass("selected");
+                $(event.currentTarget).addClass("selected");
+            })
+            .hover(() => {
+                    // mouseenter
+                        $("#mokeStats").empty().append(mokeStats(moke));
+                        $(".mokeIcon").removeClass("selected");
+                    }, (event) => {
+                    // mouseleave
+                        if (!$(event.currentTarget).hasClass("selected")) $("#mokeStats").empty();
+                }),
         $("<div>").css({
             width: `${moke.health / (moke.maxHealth || 10) * 4.5}vmin`,
             height: "5px",
@@ -930,7 +945,10 @@ function mokePortrait (moke) {
 
 function mokeStats (moke) {
     return [
-        $("<p>").text(`Health: ${Math.floor(moke.health * 10) / 10}/${moke.maxHealth}`)
+        $("<p>").text(moke.name),
+        $("<p>").text(`Health: ${Math.floor(moke.health * 10) / 10}/${moke.maxHealth}`),
+        ...moke.conditions.map(condition => $("<p>").html("<span style='color:red'> has " + condition.name + "</span>")),
+        $("<p>").text(moke.description)
     ]
 }
 
