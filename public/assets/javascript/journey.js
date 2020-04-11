@@ -326,11 +326,16 @@ class Canvas {
 const events = {
     ebola: {
         name: "ebola",
+        contagion: 0,
         get occurs() {
             // every morning at dawn
             // return posse.length > 0 && player.time === 0;
             // occasionally
-            return player.posse.length > 0 && trail.currentLocation.type === "jungle" && parseInt(Math.random() * 100) == 0;
+            events.ebola.contagion = player.posse.reduce((sum, moke) => 
+                sum + moke.conditions.reduce((sum, condition) => 
+                    sum + condition.name === "ebola" ? 1: 0 + condition.name === "quarantine" ? -0.8: 0, 0), 0
+                ) + (trail.currentLocation.type === "jungle" ? 1 : 0)
+            return player.posse.length > 0 && Math.random() * 100 <= events.ebola.contagion;
         },
         function: () => {
             // strikes randomly
@@ -369,17 +374,17 @@ const events = {
         function: () => {
             // strikes randomly
             victim = player.posse[parseInt(Math.random() * player.posse.length)];
-            if (victim.conditions.map(c => c.name).includes('ebola')) {
+            if (victim.conditions.map(c => c.name).includes('sars')) {
                 // can't get it twice
-                console.log('prevented double occurrence of ebola.');
+                console.log('prevented double occurrence of sars.');
                 return;
             } 
             victim.conditions.push ({
-                name: 'ebola', 
+                name: 'sars', 
                 timeRemaining: 1 + parseInt(Math.random() * 5)
             });
             // there's not much you can do but rest and hope
-            msgBox ("Outbreak!", victim.name + " has ebola.", [{
+            msgBox ("Outbreak!", victim.name + " has sars.", [{
                 text: "stop to rest",
                 function: nextDay
             },{
@@ -398,11 +403,22 @@ const events = {
             return player.posse.length > 0 && trail.currentLocation.type === "forest" && parseInt(Math.random() * 100) == 0;
         },
         function: () => {
+            // most often eats the weakest one
+            victim = player.posse[weightedRandom(player.posse.map(moke => 1 / moke.health))];
+            victim.die();
+            msgBox ("Death", victim.name + " was eaten by a bear.", "damn")
+        }
+    },
+    yeti: {
+        name: "eaten by a yeti",
+        get occurs() {
+            // most often eats the weakest one
+            return player.posse.length > 0 && trail.currentLocation.type === "mountains" && parseInt(Math.random() * 150) == 0;
+        },
+        function: () => {
             victim = player.posse[parseInt(Math.random() * player.posse.length)];
             victim.die();
-            msgBox ("Death", victim.name + " was eaten by a bear.", [
-                {text: "damn"}
-            ])
+            msgBox ("Death", victim.name + " was eaten by a yeti.", "damn")
         }
     },
     tree: {
@@ -412,8 +428,23 @@ const events = {
         },
         function: () => {
             victim = player.posse[parseInt(Math.random() * player.posse.length)];
-            msgBox ("Ouch", `A tree fell on ${victim.name}.`)
             victim.hurt(Math.random() * 11);
+            msgBox ("Ouch", `A tree fell on ${victim.name}.`, ":_(")
+            // put a picture of the victim in there so we can see how bad they're hurt
+            $("#msgText").append(mokePortrait(victim));
+        }
+    },
+    cactus: {
+        name: "hit by falling cactus",
+        get occurs() {
+            return player.posse.length > 0 && trail.currentLocation.type === "desert" && parseInt(Math.random() * 200) == 0;
+        },
+        function: () => {
+            victim = player.posse[parseInt(Math.random() * player.posse.length)];
+            victim.hurt(Math.random() * 11);
+            msgBox ("Ouch", `A cactus fell on ${victim.name}.`, ":_(")
+            // put a picture of the victim in there so we can see how bad they're hurt
+            $("#msgText").append(mokePortrait(victim));
         }
     },
     thief: {
@@ -490,10 +521,9 @@ const effects = {
 }
 
 class mokePosse {
-    constructor (name, health = 10, conditions = []) {
+    constructor (name, health = 0, conditions = []) {
         this._hop = player.posse.length * .37;
         this.name = name.slice(0, 1).toUpperCase() + name.slice(1).toLowerCase();
-        this.health = health;
         this.conditions = conditions;
         // this.x = posse.length * 60 + canvas.width / 12;
         switch (this.name) {
@@ -566,7 +596,8 @@ class mokePosse {
         this.height *= canvas.width / 1920;
         this.y = trailHeight * canvas.height - this.height;
         this.z = 0;
-        
+        this.health = health || this.maxHealth;
+
         this.img = $("<img>").attr('src', './assets/images/mokemon/' + name.toLowerCase() + ".png")[0];
         this.bounceHeight = this.height / 2;
         this.index = player.posse.length;
@@ -950,6 +981,19 @@ function mokeStats (moke) {
         ...moke.conditions.map(condition => $("<p>").html("<span style='color:red'> has " + condition.name + "</span>")),
         $("<p>").text(moke.description)
     ]
+}
+
+function numberInput(name, min, max) {
+    return $("<div>").html(`
+        ${name}: 
+        <span class="numberInput">
+            <span class="numberInput_text" id="${name}"></span>
+            <span class="numberInput_buttonContainer">
+                <div class="numberInput_button" id="${name}Up"><span class="numberInput_button_text">▲</span></div>
+                <div class="numberInput_button" id="${name}Down"><span class="numberInput_button_text">▼</span></div>
+            </span>
+        </span>
+    `).addClass("numberInputLine") 
 }
 
 function closeOptions() {
