@@ -666,25 +666,6 @@ $(document).ready(() => {
             if (player.grenades === undefined) player.grenades = 12;
             if (player.time === undefined) player.time = 0;
             if (player.food === undefined) player.food = 0;
-            hunter.ammo = "mokeballs"
-            $("#selectedAmmo").text(`mokeballs (${player.mokeballs}) ▼`)
-            $(".ammo").hide();
-            $('div[name="mokeballs"').html(`mokeballs (${player.mokeballs})`)
-            $('div[name="grenades"').html(`grenades (${player.grenades})`)
-            $('div[name="rocks"').html(`rocks (∞)`)
-            $("#selectedAmmo").click(() => {
-                $(".ammo").show();
-            })
-            $(".ammo").click(event => {
-                hunter.ammo = $(event.target).attr('name');
-                $('div[name="mokeballs"').html(`mokeballs (${player.mokeballs})`)
-                $('div[name="grenades"').html(`grenades (${player.grenades})`)
-                $('div[name="rocks"').html(`rocks (∞)`)
-                $("#selectedAmmo").text($(`div[name="${hunter.ammo}"`).text() + " ▼")
-                $(".ammo").hide();
-            });
-            $("#canvas").on("click", () => {$(".ammo").hide()})
-
 
             let location = trail[trail.map(location => location.name).indexOf(player.currentLocation || "The Forest of Doom")];
             landImage = $("<img>").attr('src', `./assets/images/land tiles/${location.type}.png`)[0]
@@ -738,7 +719,40 @@ $(document).ready(() => {
             window.addEventListener('resize', sizeCanvas);
             sizeCanvas();
         
-            // set player controls
+            hunter.weapons = [
+                'mokeballs',
+                'grenades',
+                'rocks'
+            ]
+            hunter.ammo = "mokeballs";
+
+            // set player weapons and controls
+            $("#selectedAmmo").text(`mokeballs (${player.mokeballs}) ▼`)
+            hunter.weapons.forEach(weapon => {
+                $("#ammoSelect").append(
+                    $("<div>")
+                    .addClass("ammo")
+                    .addClass("outline")
+                    .attr('name', weapon)
+                )
+            })
+            refreshWeapons();
+            $(".ammo").hide();
+            $("#selectedAmmo").click(() => {
+                $(".ammo").show();
+            })
+            function refreshWeapons() {
+                hunter.weapons.forEach(weapon => {
+                    $(`div[name=${weapon}]`).html(`${weapon} (${player[weapon] !== undefined ? player[weapon] : '∞'})`)
+                })
+                $("#selectedAmmo").text($(`div[name="${hunter.ammo}"`).text() + " ▼")
+            }
+            $(".ammo").click(event => {
+                hunter.ammo = $(event.target).attr('name');
+                refreshWeapons();
+                $(".ammo").hide();
+            });
+            $("#canvas").on("click", () => {$(".ammo").hide()})
 
             $("#canvas").click(event => {
                 // console.log(event.clientX);
@@ -765,6 +779,15 @@ $(document).ready(() => {
                 )
             })        
             $("#msg").contextmenu(event => event.preventDefault())
+            $(document).keypress(event => {
+                if (event.key === "f") {
+                    hunter.ammo = hunter.weapons[(hunter.weapons.indexOf(hunter.ammo) - 1 + hunter.weapons.length) % hunter.weapons.length]
+                }
+                if (event.key === "g") {
+                    hunter.ammo = hunter.weapons[(hunter.weapons.indexOf(hunter.ammo) + 1) % hunter.weapons.length]
+                }
+                refreshWeapons();
+            })
         })
     })
 })
