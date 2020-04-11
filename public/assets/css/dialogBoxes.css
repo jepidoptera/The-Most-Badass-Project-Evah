@@ -33,13 +33,13 @@
     margin: 10px;
     display: inline-block;
 }
-
+/* 
 .controlButton {
     display: inline;
     margin: 20px;
     font-size: 24pt;
     border-radius: 3px;
-}
+} */
 
 .optionButton {
     display: block;
@@ -96,4 +96,64 @@
     position: absolute;
     background-color: black;
     width: 90%;
+}
+
+
+.numberInputLine {
+    width: 100%; 
+    height: 2.5vmin; 
+    display: block; 
+    position: relative;
+    margin: 8pt 0;
+}
+
+.numberInput {
+    display: inline-block; 
+    height: 2.5vmin; 
+    vertical-align: middle; 
+    text-align: center;
+    border: 1px solid gray;
+    margin-right: 2vmin;
+}
+
+.numberInput_text {
+    display: inline-block;
+    height: 2.5vmin;
+    width: 80px;
+    line-height: 2vmin;
+    vertical-align: top;
+    border-radius: 0;
+    border: 0;
+    margin: -1px 0 0 0;
+}
+
+.numberInput_buttonContainer {
+    display: inline-block;
+    height: 100%;
+    line-height: 100%;
+    vertical-align: top;
+    margin: 0;
+}
+
+.numberInput_button {
+    display: block; 
+    width: 20pt; 
+    height: 50%; 
+    font-size: 6pt;
+    cursor: pointer;
+    padding: 0;
+    line-height: 50%;
+    text-align: center;
+}
+
+.numberInput_button:hover {
+    background-color: white;
+    color: black;
+}
+
+.numberInput_button_text {
+    display: inline-block;
+    vertical-align: middle;
+    line-height: normal;
+    user-select: none;
 }
