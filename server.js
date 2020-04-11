@@ -67,6 +67,10 @@ app.post("/login", (req, res) => {
     res.end();
 })
 
+app.get("/logout", (req, res) => {
+    res.render("logout");
+})
+
 app.get ("/journey", (req, res) => {
     console.log("let's go")
     let username = req.query.name;

@@ -11,6 +11,9 @@ function msgBox(title, text, buttons = [{text: "ok"}]) {
         .append($("<div>").addClass('msgTitle').text(title))
         .append($("<div>").attr('id', 'msgText').html(text + "<br>"))
         .append($("<div>").attr('id', 'msgbuttons'))
+    if (typeof(buttons) === "string") {
+        buttons = [{text: buttons}]
+    }
     buttons.forEach(button => {
         $("#msgbuttons").append($("<button>")
             .addClass('msgbutton')
@@ -50,6 +53,10 @@ function loadPlayer(callback) {
     }).done(data => callback({...data, messages: data.messages || [], authtoken: authtoken}))
     .fail(err => {
         console.log('load error: ', err);
+        if (err.status === 403) {
+            // auth code expired
+            window.location.href = "/logout"
+        }
         callback({name: urlParams.get('name')})
     });
     // try {
