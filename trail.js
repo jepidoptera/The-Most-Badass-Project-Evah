@@ -118,7 +118,7 @@ const trail = [
     },
     {
         type: 'city',
-        name: 'pokegonemon',
+        name: 'Pokegonemon',
         length: 1,
         scenery: [
             {type: "pokegonemon", frequency: 0}
