@@ -752,7 +752,7 @@ function gameLoop () {
         });            
     }
     // move the sun
-    moveSun();
+    astralMovements();
     // a new dawn
     if (player.time >= 24) nextDay();
 
@@ -774,10 +774,18 @@ function gameLoop () {
     }
 }
 
-function moveSun() {
+function astralMovements() {
     var x = -Math.sin(Math.PI * (0.5 + player.time / 24)) * 50 + 50;
-    var y = Math.cos(Math.PI * (0.5 + player.time / 24)) * 45 + 45;
+    var y = Math.cos(Math.PI * (0.5 + player.time / 24)) * 40 + 40;
     $("#sun").css({'top': y + '%', 'left': x + '%'});
+    // the dark moon. should be at the same place as the sun on day 30 at noon
+    let z = (player.day * 24 + player.time) ** 2 / 571536;
+    x = -Math.sin(Math.PI * (0.333333 + (player.time + 12) / 72 + (player.day % 3) / 3)) * (25 + 25 * z) + 50;
+    y = Math.cos(Math.PI * (0.333333 + (player.time + 12) / 72 + (player.day % 3) / 3)) * (40 * z) + 40;
+    $("#darkMoon").css({'top': y + '%', 'left': x + '%', 'width': `${2+3*z}vmin`, 'height': `${2+3*+z}vmin`, 'border-width': `${1+z*1.5}vmin`, 'border-radius': `${1+z*1.5}vmin`});
+    if (player.day === 31 && player.hour === 12) {
+        lose();
+    }
 }
 
 function nextDay() {
@@ -793,10 +801,12 @@ function narrate() {
     var distanceTo = parseInt(trail.currentLocation.length - trail.currentLocation.progress);
     let arrived = distanceTo === 0;
     if (arrived) distanceTo = trail.nextLocation.length;
-
+    let calendarDay = player.day < 26 
+        ? 'Novembruary ' + (74 + player.day) + ((74 + player.day) % 10 === 1 ? "st" : ((74 + player.day) % 10 === 2 ? "nd" : ((74 + player.day) % 10 === 3 ? "rd" : "th")))
+        : 'Februne ' + (player.day - 25) + ((player.day - 25) % 10 === 1 ? "st" : ((player.day - 25) % 10 === 2 ? "nd" : ((player.day - 25) % 10 === 3 ? "rd" : "th")))
     $("#narrative").html(
         '<span style="color: yellow">tap here or press enter for options</span> <br>' + 
-        'Day: Novembruary ' + (75 + player.day) + ((75 + player.day) % 10 === 1 ? "st" : ((75 + player.day) % 10 === 2 ? "nd" : ((75 + player.day) % 10 === 3 ? "rd" : "th"))) +
+        'Day: ' + calendarDay +
         ((arrived)  
         ? (`<br>You have reached: ${trail.nextLocation.name}. <br>${distanceTo} miles until ${trail.currentLocation.next.next.name}.`)
         : (`<br>Location: ${trail.currentLocation.name}<br>${distanceTo} miles to ${trail.currentLocation.next.name}.`)) + '<br>' +
@@ -861,7 +871,7 @@ function rest() {
             )
             restParameters.value --;
             player.time ++;
-            moveSun();
+            astralMovements();
             player.posse.forEach(moke => {moke.doConditions()});
             if (player.time >= 24) nextDay();
             if (restParameters.value <= 1) {
@@ -1102,6 +1112,18 @@ function win () {
     )
     saveGame()
     // TODO
+}
+
+function lose() {
+    pause();
+    $("#sky").css({"background-color": "black"});
+    setTimeout(() => {
+        $("#sky").css("background-image", "url('./assets/images/thunderstorm.jpg')")
+    }, 6000);
+    setTimeout(() => {
+        msgBox("The End", `The day turns to night.  Madness sweeps over the land.  From across the ${player.currentLocation.type}, wild Mokemon come screaming from all directions.  They fall upon you and tear your hapless corpse to shreds.  You did not reach the legendary city.  You did not survive.`, 
+        [{text: "¯\\_(ツ)_/¯", function: () => {window.location.href = "/"}}])
+    }, 8000);
 }
 
 function weightedRandom(nums) {

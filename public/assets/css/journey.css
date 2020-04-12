@@ -23,6 +23,9 @@ html, body {
 }
 #sky {
     background-color: skyblue;
+    transition: background-color 5s;
+    background-size: 100%;
+    background-position: 0 62%;
     position: absolute;
     display: block;
     top: 0;
@@ -39,6 +42,18 @@ html, body {
     height: 5vh;
     border: 2.5vh solid yellow;
     border-radius: 2.5vh;
+}
+#darkMoon {
+    /* a black circle */
+    position: absolute;
+    display: block;
+    box-sizing: border-box;
+    width: 4vh;
+    height: 4vh;
+    border: 2vh solid black;
+    border-radius: 2vh;
+    box-shadow: 0 0 .5vmin .5vmin white;
+    background-color: black;
 }
 #ground {
     background-color: green;
