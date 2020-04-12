@@ -313,7 +313,7 @@ class Canvas {
                 this.ctx.globalAlpha = 1;
                 let totalWidth = canvas.width/100;
                 player.posse.forEach((mokemon, n) => {
-                    totalWidth += mokemon.width + canvas.width/100;
+                    totalWidth += mokemon.width + canvas.width/200;
                     this.ctx.drawImage(mokemon.img, canvas.width / 4 - totalWidth, mokemon.y - mokemon.z, mokemon.width, mokemon.height);
                 })
                 mokesDrawn = true;
@@ -571,10 +571,10 @@ class mokePosse {
             break;
         case "Zyant":
             this.height = 50;
-            this.width = 60;
+            this.width = 50;
             this.foodValue = 160;
             this.hunger = 7;
-            this.maxHealth = 10;
+            this.maxHealth = 15;
             this.immuneResponse = 2;
             this.description = "This mysterious deer-thing is found in the woods, lurking behind a tree.  Has antlers and doesn't talk much."
             break;
@@ -682,7 +682,6 @@ $(document).ready(() => {
             player = playerData;
             if (!player.progress) { 
                 newGame();
-                saveGame();
             }
             else {
                 player.currentLocation = trail.locationAt(player.progress);
@@ -820,6 +819,9 @@ function arriveAt(location) {
             {text: "no, I'm good"}
         ])
     }
+    if (location.name === "Pokegonemon") {
+        win();
+    }
 }
 
 function rest() {
@@ -828,7 +830,7 @@ function rest() {
     clearDialogs();
 
     let restingDialog = $("<div>").attr('id', 'restingDialog').addClass('dialogBox').appendTo($('#canvasArea'))
-    let restParameters = {text: "rest for how long?", name: "rest", min: 0, max: Math.min(Math.floor(player.food / player.foodPerDay) - 1, 10), value: 1}
+    let restParameters = {text: "rest for how long?", name: "rest", min: 0, max: Math.min(Math.floor(player.food / player.foodPerDay), 10), value: 1}
     restingDialog.append(
         $("<form>")
             .attr("id", "restForm")
@@ -844,7 +846,7 @@ function rest() {
                 )    
     )
     if (Math.floor(player.food / player.foodPerDay) < 10) {
-        restingDialog.append($("<span style='color:red'></span>").text(`You have enough food to rest for ${Math.floor(player.food / player.foodPerDay) - 1} days.`))
+        restingDialog.append($("<span style='color:red'></span>").text(`You have enough food to rest for ${Math.floor(player.food / player.foodPerDay)} days.`))
     }
     $("#restForm").submit((event) => {
         event.preventDefault();
@@ -861,7 +863,6 @@ function rest() {
             player.time ++;
             moveSun();
             player.posse.forEach(moke => {moke.doConditions()});
-            console.log("healed");
             if (player.time >= 24) nextDay();
             if (restParameters.value <= 1) {
                 clearInterval(restInterval);
@@ -1078,7 +1079,28 @@ function closeOptions() {
 }
 
 function win () {
-    pause();
+    msgBox("glorious victory", `Let us count the survivors and give you some points! <br> You have: ${player.posse.length} surviving Mokemon.`, "sweet");
+    let pointsValue = {
+        food: .75,
+        mokeballs: 15,
+        grenades: 25
+    }
+    player.finalScore = Object.keys(pointsValue).reduce((sum, item) => sum + Math.floor(player[item] * pointsValue[item]), 0);
+    $("#msgText").append(
+        ...player.posse.map(moke => {
+            let mokePoints = Math.floor(50 * moke.health / moke.maxHealth + 50);
+            player.finalScore += mokePoints;
+            return $("<p>").append(
+                mokePortrait(moke),
+                `${moke.name}: ${Math.floor(moke.health * 10) / 10}/${moke.maxHealth} hp = ${mokePoints}`,
+            )
+        }),
+        ...Object.keys(pointsValue).map(item => 
+            $("<p>").text(`leftover ${item} x ${player[item]} = ${Math.floor(player[item] * pointsValue[item])}`),
+        ),
+        $("<p>").text(`total: ${player.finalScore}`)
+    )
+    saveGame()
     // TODO
 }
 
