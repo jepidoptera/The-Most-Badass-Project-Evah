@@ -24,7 +24,7 @@ const trail = [
         length: 15,
         message: {
             title: 'Your journey begins', 
-            text: "Orepoke, once the world's greatest city, is now wracked by devastating epidemics of cholera and dysentery, as well as terrible shortages of food, wagon axles, and bullets.  Taking your surviving Mokemon, you set off on the road, in search of the legendary city of Pokegonemon - hoping to find a better life there.",
+            text: "Orepoke, once the world's greatest city, is now wracked by devastating epidemics of cholera and dysentery, as well as terrible shortages of food, wagon axles, and bullets.  Furthermore, the prophets foretell that on Februne the sixth, the Sun will be eclipsed by the dark moon Plutanus, and madness will grip the land.  Only the legendary city of Pokegonemon has the technology to weather the coming storm.  So taking your surviving Mokemon™, you set off on the road...",
             button: "begin"
         }
     },
@@ -39,7 +39,7 @@ const trail = [
         length: 1,
         shop: {
             title: "Trader Moe's trading post", 
-            text: "Heading out, eh?  I don't blame you.  Don't forget to stock up on grenades.  There are bears in those woods up ahead.",
+            text: "Heading out, eh?  I don't blame you. <br><br>  Don't forget to stock up on grenades.  There are bears in those woods up ahead.",
             items: [
                 {name: "mokeballs", price: 20},
                 {name: "grenades", price: 50},
