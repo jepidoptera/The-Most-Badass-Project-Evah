@@ -22,6 +22,12 @@ function msgBox(title, text, buttons = [{text: "ok"}]) {
             .attr("type", (buttons.length === 1 ? "submit" : "none"))
         )
     })
+    return $("#msgbox");
+}
+
+function clearDialogs() {
+    $("#msgbox").hide();
+    $("#optionsMenu").hide();
 }
 
 function saveGame() {
