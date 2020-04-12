@@ -676,6 +676,13 @@ $(document).ready(() => {
                     frameRate = 30
                     effectiveFrameRate = 30;
                     lastFrame = Date.now();
+                    setTimeout(() => {
+                        message("Click to move.  Right-click or double-tap to throw.")
+                    }, 1000);
+                    setTimeout(() => {
+                        message("Use F and G, or tap the menu to switch weapons.")
+                    }, 3000);
+
                     setInterval(() => {
                         if (paused) return;
                         // average over 100 frames
@@ -1084,5 +1091,5 @@ function message (text) {
     messages.push(text);
     setTimeout(() => {
         messages.shift();
-    }, 2000);
+    }, 3000);
 }
