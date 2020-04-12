@@ -66,7 +66,8 @@ const trail = [
         prey: [
             {type: "deer", frequency: 100},
             {type: "bear", frequency: 20},
-            {type: "squirrel", frequency: 300}
+            {type: "squirrel", frequency: 300},
+            {type: "Zyant", isMokemon: true, frequency: 3}
         ],
         length: 75 // seconds
 
@@ -82,7 +83,8 @@ const trail = [
         prey: [
             {type: "scorpion", frequency: 100},
             {type: "armadillo", frequency: 50},
-            {type: "coyote", frequency: 20}
+            {type: "coyote", frequency: 20},
+            {type: "Dezzy", isMokemon: true, frequency: 3}
         ],
         length: 96 // seconds
 
@@ -101,7 +103,9 @@ const trail = [
         prey: [
             {type: "goat", frequency: 85},
             {type: "porcupine", frequency: 85},
-            {type: "yeti", frequency: 10}
+            {type: "yeti", frequency: 10},
+            {type: "Apismanion", isMokemon: true, frequency: 3},
+            {type: "Marlequin", isMokemon: true, frequency: 3}
         ],
         length: 82 // seconds
 
@@ -112,6 +116,13 @@ const trail = [
         scenery: [
             {type: "signpost", frequency: 0},
             {type: "palm tree", frequency: 10}
+        ],
+        prey: [
+            {type: "deer", frequency: 100},
+            {type: "goat", frequency: 85},
+            {type: "Wingmat", isMokemon: true, frequency: 3},
+            {type: "Mallowbear", isMokemon: true, frequency: 3},
+            {type: "Shadowdragon", isMokemon: true, frequency: 3}
         ],
         length: 100 // seconds
 

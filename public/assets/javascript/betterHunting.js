@@ -112,7 +112,13 @@ class Mokeball extends Projectile {
                     }
                     else {
                         let messageText = `You caught: ${animal.type}!` 
-                        if (animal.foodValue > 0) messageText += `  You gain ${animal.foodValue} food.`;
+                        if (animal.isMokemon) {
+                            player.posse.push({
+                                name: animal.type,
+                                health: animal.hp
+                            })
+                        }
+                        else if (animal.foodValue > 0) messageText += `  You gain ${animal.foodValue} food.`;
                         message(messageText);
                         player.food += animal.foodValue;
                         hunter.food += animal.foodValue;
@@ -356,11 +362,12 @@ class Animal extends Character {
     constructor(type, x, y) {
         super(type, x, y);
         this.frameRate = 60;
-        this.image = $("<img>").attr('src', `./assets/images/animals/${type}.png`)[0];
+        this.image = map.animalImages[type];
+
         this.imageFrame = {x: 0, y: 0};
+        this.frameCount = {x: 1, y: 1};
         if (type === "deer") {
-            this.imageHeight = 300;
-            this.imageWidth = 300;
+            this.frameCount = {x: 1, y: 2};
             this.size = Math.random() * .5 + .75;
             this.width = this.size;
             this.height = this.size;
@@ -371,14 +378,12 @@ class Animal extends Character {
             this.hp = 10 * this.size;
         }
         else if (type === "bear") {
-            this.imageHeight = 275;
-            this.imageWidth = 342;
+            this.frameCount = {x: 2, y: 2};
             this.size = Math.random() * .3 + 1.2;
             this.width = this.size * 1.4;
             this.height = this.size;
             this.walkSpeed = 1;
             this.runSpeed = 3;
-            this.fleeRadius = 0;
             this.chaseRadius = 9;
             this.fleeRadius = -1;
             this.attackVerb = "mauls";
@@ -387,8 +392,7 @@ class Animal extends Character {
             this.hp = 25 * this.size;
         }
         else if (type === "squirrel") {
-            this.imageHeight = 146;
-            this.imageWidth = 150;
+            this.frameCount = {x: 1, y: 2};
             this.size = Math.random() * .2 + .4;
             this.width = this.size;
             this.height = this.size;
@@ -400,8 +404,7 @@ class Animal extends Character {
             this.randomMotion = 3;
         }
         else if (type === "scorpion") {
-            this.imageHeight = 200;
-            this.imageWidth = 200;
+            this.frameCount = {x: 1, y: 2};
             this.size = Math.random() * .1 + .4;
             this.width = this.size;
             this.height = this.size;
@@ -415,8 +418,7 @@ class Animal extends Character {
             this.randomMotion = 2;
         }
         else if (type === "armadillo") {
-            this.imageHeight = 200;
-            this.imageWidth = 200;
+            this.frameCount = {x: 1, y: 2};
             this.size = Math.random() * .2 + .5;
             this.width = this.size;
             this.height = this.size;
@@ -428,8 +430,7 @@ class Animal extends Character {
             this.randomMotion = 3;
         }
         else if (type === "coyote") {
-            this.imageHeight = 200;
-            this.imageWidth = 356;
+            this.frameCount = {x: 1, y: 2};
             this.size = Math.random() * .25 + .7;
             this.width = this.size * 1.75;
             this.height = this.size;
@@ -441,8 +442,7 @@ class Animal extends Character {
             this.randomMotion = 6;
         }
         else if (type === "goat") {
-            this.imageHeight = 200;
-            this.imageWidth = 241;
+            this.frameCount = {x: 1, y: 2};
             this.size = Math.random() * .25 + .7;
             this.width = this.size * 1.2;
             this.height = this.size;
@@ -454,8 +454,7 @@ class Animal extends Character {
             this.randomMotion = 6;
         }
         else if (type === "porcupine") {
-            this.imageHeight = 183;
-            this.imageWidth = 218;
+            this.frameCount = {x: 1, y: 2};
             this.size = Math.random() * .2 + .5;
             this.width = this.size * 1.15;
             this.height = this.size;
@@ -470,8 +469,7 @@ class Animal extends Character {
             this.randomMotion = 3;
         }
         else if (type === "yeti") {
-            this.imageHeight = 377;
-            this.imageWidth = 450;
+            this.frameCount = {x: 2, y: 2};
             this.size = Math.random() * .5 + 1.5;
             this.width = this.size * 1.2;
             this.height = this.size;
@@ -484,9 +482,7 @@ class Animal extends Character {
             this.hp = 40 * this.size;
         }
         else {
-            console.log('unknown animal:', type);
-            this.size = 1;
-            this.hp = 10;
+            this.walkSpeed = 1;
         }
         this.speed = this.walkSpeed;
         this._onScreen = false;
@@ -516,7 +512,7 @@ class Animal extends Character {
         }, 1000 / this.frameRate);
 
         // face the correct direction
-        if (this.direction && !this.attacking) {
+        if (this.direction && !this.attacking && this.frameCount.y > 1) {
             if (this.direction.x > 0 || this.direction.x === 0 && this.direction.y > 0) {
                 this.imageFrame.y = 1;
             }
@@ -559,7 +555,7 @@ class Animal extends Character {
         let dist = approxDist(this.x, this.y, hunter.x, hunter.y);
         if (dist < 1 && this.attacking == 1) {
             this.attacking = 2
-            this.imageFrame.x = 1;
+            if (this.frameCount.x > 1) this.imageFrame.x = 1;
             this.imageFrame.y = (this.x + this.offset.x > hunter.x + hunter.offset.x) ? 0 : 1;
             let damage = Math.floor((1 - Math.random() * Math.random()) * this.damage + 1);
             message(`${this.type} ${this.attackVerb} you for ${damage} damage!`)
@@ -623,6 +619,93 @@ class Animal extends Character {
     die() {
         this.dead = true;
         this.rotation = 180;
+    }
+}
+
+class Mokemon extends Animal {
+    constructor(type, x, y) {
+        super(type, x, y);
+        this.isMokemon = true;
+        this.image =$("<img>").attr('src', `./assets/images/mokemon/${type}.png`)[0]
+        if (this.type==="Apismanion") {
+            this.frameCount = {x: 1, y: 1};
+            this.width = .875;
+            this.height = 1;
+            this.walkSpeed = 1;
+            this.runSpeed = 2;
+            this.fleeRadius = 10;
+            this.foodValue = 100;
+            this.hp = 10;
+        }
+        if (this.type==="Dezzy") {
+            this.frameCount = {x: 1, y: 1};
+            this.width = .75;
+            this.height = 1.2;
+            this.walkSpeed = 1;
+            this.runSpeed = 2;
+            this.fleeRadius = 10;
+            this.foodValue = 160;
+            this.hp = 9;
+        }
+        if (this.type==="Mallowbear") {
+            this.frameCount = {x: 1, y: 1};
+            this.width = 1;
+            this.height = 1.2;
+            this.walkSpeed = 1;
+            this.runSpeed = 2;
+            this.fleeRadius = 6;
+            this.hp = 20;
+            this.foodValue = 200;
+        }
+        if (this.type==="Marlequin"){
+            this.frameCount = {x: 1, y: 1};
+            this.width = .75;
+            this.height = 1;
+            this.walkSpeed = 1;
+            this.runSpeed = 3;
+            this.fleeRadius = 10;
+            this.foodValue = 90;
+            this.hp = 11;
+            this.randomMotion = 3;
+        }
+        if (this.type==="Wingmat"){
+            this.frameCount = {x: 1, y: 1};
+            this.width = 1.75;
+            this.height = 1;
+            this.walkSpeed = 1;
+            this.runSpeed = 2;
+            this.fleeRadius = 10;
+            this.foodValue = 210;
+            this.hp = 10;
+
+        }
+        if (this.type==="Zyant"){
+            this.frameCount = {x: 1, y: 1};
+            this.width = 1.2;
+            this.height = 1.2;
+            this.walkSpeed = 1;
+            this.runSpeed = 2;
+            this.fleeRadius = 10;
+            this.foodValue = 200;
+            this.hp = 15;
+        }
+        if (this.type==="Shadowdragon"){
+            this.frameCount = {x: 1, y: 2};
+            this.width = 2;
+            this.height = 1.75;
+            this.walkSpeed = .75;
+            this.runSpeed = 3;
+            this.chaseRadius = 10;
+            this.attackVerb = "strikes";
+            this.damage = 75;
+            this.foodValue = 350;
+            this.hp = 45;
+        }
+    }
+    get onScreen() {
+        // disappears if you already have one of this type
+        this._onScreen = super.onScreen;
+        return (player.posse.map(moke => moke.name).includes(this.type) ? false : super.onScreen);
     }
 }
 
@@ -702,9 +785,10 @@ $(document).ready(() => {
             // count down til dark
             function timeDown() {
                 player.time += 1;
-                hoursTilDark = parseInt((24 - player.time) / 2);
+                hoursTilDark = parseInt((24 - player.time) / 2); 
                 $("#time").text('Hours til dark: '+ hoursTilDark);
                 if (hoursTilDark == 0) {
+                    player.messages.push(`You scored ${hunter.food} food while hunting.`);
                     saveGame();
                     msgBox('darkness', `The sun has gone down.  You head back to camp with your day's catch of ${hunter.food} food.`,
                     [{text: "ok", function: () => {
@@ -720,7 +804,12 @@ $(document).ready(() => {
             hunter = new Hunter(mapWidth/2, mapHeight/2);
             location.prey.forEach(prey => {
                 for (let n = 0; n < prey.frequency; n++) {
-                    animals.push(new Animal(prey.type, Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight)));
+                    if (!prey.isMokemon) {
+                        animals.push(new Animal(prey.type, Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight)));
+                    }
+                    else {
+                        animals.push(new Mokemon(prey.type, Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight)));
+                    }
                 }
             })
             window.addEventListener('resize', sizeCanvas);
@@ -871,7 +960,10 @@ function drawCanvas() {
             }
 
             if (mapItems[n].imageFrame) {
-                ctx.drawImage(mapItems[n].image, mapItems[n].imageFrame.x * mapItems[n].imageWidth, mapItems[n].imageFrame.y * mapItems[n].imageHeight, mapItems[n].imageWidth, mapItems[n].imageHeight,
+
+                ctx.drawImage(mapItems[n].image, mapItems[n].imageFrame.x * mapItems[n].image.naturalWidth / mapItems[n].frameCount.x, 
+                    mapItems[n].imageFrame.y * mapItems[n].image.naturalHeight / mapItems[n].frameCount.y, 
+                    mapItems[n].image.naturalWidth / mapItems[n].frameCount.x, mapItems[n].image.naturalHeight / mapItems[n].frameCount.y,
                     0, 0,
                     mapItems[n].width * mapHexHeight, mapItems[n].height * mapHexHeight);
             }
@@ -919,7 +1011,7 @@ function drawMokeballs() {
 }
 
 function genMap(terrain, callback) {
-    let map = {scenery: {}, backgrounds: [], nodes: []};
+    let map = {scenery: {}, animalImages: [], backgrounds: [], nodes: []};
     terrain.scenery.forEach((item, i) => {
         if (item.frequency > 0) {
             map.scenery[item.type] = [];
@@ -930,8 +1022,13 @@ function genMap(terrain, callback) {
                 }
             }
             catch{
-                map.images[item.type] = undefined;
+                map.scenery[item.type] = undefined;
             }
+        }
+    })
+    terrain.prey.forEach((animal, i) => {
+        if (animal.frequency > 0 &! animal.isMokemon) {
+            map.animalImages[animal.type] = $("<img>").attr('src', `./assets/images/animals/${animal.type}.png`)[0]
         }
     })
 
@@ -990,7 +1087,6 @@ function genMap(terrain, callback) {
             })
         }
     }
-    console.log(map.images);
     if (callback) setTimeout(() => callback(map), 100 );
     return map;
 }
