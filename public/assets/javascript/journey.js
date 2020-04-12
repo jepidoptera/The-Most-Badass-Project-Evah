@@ -325,7 +325,6 @@ class Canvas {
 
 const events = {
     ebola: {
-        name: "ebola",
         contagion: 0,
         get occurs() {
             // every morning at dawn
@@ -339,7 +338,7 @@ const events = {
         },
         function: () => {
             // strikes randomly
-            victim = player.posse[parseInt(Math.random() * player.posse.length)];
+            victim = player.posse[weightedRandom(player.posse.map(moke => 1 / moke.immuneResponse))];
             if (victim.conditions.map(c => c.name).includes('ebola')) {
                 // can't get it twice
                 console.log('prevented double occurrence of ebola.');
@@ -347,7 +346,7 @@ const events = {
             } 
             victim.conditions.push ({
                 name: 'ebola', 
-                timeRemaining: 1 + parseInt(Math.random() * 5)
+                timeRemaining: 50 + parseInt(Math.random() * 70 / victim.immuneResponse)
             });
             // there's not much you can do but rest and hope
             msgBox ("Outbreak!", victim.name + " has ebola.", [{
@@ -364,7 +363,6 @@ const events = {
         }
     },
     sars: {
-        name: "sars",
         get occurs() {
             // every morning at dawn
             // return posse.length > 0 && player.time === 0;
@@ -381,7 +379,7 @@ const events = {
             } 
             victim.conditions.push ({
                 name: 'sars', 
-                timeRemaining: 1 + parseInt(Math.random() * 5)
+                timeRemaining: 60 + parseInt(Math.random() * 80 / victim.immuneResponse)
             });
             // there's not much you can do but rest and hope
             msgBox ("Outbreak!", victim.name + " has sars.", [{
@@ -398,7 +396,6 @@ const events = {
         }
     },
     bear: {
-        name: "eaten by a bear",
         get occurs() {
             return player.posse.length > 0 && trail.currentLocation.type === "forest" && parseInt(Math.random() * 100) == 0;
         },
@@ -410,10 +407,9 @@ const events = {
         }
     },
     yeti: {
-        name: "eaten by a yeti",
         get occurs() {
             // most often eats the weakest one
-            return player.posse.length > 0 && trail.currentLocation.type === "mountains" && parseInt(Math.random() * 150) == 0;
+            return player.posse.length > 0 && trail.currentLocation.type === "mountains" && parseInt(Math.random() * 200) == 0;
         },
         function: () => {
             victim = player.posse[parseInt(Math.random() * player.posse.length)];
@@ -422,7 +418,6 @@ const events = {
         }
     },
     tree: {
-        name: "hit by falling tree",
         get occurs() {
             return player.posse.length > 0 && trail.currentLocation.type === "forest" && parseInt(Math.random() * 100) == 0;
         },
@@ -435,7 +430,6 @@ const events = {
         }
     },
     cactus: {
-        name: "hit by falling cactus",
         get occurs() {
             return player.posse.length > 0 && trail.currentLocation.type === "desert" && parseInt(Math.random() * 200) == 0;
         },
@@ -448,7 +442,6 @@ const events = {
         }
     },
     thief: {
-        name: "a thief comes in the night",
         get occurs() {
             return player.day > 0 && player.hour === 0 && Math.random() * 10 < 1;
         },
@@ -469,6 +462,7 @@ const events = {
             msgBox ("Theft", "A thief comes in the night and makes off with: " + loss + ".", [
                 {text: "how unfortunate"}
             ])
+            player.messages.push(`${loss} was lost to a thief.`)
         }
     },
     foodLow: {
@@ -516,8 +510,11 @@ const events = {
 };
 
 const effects = {
-    ebola: (victim) => { victim.hurt(3) },
-    rest: (moke) => { moke.health += 1 }
+    ebola: (victim) => { victim.hurt(.1) },
+    sars: (victim) => { victim.hurt(.05) },
+    rest: (moke) => { 
+        moke.health = Math.min(moke.health + moke.maxHealth / 240, moke.maxHealth) 
+    } // ten days to fully heal
 }
 
 class mokePosse {
@@ -532,7 +529,7 @@ class mokePosse {
             this.width = 30;
             this.foodValue = 160;
             this.hunger = 4;
-            this.maxHealth = 10;
+            this.maxHealth = 9;
             this.immuneResponse = 2;
             this.description = "A fun-loving flipper-flopper, hardy and disease resistant.  Doesn't eat a whole lot."
             break;
@@ -559,7 +556,7 @@ class mokePosse {
             this.width = 30;
             this.foodValue = 90;
             this.hunger = 5;
-            this.maxHealth = 10;
+            this.maxHealth = 11;
             this.immuneResponse = .9;
             this.description = "Enigmatic and rare.  Might have special powers, or maybe it just wants you to think that."
             break;
@@ -702,6 +699,9 @@ $(document).ready(() => {
                 ...player,
                 get foodPerDay() {
                     return 5 + player.posse.reduce((sum, moke) => sum + moke.hunger, 0)
+                },
+                get currentMessage() {
+                    return player.messages[player.messages.length - 1]
                 }
             }
             gameInterval = setInterval(gameLoop, 1000 / canvas.metrics.frameRate);
@@ -741,11 +741,16 @@ function gameLoop () {
 
     player.time += timeSpeed;
     if (player.hour != Math.floor(player.time)) {
+        // hourly events
         player.hour = Math.floor(player.time);
-        // do random events once per hour (so it's not dependent on framerate)
+        // random disasters
         Object.keys(events).forEach((key) => {
             if (!paused && events[key].occurs) events[key].function();
         });
+        // mokemon conditions (ebola and so forth)
+        player.posse.forEach((mokemon) =>{
+            mokemon.doConditions();
+        });            
     }
     // move the sun
     moveSun();
@@ -781,14 +786,7 @@ function nextDay() {
     player.time = 0; 
     player.day += 1;
     // eat
-    player.food -= 5;
-    player.posse.forEach(moke => {
-        player.food -= moke.foodValue / 20;
-    })
-    // mokemon conditions (ebola and so forth)
-    player.posse.forEach((mokemon) =>{
-        mokemon.doConditions();
-    });    
+    player.food -= player.foodPerDay;
 }
 
 function narrate() {
@@ -799,7 +797,7 @@ function narrate() {
 
     $("#narrative").html(
         '<span style="color: yellow">tap here or press enter for options</span> <br>' + 
-        'Day: ' + player.day + 
+        'Day: Novembruary ' + (75 + player.day) + ((75 + player.day) % 10 === 1 ? "st" : ((75 + player.day) % 10 === 2 ? "nd" : ((75 + player.day) % 10 === 3 ? "rd" : "th"))) +
         ((arrived)  
         ? (`<br>You have reached: ${trail.nextLocation.name}. <br>${distanceTo} miles until ${trail.currentLocation.next.next.name}.`)
         : (`<br>Location: ${trail.currentLocation.name}<br>${distanceTo} miles to ${trail.currentLocation.next.name}.`)) + '<br>' +
@@ -826,14 +824,52 @@ function arriveAt(location) {
 
 function rest() {
     // how long?
-    if (paused) return;
     pause();
-    $("#rest").show();
-    $("#restform").submit((event) => {
+    clearDialogs();
+
+    let restingDialog = $("<div>").attr('id', 'restingDialog').addClass('dialogBox').appendTo($('#canvasArea'))
+    let restParameters = {text: "rest for how long?", name: "rest", min: 0, max: Math.min(Math.floor(player.food / player.foodPerDay) - 1, 10), value: 1}
+    restingDialog.append(
+        $("<form>")
+            .attr("id", "restForm")
+            .append(numberInput(restParameters))
+            .append($("<div>")
+                .attr('id', 'msgbuttons')
+                .append(        
+                    $("<button>")
+                        .attr("type", "submit")
+                        .text("ok")
+                        .addClass('msgbutton')
+                    )
+                )    
+    )
+    if (Math.floor(player.food / player.foodPerDay) < 10) {
+        restingDialog.append($("<span style='color:red'></span>").text(`You have enough food to rest for ${Math.floor(player.food / player.foodPerDay) - 1} days.`))
+    }
+    $("#restForm").submit((event) => {
         event.preventDefault();
-        player.day += parseInt($("#restLength").val());
-        $("#rest").hide();
-        unpause();
+        restingDialog.remove();
+        player.posse.forEach(moke => {
+            moke.conditions.push({name: "rest", timeRemaining: restParameters.value * 24})
+        })
+        let mokePosseHealthMonitor = $("<div>").addClass("dialogBox").appendTo($("#canvasArea"));
+        let restInterval = setInterval(() => {
+            mokePosseHealthMonitor.empty().append(
+                player.posse.map(moke => mokePortrait(moke))
+            )
+            restParameters.value --;
+            player.time ++;
+            moveSun();
+            player.posse.forEach(moke => {moke.doConditions()});
+            console.log("healed");
+            if (player.time >= 24) nextDay();
+            if (restParameters.value <= 1) {
+                clearInterval(restInterval);
+                mokePosseHealthMonitor.remove();
+                unpause();
+            }    
+        }, 43 - restParameters.value * 2);
+        restParameters.value *= 24;
     });
 }
 
@@ -952,14 +988,19 @@ function mokePortrait (moke) {
                 }))
             .click((event) => {
                 $("#mokeStats").empty();
-                $("#mokeStats").append(mokeStats(moke));
-                $(".mokeIcon").removeClass("selected");
-                $(event.currentTarget).addClass("selected");
+                if (!$(event.currentTarget).hasClass("selected")){
+                    $("#mokeStats").append(mokeStats(moke));
+                    $(".mokeIcon").removeClass("selected");
+                    $(event.currentTarget).addClass("selected");
+                }
+                else {
+                    $(".mokeIcon").removeClass("selected");
+                }
             })
             .hover(() => {
                     // mouseenter
                         $("#mokeStats").empty().append(mokeStats(moke));
-                        $(".mokeIcon").removeClass("selected");
+                        if (!$(event.currentTarget).hasClass("selected")) $(".mokeIcon").removeClass("selected");
                     }, (event) => {
                     // mouseleave
                         if (!$(event.currentTarget).hasClass("selected")) $("#mokeStats").empty();
@@ -983,17 +1024,52 @@ function mokeStats (moke) {
     ]
 }
 
-function numberInput(name, min, max) {
-    return $("<div>").html(`
-        ${name}: 
-        <span class="numberInput">
-            <span class="numberInput_text" id="${name}"></span>
-            <span class="numberInput_buttonContainer">
-                <div class="numberInput_button" id="${name}Up"><span class="numberInput_button_text">▲</span></div>
-                <div class="numberInput_button" id="${name}Down"><span class="numberInput_button_text">▼</span></div>
-            </span>
-        </span>
-    `).addClass("numberInputLine") 
+function numberInput(inputParams) {
+    let numberInput = $("<div>").html(`${inputParams.text}: `)
+        .addClass("numberInputLine")
+        .append($("<span>")
+            .addClass("numberInput")
+            .append($("<input>")
+                .attr("id", `${inputParams.name}Input`)
+                .addClass("numberInput_text")
+                .val(inputParams.value))
+                .change(() => {
+                    let self = $(`#${inputParams.name}Input`)
+                    if (self.val() > inputParams.max) self.val(inputParams.max);
+                    if (self.val() < inputParams.min) self.val(inputParams.min);
+                    inputParams.value = self.val();
+                })
+            .append($("<span>")
+                .addClass("numberInput_buttonContainer")
+                .append(
+                    $("<div>")
+                        .attr("id", `${inputParams.name}Up`)
+                        .addClass("numberInput_button")
+                        .append($("<span>").addClass("numberInput_button_text").text("▲"))
+                        .click(() => {
+                            inputParams.value = Math.min(parseInt(inputParams.value) + 1, inputParams.max);
+                            $(`#${inputParams.name}Input`).val(inputParams.value);
+                        }),
+                    $("<div>")
+                    .attr("id", `${inputParams.name}Up`)
+                        .addClass("numberInput_button")
+                        .append($("<span>").addClass("numberInput_button_text").text("▼"))
+                        .click(() => {
+                            inputParams.value = Math.max(parseInt(inputParams.value) - 1, inputParams.min);
+                            $(`#${inputParams.name}Input`).val(inputParams.value);
+                        })
+                )
+            )
+        )
+    return numberInput;
+// `<span class="numberInput">
+//     <span class="numberInput_text" id="${inputTo.name}"></span>
+//     <span class="numberInput_buttonContainer">
+//         <div class="numberInput_button" id="${inputTo.name}Up"><span class="numberInput_button_text">▲</span></div>
+//         <div class="numberInput_button" id="${inputTo.name}Down"><span class="numberInput_button_text">▼</span></div>
+//     </span>
+// </span>
+// `
 }
 
 function closeOptions() {

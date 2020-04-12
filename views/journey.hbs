@@ -10,7 +10,7 @@
         <canvas id='canvas' width="1920" height="1080"></canvas>
         <div id="msgbox" class="hidden dialogBox"><div id="msgbuttons"></div></div>    
         <div id='optionsMenu' class='hidden dialogBox'>
-            <button class="optionButton">Rest</button>
+            <button class="optionButton" onclick="rest()">Rest</button>
             <button id="huntButton" class="optionButton" onclick="saveGame(); window.location.href=`/hunt?name=${player.name}&auth=${player.authtoken}`">Hunt</button>
             <button class="optionButton" onclick="saveGame(); closeOptions(); msgBox('Game saved.');">Save</button>
             <button class="optionButton" onclick="window.location.href=window.location.href">Reload</button>
