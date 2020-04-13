@@ -383,8 +383,10 @@ const events = {
             });
             // there's not much you can do but rest and hope
             msgBox ("Outbreak!", victim.name + " has sars.", [{
-                text: "stop to rest",
-                function: nextDay
+                text: "euthanize",
+                function: () => victime.die("had to be put down")
+            },{
+                text: "rest and quarantine"
             },{
                 // or ruthlessly carry forward
                 text: "keep going",
@@ -402,7 +404,7 @@ const events = {
         function: () => {
             // most often eats the weakest one
             victim = player.posse[weightedRandom(player.posse.map(moke => 1 / moke.health))];
-            victim.die();
+            victim.die("was slain by a hungry bear");
             msgBox ("Death", victim.name + " was eaten by a bear.", "damn")
         }
     },
@@ -413,7 +415,7 @@ const events = {
         },
         function: () => {
             victim = player.posse[parseInt(Math.random() * player.posse.length)];
-            victim.die();
+            victim.die("was devoured by a monstrous yeti");
             msgBox ("Death", victim.name + " was eaten by a yeti.", "damn")
         }
     },
@@ -423,7 +425,9 @@ const events = {
         },
         function: () => {
             victim = player.posse[parseInt(Math.random() * player.posse.length)];
-            victim.hurt(Math.random() * 11);
+            let damage = Math.floor(Math.random() * 11 + 1)
+            victim.hurt(damage);
+            player.messages.push(`${victim.name} suffered ${damage} damage from a falling tree.`);
             msgBox ("Ouch", `A tree fell on ${victim.name}.`, ":_(")
             // put a picture of the victim in there so we can see how bad they're hurt
             $("#msgText").append(mokePortrait(victim));
@@ -435,8 +439,23 @@ const events = {
         },
         function: () => {
             victim = player.posse[parseInt(Math.random() * player.posse.length)];
-            victim.hurt(Math.random() * 11);
+            let damage = Math.floor(Math.random() * 11 + 1)
+            victim.hurt(damage);
+            player.messages.push(`${victim.name} suffered ${damage} damage from a cactus.`);
             msgBox ("Ouch", `A cactus fell on ${victim.name}.`, ":_(")
+            // put a picture of the victim in there so we can see how bad they're hurt
+            $("#msgText").append(mokePortrait(victim));
+        }
+    },
+    scorpion: {
+        get occurs() {
+            return player.posse.length > 0 && trail.currentLocation.type === "desert" && parseInt(Math.random() * 200) == 0;
+        },
+        function: () => {
+            victim = player.posse[parseInt(Math.random() * player.posse.length)];
+            victim.hurt(1);
+            player.messages.push(`${victim.name} was stung by a scorpion.`);
+            msgBox ("Venemous wildlife", `${victim.name} was stung by a scorpion.`, "That's how it goes sometimes")
             // put a picture of the victim in there so we can see how bad they're hurt
             $("#msgText").append(mokePortrait(victim));
         }
@@ -450,7 +469,7 @@ const events = {
             let loss = "";
             if (theftType === "mokemon") {
                 victim = player.posse[parseInt(Math.random() * player.posse.length)];
-                victim.die();    
+                victim.die("was stolen by a villainous theif");    
                 loss = victim.name;
             }
             else {
@@ -462,7 +481,7 @@ const events = {
             msgBox ("Theft", "A thief comes in the night and makes off with: " + loss + ".", [
                 {text: "how unfortunate"}
             ])
-            player.messages.push(`${loss} was lost to a thief.`)
+            player.messages.push(`${loss} ${["mokeballs", "grenades"].includes(loss) ? "were" : "was"} lost to a thief.`)
         }
     },
     foodLow: {
@@ -471,7 +490,7 @@ const events = {
         },
         function: () => {
             let daysRemaining = parseInt(player.food / player.foodPerDay) + 1;
-            player.lowFood = true;
+            player.foodLow = true;
             player.messages.push(`You are low on food.  You will starve in: ${daysRemaining} days.`)
         }
     },
@@ -491,7 +510,7 @@ const events = {
                         text: `${moke.name} (${moke.foodValue} food, eats ${moke.hunger}/day)`,
                         function: () => {
                             player.food += moke.foodValue;
-                            moke.die(); 
+                            moke.die("had to be sacrificed for the greater good"); 
                         }
                     }
                 }))
@@ -621,12 +640,13 @@ class mokePosse {
         this.health -= damage;
         if (this.health <= 0) this.die();
     }
-    die() {
+    die(cause) {
         msgBox('tragedy', this.name + " has died.", [{
             text: 'ok',
             function: () => {
             } // not much you can do here
         }]);
+        player.messages.push(`${this.name} ${cause || "died"}.`)
         player.posse.splice(this.index, 1);
         player.posse.forEach((moke, n) => {
             moke.index = n;
@@ -824,7 +844,7 @@ function arriveAt(location) {
     if (location.shop) {
         msgBox("Buy stuff?", `You have reached: ${location.name}.  Stop and buy supplies?`, [
             {text: "yes, of course", function: () => {
-                shop(location.shop.items);
+                shopDialog(location.shop.items);
             }},
             {text: "no, I'm good"}
         ])
@@ -834,7 +854,31 @@ function arriveAt(location) {
     }
 }
 
-function rest() {
+function rest(days, showPosse) {
+    let hours = days * 24;
+    player.posse.forEach(moke => {
+        moke.conditions.push({name: "rest", timeRemaining: hours})
+    })
+    let mokePosseHealthMonitor = $("<div>").addClass("dialogBox");
+    if (showPosse) mokePosseHealthMonitor.appendTo($("#canvasArea"));
+    let restInterval = setInterval(() => {
+        mokePosseHealthMonitor.empty().append(
+            player.posse.map(moke => mokePortrait(moke))
+        )
+        hours --;
+        player.time ++;
+        astralMovements();
+        player.posse.forEach(moke => {moke.doConditions()});
+        if (player.time >= 24) nextDay();
+        if (hours <= 1) {
+            clearInterval(restInterval);
+            mokePosseHealthMonitor.remove();
+            unpause();
+        }    
+    }, 43 - days * 2);
+}
+
+function restDialog() {
     // how long?
     pause();
     clearDialogs();
@@ -861,30 +905,11 @@ function rest() {
     $("#restForm").submit((event) => {
         event.preventDefault();
         restingDialog.remove();
-        player.posse.forEach(moke => {
-            moke.conditions.push({name: "rest", timeRemaining: restParameters.value * 24})
-        })
-        let mokePosseHealthMonitor = $("<div>").addClass("dialogBox").appendTo($("#canvasArea"));
-        let restInterval = setInterval(() => {
-            mokePosseHealthMonitor.empty().append(
-                player.posse.map(moke => mokePortrait(moke))
-            )
-            restParameters.value --;
-            player.time ++;
-            astralMovements();
-            player.posse.forEach(moke => {moke.doConditions()});
-            if (player.time >= 24) nextDay();
-            if (restParameters.value <= 1) {
-                clearInterval(restInterval);
-                mokePosseHealthMonitor.remove();
-                unpause();
-            }    
-        }, 43 - restParameters.value * 2);
-        restParameters.value *= 24;
+        rest(restParameters.value, true)
     });
 }
 
-function shop(shopItems) {
+function shopDialog(shopItems) {
     let buyItems = {};
     let cost = 0;
     let shoppingDialog = $("<div>").attr('id', 'shoppingDialog').addClass('dialogBox').appendTo($('#canvasArea'))
