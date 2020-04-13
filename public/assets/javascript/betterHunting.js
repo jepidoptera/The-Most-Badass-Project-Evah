@@ -1,5 +1,5 @@
-const mapWidth = 500;
-const mapHeight = 500;
+const mapWidth = 400;
+const mapHeight = 400;
 let frameRate = 60;
 
 let viewport = {width: 0, height: 0, innerWindow: {width: 0, height: 0}, x: 488, y: 494}
@@ -796,7 +796,7 @@ $(document).ready(() => {
                     }}]);
                 }
                 else {
-                    setTimeout(timeDown, 10000);
+                    setTimeout(timeDown, 6400);
                 }
             }    
             if (player.time) timeDown();
