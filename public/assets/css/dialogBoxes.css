@@ -157,3 +157,13 @@
     line-height: normal;
     user-select: none;
 }
+
+.hidden {
+    display: none;
+}
+
+@media screen and (max-width: 400px) {
+    .dialogBox {
+        min-width: 100%;
+    }
+}
