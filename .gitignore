@@ -4,3 +4,4 @@ node_modules/
 public/assets/images/pokemon
 *.tmp
 public/assets/javascript/unused
+public/assets/css/unused
