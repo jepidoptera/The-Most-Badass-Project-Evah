@@ -324,82 +324,84 @@ class Canvas {
 
 
 const events = {
-    ebola: {
+    disease: {
         contagion: 0,
         get occurs() {
             // every morning at dawn
             // return posse.length > 0 && player.time === 0;
             // occasionally
-            events.ebola.contagion = player.posse.reduce((sum, moke) => 
-                sum + moke.conditions.reduce((sum, condition) => 
-                    sum + condition.name === "ebola" ? 1: 0 + condition.name === "quarantine" ? -0.8: 0, 0), 0
-                ) + (trail.currentLocation.type === "jungle" ? 1 : 0)
-            return player.posse.length > 0 && Math.random() * 100 <= events.ebola.contagion;
+            let diseases = [
+                {
+                    name: "ebola",
+                    rarity: 100,
+                    duration: {
+                        base: 50,
+                        random: 10,
+                        immuneDependent: 70
+                    },
+                    contagion: player.posse.reduce((sum, moke) => 
+                        sum + moke.conditions.reduce((sum, condition) => 
+                            sum + (condition.name === "ebola" ? 1.5: 0) + (condition.name === "quarantine" ? -0.8: 0), 0), 0
+                        ) + (trail.currentLocation.type === "jungle" ? 1 : 0)
+                }, {
+                    name: "sars",
+                    rarity: 500,
+                    duration: { // in hours
+                        base: 80,
+                        random: 20,
+                        immuneDependent: 100
+                    },
+                    contagion: player.posse.reduce((sum, moke) => 
+                        sum + moke.conditions.reduce((sum, condition) => 
+                            sum + (condition.name === "sars" ? 7.5: 0) + (condition.name === "quarantine" ? -0.8: 0), 0), 1
+                        )                    
+                }
+            ]
+            events.disease.name = "";
+            diseases.forEach(disease => {
+                if (disease.contagion > Math.random() * disease.rarity) {
+                    events.disease.name = disease.name;
+                    events.disease.duration = disease.duration;
+                }
+            })
+            return events.disease.name;
         },
         function: () => {
             // strikes randomly
             victim = player.posse[weightedRandom(player.posse.map(moke => 1 / moke.immuneResponse))];
-            if (victim.conditions.map(c => c.name).includes('ebola')) {
+            if (victim.conditions.map(c => c.name).includes(events.disease.name)) {
                 // can't get it twice
-                console.log('prevented double occurrence of ebola.');
+                console.log(`prevented double occurrence of ${events.disease.name}.`);
                 return;
             } 
-            victim.conditions.push ({
-                name: 'ebola', 
-                timeRemaining: 50 + parseInt(Math.random() * 70 / victim.immuneResponse)
-            });
+            let illnessLength = events.disease.duration.base 
+                + Math.random() * events.disease.duration.random 
+                + Math.random() * events.disease.duration.immuneDependent / victim.immuneResponse
+
             // there's not much you can do but rest and hope
-            msgBox ("Outbreak!", victim.name + " has ebola.", [{
-                text: "stop to rest",
-                function: nextDay
-            },{
-                // or ruthlessly carry forward
-                text: "keep going",
-                function: () => {
-                    // which cuts their chances of survival from 2/3 to 1/3, incidentally
-                    victim.health -= 2;
-                }
-            }]);
-        }
-    },
-    sars: {
-        get occurs() {
-            // every morning at dawn
-            // return posse.length > 0 && player.time === 0;
-            // occasionally
-            return player.posse.length > 0 && parseInt(Math.random() * 500) == 0;
-        },
-        function: () => {
-            // strikes randomly
-            victim = player.posse[parseInt(Math.random() * player.posse.length)];
-            if (victim.conditions.map(c => c.name).includes('sars')) {
-                // can't get it twice
-                console.log('prevented double occurrence of sars.');
-                return;
-            } 
             victim.conditions.push ({
-                name: 'sars', 
-                timeRemaining: 60 + parseInt(Math.random() * 80 / victim.immuneResponse)
+                name: events.disease.name,
+                type: 'disease', 
+                timeRemaining: illnessLength
             });
-            // there's not much you can do but rest and hope
-            msgBox ("Outbreak!", victim.name + " has sars.", [{
+            player.messages.push(`${victim.name} caught ${events.disease.name}.`)
+            msgBox ("Outbreak!", `${victim.name} has ${events.disease.name}.`, [{
                 text: "euthanize",
                 function: () => victime.die("had to be put down")
             },{
-                text: "rest and quarantine"
-            },{
-                // or ruthlessly carry forward
-                text: "keep going",
+                text: "rest and quarantine",
                 function: () => {
-                    // which cuts their chances of survival from 2/3 to 1/3, incidentally
-                    victim.health -= 2;
+                    player.posse.forEach(moke => moke.conditions.push({name: 'quarantine', timeRemaining: illnessLength}))
+                    rest(illnessLength / 24, true);
                 }
+            },{
+                text: "ruthlessly carry forward"
             }]);
         }
     },
     bear: {
         get occurs() {
-            return player.posse.length > 0 && trail.currentLocation.type === "forest" && parseInt(Math.random() * 100) == 0;
+            return player.posse.length > 0 && trail.currentLocation.type === "forest" && parseInt(Math.random() * 150) == 0;
         },
         function: () => {
             // most often eats the weakest one
@@ -411,7 +413,7 @@ const events = {
     yeti: {
         get occurs() {
             // most often eats the weakest one
-            return player.posse.length > 0 && trail.currentLocation.type === "mountains" && parseInt(Math.random() * 200) == 0;
+            return player.posse.length > 0 && trail.currentLocation.type === "mountains" && parseInt(Math.random() * 250) == 0;
         },
         function: () => {
             victim = player.posse[parseInt(Math.random() * player.posse.length)];
@@ -421,7 +423,7 @@ const events = {
     },
     tree: {
         get occurs() {
-            return player.posse.length > 0 && trail.currentLocation.type === "forest" && parseInt(Math.random() * 100) == 0;
+            return player.posse.length > 0 && !player.resting && trail.currentLocation.type === "forest" && parseInt(Math.random() * 100) == 0;
         },
         function: () => {
             victim = player.posse[parseInt(Math.random() * player.posse.length)];
@@ -435,7 +437,7 @@ const events = {
     },
     cactus: {
         get occurs() {
-            return player.posse.length > 0 && trail.currentLocation.type === "desert" && parseInt(Math.random() * 200) == 0;
+            return player.posse.length > 0 && !player.resting  && trail.currentLocation.type === "desert" && parseInt(Math.random() * 200) == 0;
         },
         function: () => {
             victim = player.posse[parseInt(Math.random() * player.posse.length)];
@@ -529,8 +531,8 @@ const events = {
 };
 
 const effects = {
-    ebola: (victim) => { victim.hurt(.1) },
-    sars: (victim) => { victim.hurt(.05) },
+    ebola: (victim) => { victim.hurt(.01 * victim.maxHealth) },
+    sars: (victim) => { victim.hurt(.005 * victim.maxHealth) },
     rest: (moke) => { 
         moke.health = Math.min(moke.health + moke.maxHealth / 240, moke.maxHealth) 
     } // ten days to fully heal
@@ -632,6 +634,9 @@ class mokePosse {
                 condition.timeRemaining --;
                 if (effects[condition.name]) effects[condition.name](this);
                 if (condition.timeRemaining > 0) activeConditions.push(condition);
+                else if (condition.timeRemaining <= 0 && condition.type === 'disease') {
+                    player.messages.push(`${this.name} recovered from ${condition.name}.`)
+                }
             }
         });
         this.conditions = activeConditions;
@@ -759,6 +764,24 @@ function gameLoop () {
     if (paused) return;
 
     player.time += timeSpeed;
+    timelyEvents();
+
+    trail.travel();
+    canvas.draw();
+
+    // mokemon hop
+    player.posse.forEach((mokemon) =>{
+        mokemon.hop();
+    });
+
+    // are we there yet?
+    if (player.currentLocation != trail.currentLocation) {
+        // we are here!
+        arriveAt(trail.currentLocation);
+    }
+}
+
+function timelyEvents() {
     if (player.hour != Math.floor(player.time)) {
         // hourly events
         player.hour = Math.floor(player.time);
@@ -776,22 +799,8 @@ function gameLoop () {
     // a new dawn
     if (player.time >= 24) nextDay();
 
-    trail.travel();
-    canvas.draw();
-
-    // mokemon hop
-    player.posse.forEach((mokemon) =>{
-        mokemon.hop();
-    });
-
     // narrate the journey
     narrate();
-
-    // are we there yet?
-    if (player.currentLocation != trail.currentLocation) {
-        // we are here!
-        arriveAt(trail.currentLocation);
-    }
 }
 
 function astralMovements() {
@@ -854,25 +863,32 @@ function arriveAt(location) {
     }
 }
 
+let restInterval = null;
 function rest(days, showPosse) {
+    pause();
     let hours = days * 24;
     player.posse.forEach(moke => {
         moke.conditions.push({name: "rest", timeRemaining: hours})
     })
-    let mokePosseHealthMonitor = $("<div>").addClass("dialogBox");
+    player.resting = true;
+    $(".healthMonitor").remove();
+    let mokePosseHealthMonitor = $("<div>").addClass("dialogBox").addClass('healthMonitor').css({"z-index": 1});
     if (showPosse) mokePosseHealthMonitor.appendTo($("#canvasArea"));
-    let restInterval = setInterval(() => {
-        mokePosseHealthMonitor.empty().append(
+    if (restInterval) clearInterval(restInterval);
+    restInterval = setInterval(() => {
+        if (msgBoxActive) return;
+        if (showPosse) mokePosseHealthMonitor.empty().append(
             player.posse.map(moke => mokePortrait(moke))
         )
+
         hours --;
         player.time ++;
-        astralMovements();
-        player.posse.forEach(moke => {moke.doConditions()});
-        if (player.time >= 24) nextDay();
+        timelyEvents();
+
         if (hours <= 1) {
             clearInterval(restInterval);
             mokePosseHealthMonitor.remove();
+            player.resting = false;
             unpause();
         }    
     }, 43 - days * 2);
