@@ -1,8 +1,10 @@
 let player = {};
 let paused = false;
+let msgBoxActive = false;
 
 function msgBox(title, text, buttons = [{text: "ok"}]) {
     if (pause) pause();
+    msgBoxActive = true;
     if (!text) {
         text = title;
         title = "-------"
@@ -18,7 +20,7 @@ function msgBox(title, text, buttons = [{text: "ok"}]) {
         $("#msgbuttons").append($("<button>")
             .addClass('msgbutton')
             .text(button.text)
-            .click(() => {$("#msgbox").hide(); unpause(); if (button.function) button.function();})
+            .click(() => {$("#msgbox").hide(); unpause(); msgBoxActive = false; if (button.function) button.function();})
             .attr("type", (buttons.length === 1 ? "submit" : "none"))
         )
     })
