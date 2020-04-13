@@ -1,0 +1,122 @@
+html, body {
+    overflow: hidden;
+}
+
+p {
+    padding: 1vmin;
+    margin: 0;
+}
+.bg-pan-left {
+    -webkit-animation: bg-pan-left 8s infinite both;
+    animation: bg-pan-left 8s infinite both;
+}
+
+@-webkit-keyframes bg-pan-left {
+    0% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+@keyframes bg-pan-left {
+    0% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.box-object-gradient-hor {
+    background-image: linear-gradient(360deg,#6298ef,#8bb6f9,#afcbf7,#8bb6f9, #6298ef);
+    background-size: 600% 100%
+}
+
+h1 {
+    text-align: center;
+}
+
+.tracking-in-contract {
+    font-family: 'VT323', monospace;
+    font-size: 60px;
+    color: #fff;
+    margin-top: 150px;
+    -webkit-animation: tracking-in-contract 0.8s cubic-bezier(0.215, 0.610, 0.355, 1.000) both;
+    animation: tracking-in-contract 0.8s cubic-bezier(0.215, 0.610, 0.355, 1.000) both;
+}
+
+@-webkit-keyframes tracking-in-contract {
+    0% {
+        letter-spacing: 1em;
+        opacity: 0;
+    }
+    40% {
+        opacity: 0.6;
+    }
+    100% {
+        letter-spacing: normal;
+        opacity: 1;
+    }
+}
+@keyframes tracking-in-contract {
+    0% {
+        letter-spacing: 1em;
+        opacity: 0;
+    }
+    40% {
+        opacity: 0.6;
+    }
+    100% {
+        letter-spacing: normal;
+        opacity: 1;
+    }
+}
+
+form {
+    text-align: center;
+    margin: auto;
+    width: 250px;
+}
+
+input.error {
+    border: 1px solid red;
+}
+
+label.error {
+    border-radius: .25rem;
+    text-align: center;
+    display: block;
+    color: white;
+    background: red;
+    width: 100%;
+    margin-top: 5px;
+    padding: 0 15px;
+}
+
+.btn {
+    background: #ffe15e;
+    color: #fff;
+    text-align: center;
+    text-shadow:
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000;
+}
+
+.main-menu {
+    display: inline-block;
+    position: absolute;
+    width: 300px;
+    height: 500px;
+    text-align: center;
+    top: 225px;
+    left: 50%;
+    transform: translate(-50%, 0);
+}
+
+.menu-btn {
+    margin-bottom: 15px;
+    text-align: center;
+}
