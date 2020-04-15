@@ -86,7 +86,42 @@ const trail = [
             {type: "coyote", frequency: 20},
             {type: "Dezzy", isMokemon: true, frequency: 3}
         ],
-        length: 96 // seconds
+        length: 57 // seconds
+
+    },
+    {
+        type: 'shop',
+        name: "The Oasis",
+        scenery: [
+            {type: "oasis", frequency: 0},
+            {type: "rock", frequency: 5},
+            {type: "cactus", frequency: 10}
+        ],
+        length: 1,
+        shop: {
+            title: "The Desert Oasis", 
+            text: "Welcome, welcome.  Hope you haven't had to eat too many of your Mokemon.  The moon's getting bigger, isn't it?  Please buy some stuff. ",
+            items: [
+                {name: "mokeballs", price: 20},
+                {name: "grenades", price: 50},
+                {name: "food", price: 1}
+            ]
+        }
+    },
+    {
+        type: 'desert',
+        name: 'More Desert',
+        scenery: [
+            {type: "cactus", frequency: 2},
+            {type: "rock", frequency: 2}
+        ],
+        prey: [
+            {type: "scorpion", frequency: 100},
+            {type: "armadillo", frequency: 50},
+            {type: "coyote", frequency: 20},
+            {type: "Dezzy", isMokemon: true, frequency: 3}
+        ],
+        length: 39 // seconds
 
     },
     {

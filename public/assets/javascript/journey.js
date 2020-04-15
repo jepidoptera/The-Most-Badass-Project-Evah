@@ -177,6 +177,14 @@ const SceneObjects = {
         height: 150,
         width: 150,
         distance: () => 1,
+    }),
+    oasis: new SceneObject ({
+        type: 'trading post',
+        spacing: 0,
+        image: './assets/images/oasis.png',
+        height: 150,
+        width: 150,
+        distance: () => 1,
     })
 }
 
@@ -428,8 +436,8 @@ const events = {
         function: () => {
             victim = player.posse[parseInt(Math.random() * player.posse.length)];
             let damage = Math.floor(Math.random() * 11 + 1)
-            victim.hurt(damage);
             player.messages.push(`${victim.name} suffered ${damage} damage from a falling tree.`);
+            victim.hurt(damage);
             msgBox ("Ouch", `A tree fell on ${victim.name}.`, ":_(")
             // put a picture of the victim in there so we can see how bad they're hurt
             $("#msgText").append(mokePortrait(victim));
@@ -442,8 +450,8 @@ const events = {
         function: () => {
             victim = player.posse[parseInt(Math.random() * player.posse.length)];
             let damage = Math.floor(Math.random() * 11 + 1)
-            victim.hurt(damage);
             player.messages.push(`${victim.name} suffered ${damage} damage from a cactus.`);
+            victim.hurt(damage);
             msgBox ("Ouch", `A cactus fell on ${victim.name}.`, ":_(")
             // put a picture of the victim in there so we can see how bad they're hurt
             $("#msgText").append(mokePortrait(victim));
@@ -846,6 +854,7 @@ function narrate() {
 function arriveAt(location) {
     player.currentLocation = location;
     player.nextLocation = location.next;
+    player.messages.push(`You have reached ${player.currentLocation.name}.`)
     // execute this location's function, if it has one
     if (location.message) {
         msgBox(location.message.title, location.message.text, [{text: location.message.button}])
@@ -900,7 +909,7 @@ function restDialog() {
     clearDialogs();
 
     let restingDialog = $("<div>").attr('id', 'restingDialog').addClass('dialogBox').appendTo($('#canvasArea'))
-    let restParameters = {text: "rest for how long?", name: "rest", min: 0, max: Math.min(Math.floor(player.food / player.foodPerDay), 10), value: 1}
+    let restParameters = {text: "rest for how many days?", name: "rest", min: 0, max: Math.min(Math.floor(player.food / player.foodPerDay), 10), value: 1}
     restingDialog.append(
         $("<form>")
             .attr("id", "restForm")
