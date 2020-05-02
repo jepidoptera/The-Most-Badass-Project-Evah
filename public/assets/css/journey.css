@@ -38,10 +38,10 @@ html, body {
     position: absolute;
     display: block;
     box-sizing: border-box;
-    width: 5vh;
-    height: 5vh;
-    border: 2.5vh solid yellow;
-    border-radius: 2.5vh;
+    width: 5vmin;
+    height: 5vmin;
+    border: 2.5vmin solid yellow;
+    border-radius: 2.5vmin;
 }
 #darkMoon {
     /* a black circle */
