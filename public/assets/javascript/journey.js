@@ -426,6 +426,7 @@ const events = {
         },
         function: () => {
             let berries = Math.floor(Math.random() * 50 + 25)
+            player.messages.push("You scored some berries.")
             msgBox ("Free food!", `You found some random berries worth ${berries} food!`, [{text: "sweet"}, {text: "carry on, then"}]);
             player.food += berries
         }
@@ -503,7 +504,7 @@ const events = {
             msgBox ("Theft", "A thief comes in the night and makes off with: " + loss + ".", [
                 {text: "how unfortunate"}
             ])
-            player.messages.push(`${loss} ${["mokeballs", "grenades"].includes(loss) ? "were" : "was"} lost to a thief.`)
+            player.messages.push(`${loss} ${["mokeballs", "grenades"].includes(theftType) ? "were" : "was"} lost to a thief.`)
         }
     },
     foodLow: {
@@ -773,10 +774,6 @@ function newGame() {
     player.time = 0;
     player.day = 0;
     trail.loadFrom(player.progress);
-    // wait a fraction of a second because canvas doesn't work right away
-    setTimeout(() => {
-        canvas.draw()
-    }, 100);
 }
 
 function gameLoop () {
@@ -811,7 +808,7 @@ function timelyEvents() {
         player.hour = Math.floor(player.time);
         // random disasters
         Object.keys(events).forEach((key) => {
-            if (!paused && events[key].occurs) events[key].function();
+            if (events[key].occurs) events[key].function();
         });
         // mokemon conditions (ebola and so forth)
         player.posse.forEach((mokemon) =>{
@@ -925,7 +922,7 @@ function restDialog() {
     clearDialogs();
 
     let restingDialog = $("<div>").attr('id', 'restingDialog').addClass('dialogBox').appendTo($('#canvasArea'))
-    let restParameters = {text: "rest for how many days?", name: "rest", min: 0, max: Math.min(Math.floor(player.food / player.foodPerDay), 10), value: 1}
+    let restParameters = {text: "rest for how many days?", name: "rest", min: 0, max: Math.min(Math.floor(player.food / player.foodPerDay), 10), number: 1}
     restingDialog.append(
         $("<form>")
             .attr("id", "restForm")
@@ -946,13 +943,11 @@ function restDialog() {
     $("#restForm").submit((event) => {
         event.preventDefault();
         restingDialog.remove();
-        rest(restParameters.value, true)
+        rest(restParameters.number, true)
     });
 }
 
 function shopDialog(shopItems) {
-    let buyItems = {};
-    let cost = 0;
     let shoppingDialog = $("<div>").attr('id', 'shoppingDialog').addClass('dialogBox').appendTo($('#canvasArea'))
 
     shoppingDialog.prepend($("<div>").addClass('msgTitle').text(player.currentLocation.shop.title || `Shopping at ${player.currentLocation.name}`))
@@ -963,37 +958,27 @@ function shopDialog(shopItems) {
                 .append(
                     "<br><br><hr>",
                     ...shopItems.map(item => {
-                        return $("<div>").append(
-                            $("<span>").html(`You have: ${player[item.name]} ${item.name}.  Buy @ $${item.price}:`),
-                            $("<span>").addClass('quantity').attr('id', item.name).text("   0   "),
-                            $("<span>").append(
-                                $("<button>").text("+").click(() => {
-                                    if (!(buyItems[item.name] > item.max) && cost + item.price <= player.money) {
-                                        buyItems[item.name] = (buyItems[item.name] || 0) + 1;
-                                        cost += item.price;
-                                        $(`span#${item.name}.quantity`).text(`   ${buyItems[item.name]}   `);
-                                        $("p#totalCost").text(`Total: $${cost}`);
-                                        $("p#available").text(`Available: $${player.money - cost}`)
-                                    }
-                                    else if (cost + item.price > player.money) {
-                                        $("p#available").css({color: "red"});
-                                        setTimeout(() => {
-                                            $("p#available").css({color: "white"})
-                                        }, 100);
-                                    }
-                                }),
-                                $("<button>").text("-").click(() => {
-                                    if (buyItems[item.name] > 0) {
-                                        buyItems[item.name] -= 1;
-                                        cost -= item.price;
-                                        $(`span#${item.name}.quantity`).text(buyItems[item.name]);
-                                        $("p#totalCost").text(`Total: $${cost}`);
-                                        $("p#available").text(`Available: $${player.money - cost}`)
-                                    }
-                                })
-                            )
-            
-                        )
+                        item.min = 0;
+                        item.max = Math.floor(player.money / item.price);
+                        item.number = 0;
+                        item.text = `You have: ${player[item.name]} ${item.name}.  Buy @ $${item.price}:`;
+                        item.onChange = () => {
+                            // calculate the maximum number of each item you can still afford
+                            let cost = shopItems.reduce((sum, item) => sum + item.number * item.price, 0)
+                            shopItems.forEach(item => {
+                                item.max = Math.floor((player.money - cost) / item.price) + item.number;
+                            })
+                            $("p#available").text(`Available: $${player.money - cost}`)
+                            $("p#totalCost").text(`Total: $${cost}`)
+                        }
+                        item.onRejectChange = () => {
+                            if (item.number < item.min) return;
+                            $("p#available").css({color: "red"});
+                            setTimeout(() => {
+                                $("p#available").css({color: "white"})
+                            }, 100);
+                        }
+                        return numberInput(item)
                     }),
                     "<hr><br>",
                     $("<p>").attr('id', "totalCost").text("Total: $0"),
@@ -1007,10 +992,11 @@ function shopDialog(shopItems) {
                             .addClass('msgbutton')
                             .text("done, pay up")
                             .click(() => {
-                                Object.keys(buyItems).forEach(item => {
-                                    player[item] = (player[item] || 0) + buyItems[item];
+                                Object.keys(shopItems).forEach(key => {
+                                    let item = shopItems[key];
+                                    player[item.name] = (player[item.name] || 0) + item.number;
+                                    player.money -= item.number * item.price;
                                 })
-                                player.money -= cost;
                                 unpause();
                                 shoppingDialog.remove(); 
                             })
@@ -1048,106 +1034,6 @@ function options () {
         $("#shopButton").hide()
 }
 
-function mokePortrait (moke) {
-    let healthColor = `rgb(${768 - moke.health / (moke.maxHealth || 10) * 768}, ${(moke.health / (moke.maxHealth || 10) - 1/3) * 768}, 0)`
-    let portrait = $("<div>").addClass('thumbnailContainer').append(
-        $("<div>")
-            .addClass('mokeIcon')
-            .append(
-                $(moke.img).css({
-                    width: `${(moke.width > moke.height ? 1 : moke.width / moke.height) * 4.5}vmin`, 
-                    height: `${(moke.height > moke.width ? 1 : moke.height / moke.width) * 4.5}vmin`,
-                    display: "block",
-                    position: "relative",
-                    top: "50%",
-                    left: "50%",
-                    transform: "translate(-50%, -50%)"
-                }))
-            .click((event) => {
-                $("#mokeStats").empty();
-                if (!$(event.currentTarget).hasClass("selected")){
-                    $("#mokeStats").append(mokeStats(moke));
-                    $(".mokeIcon").removeClass("selected");
-                    $(event.currentTarget).addClass("selected");
-                }
-                else {
-                    $(".mokeIcon").removeClass("selected");
-                }
-            })
-            .hover(() => {
-                    // mouseenter
-                        $("#mokeStats").empty().append(mokeStats(moke));
-                        if (!$(event.currentTarget).hasClass("selected")) $(".mokeIcon").removeClass("selected");
-                    }, (event) => {
-                    // mouseleave
-                        if (!$(event.currentTarget).hasClass("selected")) $("#mokeStats").empty();
-                }),
-        $("<div>").css({
-            width: `${moke.health / (moke.maxHealth || 10) * 4.5}vmin`,
-            height: "5px",
-            position: "relative",
-            bottom: 0,
-            "background-color": healthColor,
-        }))
-    return portrait;
-}
-
-function mokeStats (moke) {
-    return [
-        $("<p>").text(moke.name),
-        $("<p>").text(`Health: ${Math.floor(moke.health * 10) / 10}/${moke.maxHealth}`),
-        ...moke.conditions.map(condition => $("<p>").html("<span style='color:red'> has " + condition.name + "</span>")),
-        $("<p>").text(moke.description)
-    ]
-}
-
-function numberInput(inputParams) {
-    let numberInput = $("<div>").html(`${inputParams.text}: `)
-        .addClass("numberInputLine")
-        .append($("<span>")
-            .addClass("numberInput")
-            .append($("<input>")
-                .attr("id", `${inputParams.name}Input`)
-                .addClass("numberInput_text")
-                .val(inputParams.value))
-                .change(() => {
-                    let self = $(`#${inputParams.name}Input`)
-                    if (self.val() > inputParams.max) self.val(inputParams.max);
-                    if (self.val() < inputParams.min) self.val(inputParams.min);
-                    inputParams.value = self.val();
-                })
-            .append($("<span>")
-                .addClass("numberInput_buttonContainer")
-                .append(
-                    $("<div>")
-                        .attr("id", `${inputParams.name}Up`)
-                        .addClass("numberInput_button")
-                        .append($("<span>").addClass("numberInput_button_text").text("▲"))
-                        .click(() => {
-                            inputParams.value = Math.min(parseInt(inputParams.value) + 1, inputParams.max);
-                            $(`#${inputParams.name}Input`).val(inputParams.value);
-                        }),
-                    $("<div>")
-                    .attr("id", `${inputParams.name}Up`)
-                        .addClass("numberInput_button")
-                        .append($("<span>").addClass("numberInput_button_text").text("▼"))
-                        .click(() => {
-                            inputParams.value = Math.max(parseInt(inputParams.value) - 1, inputParams.min);
-                            $(`#${inputParams.name}Input`).val(inputParams.value);
-                        })
-                )
-            )
-        )
-    return numberInput;
-// `<span class="numberInput">
-//     <span class="numberInput_text" id="${inputTo.name}"></span>
-//     <span class="numberInput_buttonContainer">
-//         <div class="numberInput_button" id="${inputTo.name}Up"><span class="numberInput_button_text">▲</span></div>
-//         <div class="numberInput_button" id="${inputTo.name}Down"><span class="numberInput_button_text">▼</span></div>
-//     </span>
-// </span>
-// `
-}
 
 function closeOptions() {
     $("#optionsMenu").hide();
