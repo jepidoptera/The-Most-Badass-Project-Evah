@@ -899,6 +899,7 @@ function rest(days, showPosse) {
     if (restInterval) clearInterval(restInterval);
     restInterval = setInterval(() => {
         if (msgBoxActive) return;
+        pause();
         if (showPosse) mokePosseHealthMonitor.empty().append(
             player.posse.map(moke => mokePortrait(moke))
         )
@@ -1067,6 +1068,8 @@ function win () {
 }
 
 function lose() {
+    if (player.resting) clearInterval(restInterval);
+    $(".dialogBox").hide();
     pause();
     $("#sky").css({"background-color": "black"});
     setTimeout(() => {
@@ -1075,7 +1078,7 @@ function lose() {
     setTimeout(() => {
         msgBox("The End", `The day turns to night.  Madness sweeps over the land.  From across the ${player.currentLocation.type}, wild Mokemon come screaming from all directions.  They fall upon you and tear your hapless corpse to shreds.  You did not reach the legendary city.  You did not survive.`, 
         [{text: "¯\\_(ツ)_/¯", function: () => {window.location.href = "/"}}])
-    }, 8000);
+    }, 9370);
 }
 
 function weightedRandom(nums) {
