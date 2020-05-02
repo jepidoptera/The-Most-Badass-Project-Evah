@@ -39,6 +39,7 @@ function saveGame() {
         url: '/save',
         data: {data: JSON.stringify({
             ...player,
+            isLoaded: false,
             currentLocation: player.currentLocation.name,
             posse: player.posse.map(moke => {return {
                 type: moke.type,
