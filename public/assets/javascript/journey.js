@@ -331,43 +331,45 @@ class Canvas {
 }
 
 
+
 const events = {
     disease: {
-        contagion: 0,
+        pathogens: [
+            {
+                name: "ebola",
+                rarity: 100,
+                duration: {
+                    base: 50,
+                    random: 10,
+                    immuneDependent: 70
+                },
+                get contagionLevel() {player.posse.reduce((sum, moke) => 
+                    sum + moke.conditions.reduce((sum, condition) => 
+                        sum + (condition.name === "ebola" ? 1.5: 0) + (condition.name === "quarantine" ? -0.8: 0), 0), 0
+                    ) + (trail.currentLocation.type === "jungle" ? 1 : 0)
+                }
+            }, {
+                name: "sars",
+                rarity: 500,
+                duration: { // in hours
+                    base: 80,
+                    random: 20,
+                    immuneDependent: 100
+                },
+                get contagionLevel() {return player.posse.reduce((sum, moke) => 
+                    sum + moke.conditions.reduce((sum, condition) => 
+                        sum + (condition.name === "sars" ? 7.5: 0) + (condition.name === "quarantine" ? -0.8: 0), 0), 1
+                    )                 
+                }   
+            }
+        ],
         get occurs() {
             // every morning at dawn
             // return posse.length > 0 && player.time === 0;
             // occasionally
-            let diseases = [
-                {
-                    name: "ebola",
-                    rarity: 100,
-                    duration: {
-                        base: 50,
-                        random: 10,
-                        immuneDependent: 70
-                    },
-                    contagion: player.posse.reduce((sum, moke) => 
-                        sum + moke.conditions.reduce((sum, condition) => 
-                            sum + (condition.name === "ebola" ? 1.5: 0) + (condition.name === "quarantine" ? -0.8: 0), 0), 0
-                        ) + (trail.currentLocation.type === "jungle" ? 1 : 0)
-                }, {
-                    name: "sars",
-                    rarity: 500,
-                    duration: { // in hours
-                        base: 80,
-                        random: 20,
-                        immuneDependent: 100
-                    },
-                    contagion: player.posse.reduce((sum, moke) => 
-                        sum + moke.conditions.reduce((sum, condition) => 
-                            sum + (condition.name === "sars" ? 7.5: 0) + (condition.name === "quarantine" ? -0.8: 0), 0), 1
-                        )                    
-                }
-            ]
             events.disease.name = "";
-            diseases.forEach(disease => {
-                if (disease.contagion > Math.random() * disease.rarity) {
+            events.disease.pathogens.forEach(disease => {
+                if (disease.contagionLevel > Math.random() * disease.rarity) {
                     events.disease.name = disease.name;
                     events.disease.duration = disease.duration;
                 }
@@ -416,6 +418,16 @@ const events = {
             victim = player.posse[weightedRandom(player.posse.map(moke => 1 / moke.health))];
             victim.die("was slain by a hungry bear");
             msgBox ("Death", victim.name + " was eaten by a bear.", "damn")
+        }
+    },
+    berries: {
+        get occurs() {
+            return trail.currentLocation.type === "forest" && parseInt(Math.random() * 100) == 0;
+        },
+        function: () => {
+            let berries = Math.floor(Math.random() * 50 + 25)
+            msgBox ("Free food!", `You found some random berries worth ${berries} food!`, [{text: "sweet"}, {text: "carry on, then"}]);
+            player.food += berries
         }
     },
     yeti: {
@@ -769,6 +781,10 @@ function newGame() {
 
 function gameLoop () {
     // time does pass
+    if (!player.isLoaded) {
+        canvas.draw();
+        player.isLoaded = true;
+    }
     if (paused) return;
 
     player.time += timeSpeed;
