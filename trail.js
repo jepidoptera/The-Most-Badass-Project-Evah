@@ -43,7 +43,7 @@ const trail = [
             items: [
                 {name: "mokeballs", price: 20},
                 {name: "grenades", price: 50},
-                {name: "food", price: 1}
+                {name: "food", price: 1, increment: 10}
             ]
         }
     },
@@ -104,7 +104,7 @@ const trail = [
             items: [
                 {name: "mokeballs", price: 20},
                 {name: "grenades", price: 50},
-                {name: "food", price: 1}
+                {name: "food", price: 1, increment: 10}
             ]
         }
     },
