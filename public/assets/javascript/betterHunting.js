@@ -744,7 +744,9 @@ $(document).ready(() => {
 
     loadTrail(trail => {
         loadPlayer(p => {
-            player = p;
+            Object.keys(p).forEach(key => {
+                player[key] = p[key];
+            })
             if (player.mokeballs === undefined) player.mokeballs = 30;
             if (player.grenades === undefined) player.grenades = 12;
             if (player.time === undefined) player.time = 0;
