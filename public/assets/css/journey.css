@@ -52,7 +52,7 @@ html, body {
     height: 4vh;
     border: 2vh solid black;
     border-radius: 2vh;
-    box-shadow: 0 0 .5vmin .5vmin white;
+    box-shadow: 0 0 2vmin .5vmin #BB7700;
     background-color: black;
 }
 #ground {
