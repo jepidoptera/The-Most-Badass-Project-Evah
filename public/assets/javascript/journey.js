@@ -1136,6 +1136,7 @@ function lose() {
     $(".dialogBox").hide();
     pause();
     $("#sky").css({"background-color": "black"});
+    $("#darkMoon").css({"box-shadow": "0 0 2.5vmin 2.5vmin white"});
     setTimeout(() => {
         $("#sky").css("background-image", "url('./assets/images/thunderstorm.jpg')")
     }, 6000);

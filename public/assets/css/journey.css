@@ -54,6 +54,7 @@ html, body {
     border-radius: 2vh;
     box-shadow: 0 0 2vmin .5vmin #BB7700;
     background-color: black;
+    transition: box-shadow 5s;
 }
 #ground {
     background-color: green;
