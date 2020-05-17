@@ -89,6 +89,8 @@
     border-left: 1px solid white;
     padding: 10px;
     box-sizing: border-box;
+    overflow-y: scroll;
+
 }
 
 #mokeStats {
