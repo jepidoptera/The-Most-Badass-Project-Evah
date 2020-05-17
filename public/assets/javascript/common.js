@@ -1,8 +1,41 @@
-let player = {};
+class Player{
+    constructor() {
+        // give player initial stats
+        this.food = 120;
+        this.money = 1000;
+        this.mokeballs = 27;
+        this.grenades = 9;
+        this.speed = 4;
+        this.name = this.name || 'simone';
+        // reset to beginning of trail
+        this.progress = 1;
+        this.time = 0;
+        this.day = 0;
+        this.messages = ["You set off on the trail! Next stop: the forest of doom."];
+        this.posse = [{name: 'dezzy'}, {name: 'apismanion'}, {name: 'mallowbear'}, {name: 'marlequin'}, {name: 'wingmat'}];
+    }
+    get message() {
+        return this.messages[this.messages.length];
+    }
+    uploadJson() {
+        return {
+            ...player,
+            isLoaded: false,
+            currentLocation: player.currentLocation.name,
+            posse: player.posse.map(moke => {return {
+                type: moke.type,
+                name: moke.name,
+                health: moke.health,
+                conditions: moke.conditions
+            }})
+        }
+    }
+}
+let player = new Player();
 let paused = false;
 let msgBoxActive = false;
 
-function msgBox(title, text, buttons = [{text: "ok"}]) {
+function msgBox(title, text, buttons = [{text: "ok", function: () => {}}]) {
     if (pause) pause();
     msgBoxActive = true;
     if (!text) {
@@ -37,18 +70,7 @@ function saveGame() {
     $.ajax({
         method: "POST",
         url: '/save',
-        data: {data: JSON.stringify({
-            ...player,
-            isLoaded: false,
-            currentLocation: player.currentLocation.name,
-            posse: player.posse.map(moke => {return {
-                type: moke.type,
-                name: moke.name,
-                health: moke.health,
-                conditions: moke.conditions
-            }})
-        })
-        }
+        data: {data: JSON.stringify(player.uploadJson())}
     })
 }
 
