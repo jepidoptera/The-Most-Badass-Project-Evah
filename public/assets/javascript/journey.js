@@ -350,7 +350,7 @@ const events = {
                 }
             }, {
                 name: "sars",
-                rarity: 500,
+                rarity: 50,
                 duration: { // in hours
                     base: 80,
                     random: 20,
@@ -397,12 +397,12 @@ const events = {
             player.messages.push(`${victim.name} caught ${events.disease.name}.`)
             msgBox ("Outbreak!", `${victim.name} has ${events.disease.name}.`, [{
                 text: "euthanize",
-                function: () => victime.die("had to be put down")
+                    function: () => victim.die("had to be put down")
             },{
                 text: "rest and quarantine",
                 function: () => {
                     player.posse.forEach(moke => moke.conditions.push({name: 'quarantine', timeRemaining: illnessLength}))
-                    rest(illnessLength / 24, true);
+                    rest(illnessLength / 24, true, () => victim.alive);
                 }
             },{
                 text: "ruthlessly carry forward"
@@ -485,14 +485,18 @@ const events = {
     },
     thief: {
         get occurs() {
-            return player.day > 0 && player.hour === 0 && Math.random() * 10 < 1;
+            return player.day > 0 && player.hour === 0 && Math.random() * 10 < 1 && !events.thief.alreadyHappening;
         },
+        // don't allow a thief to come while you're in the middle of chasing a thief
+        // would just be messy
+        alreadyHappening: false,
         function: () => {
             let theftType = ["food", "mokeballs", "money", "mokemon"][Math.floor(Math.random() * 4)];
             let loss = "";
+            let victim = null;
             if (theftType === "mokemon") {
                 victim = player.posse[parseInt(Math.random() * player.posse.length)];
-                victim.die("was stolen by a villainous theif");    
+                if (!victim) return;
                 loss = victim.name;
             }
             else {
@@ -502,9 +506,76 @@ const events = {
                 loss = lossAmount + " " + theftType;
             }
             msgBox ("Theft", "A thief comes in the night and makes off with: " + loss + ".", [
-                {text: "how unfortunate"}
+                {text: "how unfortunate", function: concludeChase},
+                {text: "give chase!", function: () => {
+                    events.thief.alreadyHappening = true;
+                    giveChase();
+                }}
             ])
-            player.messages.push(`${loss} ${["mokeballs", "grenades"].includes(theftType) ? "were" : "was"} lost to a thief.`)
+            function giveChase() {
+                rest(1, false, undefined, () => {
+                    pause();
+                    let caught = Math.floor(Math.random() * 1.5);
+                    let escaped = Math.floor(Math.random() * 1.2);
+                    if (caught) {
+                        msgBox('gotcha', `You caught the thief and administered swift justice!  ${loss} returned!`)
+                        loss = 0;
+                        concludeChase();
+                    }
+                    else if (escaped) {
+                        msgBox('the trail has gone cold', 'The thief escaped your pursuit.');
+                        concludeChase();
+                    }
+                    else {
+                        msgBox('no dice', 'The thief has evaded you!  Continue pursuit?', [
+                            {text: "yes!", function: giveChase},
+                            {text: "no :(", function: concludeChase}
+                        ])
+                    }
+                });
+            }
+            function concludeChase() {
+                events.thief.alreadyHappening = false;
+                if (loss) {
+                    if (theftType === "mokemon") {
+                        victim.die("was stolen by a villainous theif");    
+                    }
+                    else {
+    
+                    }
+                    player.messages.push(`${loss} ${["mokeballs", "grenades"].includes(theftType) ? "were" : "was"} lost to a thief.`)
+                }
+            }
+        }
+    },
+    trader: {
+        get occurs() {
+            return player.day > 0 && Math.random() * 240  < 1;
+        },
+        function: () => {
+            let mokeNames = player.posse.map(moke => moke.name.toLowerCase());
+            let offer = ['dezzy', 'apismanion', 'mallowbear', 'marlequin', 'wingmat', 'zyant', 'shadowdragon']
+                .filter(moke => !mokeNames.includes(moke));
+            if (offer.length > 0) offer = offer[Math.floor(Math.random() * offer.length)];
+            else return;
+            let minPrice = {food: 100, mokeballs: 12, grenades: 5, money: 200}
+            let possibleTrades = Object.keys(minPrice).filter(item => player[item] >= minPrice[item])
+            if (possibleTrades.length == 0) {
+                // you have nothing to offer :(
+                return;
+            }
+            let trade = {
+                item: possibleTrades[Math.floor(Math.random() * possibleTrades.length)],
+            }
+            trade.quantity = Math.min(player[trade.item], minPrice[trade.item] + Math.floor(Math.random() * minPrice[trade.item] * 3));
+            msgBox("Can you refuse this offer?", `A trader passes by with a ${offer} for sale, asking ${trade.quantity} ${trade.item} in exchange.  Do you accept?`, [
+                {text: "yes, please",
+                function: () => {
+                    player.posse.push(new mokePosse(offer));
+                    player[trade.item] -= trade.quantity;
+                }},
+                {text: "nope"}
+            ])
         }
     },
     foodLow: {
@@ -514,7 +585,7 @@ const events = {
         function: () => {
             let daysRemaining = parseInt(player.food / player.foodPerDay) + 1;
             player.foodLow = true;
-            player.messages.push(`You are low on food.  You will starve in: ${daysRemaining} days.`)
+            player.messages.push(`You are low on food.  It will be gone in: ${daysRemaining} days.`)
         }
     },
     starve: {
@@ -528,15 +599,22 @@ const events = {
                 ])
             }
             else {
-                msgBox("starvation", "You are out of food! Who will you eat to survive?", player.posse.map(moke => {
-                    return {
-                        text: `${moke.name} (${moke.foodValue} food, eats ${moke.hunger}/day)`,
-                        function: () => {
-                            player.food += moke.foodValue;
-                            moke.die("had to be sacrificed for the greater good"); 
-                        }
-                    }
-                }))
+                // msgBox("starvation", "You are out of food! Who will you eat to survive?", player.posse.map(moke => {
+                //     return {
+                //         text: `${moke.name} (${moke.foodValue} food, eats ${moke.hunger}/day)`,
+                //         function: () => {
+                //             player.food += moke.foodValue;
+                //             moke.die("had to be sacrificed for the greater good"); 
+                //         }
+                //     }
+                // }))
+                if (player.currentMessage != "You have no food!") {
+                    player.messages.push("You have no food!");
+                }
+                player.posse.forEach(moke => {
+                    moke.hurt(moke.hunger / 100)
+                })
+                player.food = 0;
             }
         }
     },
@@ -553,7 +631,7 @@ const events = {
 
 const effects = {
     ebola: (victim) => { victim.hurt(.01 * victim.maxHealth) },
-    sars: (victim) => { victim.hurt(.005 * victim.maxHealth) },
+    sars: (victim) => { victim.hurt(.05 * victim.maxHealth) },
     rest: (moke) => { 
         moke.health = Math.min(moke.health + moke.maxHealth / 240, moke.maxHealth) 
     } // ten days to fully heal
@@ -564,6 +642,7 @@ class mokePosse {
         this._hop = player.posse.length * .37;
         this.name = name.slice(0, 1).toUpperCase() + name.slice(1).toLowerCase();
         this.conditions = conditions;
+        this.alive = true;
         // this.x = posse.length * 60 + canvas.width / 12;
         switch (this.name) {
         case "Dezzy":
@@ -579,7 +658,7 @@ class mokePosse {
             this.height = 50;
             this.width = 40;
             this.foodValue = 200;
-            this.hunger = 10;
+            this.hunger = 17;
             this.maxHealth = 20;
             this.immuneResponse = .3;
             this.description = "Strong, sturdy, and stoic.  Eats voraciously.  Susceptible to disease."
@@ -624,8 +703,8 @@ class mokePosse {
             this.height = 70;
             this.width = 70;
             this.foodValue = 350;
-            this.hunger = 20;
-            this.maxHealth = 20;
+            this.hunger = 25;
+            this.maxHealth = 25;
             this.immuneResponse = 1;
             this.description = "Part dragon, part dog, part mantis, pretty big, definitely worth a lot of money.  Eats a crapload, so make sure you've got food."
             break;
@@ -674,6 +753,7 @@ class mokePosse {
         }]);
         player.messages.push(`${this.name} ${cause || "died"}.`)
         player.posse.splice(this.index, 1);
+        this.alive = false;
         player.posse.forEach((moke, n) => {
             moke.index = n;
         })        
@@ -725,7 +805,9 @@ $(document).ready(() => {
                         ) : [])
                 })
             }))
-            player = playerData;
+            Object.keys(playerData).forEach(key => {
+                player[key] = playerData[key];
+            })
             if (!player.progress) { 
                 newGame();
             }
@@ -740,15 +822,6 @@ $(document).ready(() => {
                 player.posse.push(new mokePosse(moke.name, moke.health, moke.conditions));
             })
         
-            player = {
-                ...player,
-                get foodPerDay() {
-                    return 5 + player.posse.reduce((sum, moke) => sum + moke.hunger, 0)
-                },
-                get currentMessage() {
-                    return player.messages[player.messages.length - 1]
-                }
-            }
             gameInterval = setInterval(gameLoop, 1000 / canvas.metrics.frameRate);
         });
     })
@@ -756,23 +829,10 @@ $(document).ready(() => {
 })
 
 function newGame() {
-    // give player initial stats
-    player.food = 99;
-    player.money = 1000;
-    player.mokeballs = 27;
-    player.grenades = 9;
-    player.speed = 4;
-    player.name = player.name || 'simone';
-    // reset to beginning of trail
-    player.progress = 1;
-    player.messages = ["You set off on the trail! Next stop: the forest of doom."];
-    player.currentLocation = trail.locations[1];
-    // construct a new party 
-    player.posse = [{name: 'dezzy'}, {name: 'apismanion'}, {name: 'mallowbear'}, {name: 'marlequin'}, {name: 'wingmat'}];
+    player = new Player();
+    Player.currentLocation = trail.locations[1];
     // // remove all background objects
     trail.scenery = [];
-    player.time = 0;
-    player.day = 0;
     trail.loadFrom(player.progress);
 }
 
@@ -886,11 +946,14 @@ function arriveAt(location) {
 }
 
 let restInterval = null;
-function rest(days, showPosse) {
+let restingHours = 0;
+function rest(days, showPosse, conditionFunction, callback) {
     pause();
-    let hours = days * 24;
+    conditionFunction = conditionFunction || (() => true);
+    restingHours = Math.max(days * 24, restingHours);
     player.posse.forEach(moke => {
-        moke.conditions.push({name: "rest", timeRemaining: hours})
+        moke.conditions = moke.conditions.filter(condition => condition.name != "rest");
+        moke.conditions.push({name: "rest", timeRemaining: restingHours})
     })
     player.resting = true;
     $(".healthMonitor").remove();
@@ -904,15 +967,16 @@ function rest(days, showPosse) {
             player.posse.map(moke => mokePortrait(moke))
         )
 
-        hours --;
+        restingHours --;
         player.time ++;
         timelyEvents();
 
-        if (hours <= 1) {
+        if (restingHours <= 1 || !conditionFunction()) {
             clearInterval(restInterval);
             mokePosseHealthMonitor.remove();
             player.resting = false;
             unpause();
+            if (callback) callback();
         }    
     }, 43 - days * 2);
 }
