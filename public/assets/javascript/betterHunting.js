@@ -454,7 +454,7 @@ class Animal extends Character {
             this.randomMotion = 6;
         }
         else if (type === "porcupine") {
-            this.frameCount = {x: 1, y: 2};
+            this.frameCount = {x: 2, y: 2};
             this.size = Math.random() * .2 + .5;
             this.width = this.size * 1.15;
             this.height = this.size;
