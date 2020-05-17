@@ -14,8 +14,11 @@ class Player{
         this.messages = ["You set off on the trail! Next stop: the forest of doom."];
         this.posse = [{name: 'dezzy'}, {name: 'apismanion'}, {name: 'mallowbear'}, {name: 'marlequin'}, {name: 'wingmat'}];
     }
-    get message() {
-        return this.messages[this.messages.length];
+    get foodPerDay() {
+        return 5 + player.posse.reduce((sum, moke) => sum + moke.hunger, 0)
+    }
+    get currentMessage() {
+        return player.messages[player.messages.length - 1]
     }
     uploadJson() {
         return {
