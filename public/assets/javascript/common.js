@@ -2,7 +2,7 @@ class Player{
     constructor() {
         // give player initial stats
         this.food = 120;
-        this.money = 1000;
+        this.money = 1550;
         this.mokeballs = 27;
         this.grenades = 9;
         this.speed = 4;
