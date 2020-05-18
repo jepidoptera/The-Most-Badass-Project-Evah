@@ -704,6 +704,7 @@ class mokePosse {
             this.maxHealth = 25;
             this.immuneResponse = 1;
             this.description = "Part dragon, part dog, part mantis, pretty big, definitely worth a lot of money.  Eats a crapload, so make sure you've got food."
+            this.img = $("<img>").attr('src', './assets/images/mokemon/shadowDragon_thumbnail.png')[0];
             break;
 
         }
@@ -713,7 +714,7 @@ class mokePosse {
         this.z = 0;
         this.health = health || this.maxHealth;
 
-        this.img = $("<img>").attr('src', './assets/images/mokemon/' + name.toLowerCase() + ".png")[0];
+        if (!this.img) this.img = $("<img>").attr('src', './assets/images/mokemon/' + name.toLowerCase() + ".png")[0];
         this.bounceHeight = this.height / 2;
         this.index = player.posse.length;
     }
@@ -1112,7 +1113,7 @@ function win () {
     player.finalScore = Object.keys(pointsValue).reduce((sum, item) => sum + Math.floor(player[item] * pointsValue[item]), 0);
     $("#msgText").append(
         ...player.posse.map(moke => {
-            let mokePoints = Math.floor(50 * moke.health / moke.maxHealth + 50);
+            let mokePoints = Math.floor(100 * moke.health / moke.maxHealth + 100);
             player.finalScore += mokePoints;
             return $("<p>").append(
                 mokePortrait(moke),
