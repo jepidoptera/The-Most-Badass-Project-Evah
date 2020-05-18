@@ -345,12 +345,12 @@ const events = {
                 },
                 get contagionLevel() {player.posse.reduce((sum, moke) => 
                     sum + moke.conditions.reduce((sum, condition) => 
-                        sum + (condition.name === "ebola" ? 1.5: 0) + (condition.name === "quarantine" ? -0.8: 0), 0), 0
+                        sum + (condition.name === "ebola" ? 1.5: 0) + (condition.name === "quarantine" ? -1.25: 0), 0), 0
                     ) + (trail.currentLocation.type === "jungle" ? 1 : 0)
                 }
             }, {
                 name: "sars",
-                rarity: 50,
+                rarity: 500,
                 duration: { // in hours
                     base: 80,
                     random: 20,
@@ -358,15 +358,12 @@ const events = {
                 },
                 get contagionLevel() {return player.posse.reduce((sum, moke) => 
                     sum + moke.conditions.reduce((sum, condition) => 
-                        sum + (condition.name === "sars" ? 7.5: 0) + (condition.name === "quarantine" ? -0.8: 0), 0), 1
+                        sum + (condition.name === "sars" ? 7.5: 0) + (condition.name === "quarantine" ? -7.2: 0), 0), 1
                     )                 
                 }   
             }
         ],
         get occurs() {
-            // every morning at dawn
-            // return posse.length > 0 && player.time === 0;
-            // occasionally
             events.disease.name = "";
             events.disease.pathogens.forEach(disease => {
                 if (disease.contagionLevel > Math.random() * disease.rarity) {
@@ -550,7 +547,7 @@ const events = {
     },
     trader: {
         get occurs() {
-            return player.day > 0 && Math.random() * 240  < 1;
+            return player.day > 0 && Math.random() * 360  < 1;
         },
         function: () => {
             let mokeNames = player.posse.map(moke => moke.name.toLowerCase());
@@ -568,7 +565,7 @@ const events = {
                 item: possibleTrades[Math.floor(Math.random() * possibleTrades.length)],
             }
             trade.quantity = Math.min(player[trade.item], minPrice[trade.item] + Math.floor(Math.random() * minPrice[trade.item] * 3));
-            msgBox("Can you refuse this offer?", `A trader passes by with a ${offer} for sale, asking ${trade.quantity} ${trade.item} in exchange.  Do you accept?`, [
+            msgBox("Can you refuse this offer?", `A wandering Mokemon trader passes by with a ${offer} for sale, asking ${trade.quantity} ${trade.item} in exchange.  Do you accept?`, [
                 {text: "yes, please",
                 function: () => {
                     player.posse.push(new mokePosse(offer));
@@ -631,7 +628,7 @@ const events = {
 
 const effects = {
     ebola: (victim) => { victim.hurt(.01 * victim.maxHealth) },
-    sars: (victim) => { victim.hurt(.05 * victim.maxHealth) },
+    sars: (victim) => { victim.hurt(.005 * victim.maxHealth) },
     rest: (moke) => { 
         moke.health = Math.min(moke.health + moke.maxHealth / 240, moke.maxHealth) 
     } // ten days to fully heal
