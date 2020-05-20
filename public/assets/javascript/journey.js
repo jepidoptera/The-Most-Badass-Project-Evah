@@ -13,6 +13,7 @@ var timeSpeed = 0.05;
 var canvas;
 var gameInterval;
 const playerName = "{{name}}"
+const daysTilEclipse = 37
 
 var trail;
 
@@ -887,11 +888,11 @@ function astralMovements() {
     var y = Math.cos(Math.PI * (0.5 + player.time / 24)) * 40 + 40;
     $("#sun").css({'top': y + '%', 'left': x + '%'});
     // the dark moon. should be at the same place as the sun on day 30 at noon
-    let z = (player.day * 24 + player.time) ** 2 / 571536;
+    let z = (player.day * 24 + player.time) ** 2 / (daysTilEclipse * 24 + 12) ** 2; // 571536;
     x = -Math.sin(Math.PI * (0.333333 + (player.time + 12) / 72 + (player.day % 3) / 3)) * (25 + 25 * z) + 50;
     y = Math.cos(Math.PI * (0.333333 + (player.time + 12) / 72 + (player.day % 3) / 3)) * (40 * z) + 40;
     $("#darkMoon").css({'top': y + '%', 'left': x + '%', 'width': `${2+3*z}vmin`, 'height': `${2+3*+z}vmin`, 'border-width': `${1+z*1.5}vmin`, 'border-radius': `${1+z*1.5}vmin`});
-    if (player.day === 31 && player.hour === 12) {
+    if (player.day === daysTilEclipse && player.hour === 12) {
         lose();
     }
 }
