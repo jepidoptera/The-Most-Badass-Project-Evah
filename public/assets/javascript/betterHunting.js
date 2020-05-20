@@ -751,6 +751,7 @@ $(document).ready(() => {
             if (player.grenades === undefined) player.grenades = 12;
             if (player.time === undefined) player.time = 0;
             if (player.food === undefined) player.food = 0;
+            player.hour = 0;
 
             let location = trail[trail.map(location => location.name).indexOf(player.currentLocation || "The Forest of Doom")];
             landImage = $("<img>").attr('src', `./assets/images/land tiles/${location.type}.png`)[0]
@@ -786,8 +787,8 @@ $(document).ready(() => {
 
             // count down til dark
             function timeDown() {
-                player.time += 1;
-                hoursTilDark = parseInt((24 - player.time) / 2); 
+                player.hour += 1;
+                hoursTilDark = parseInt(12 - player.hour); 
                 $("#time").text('Hours til dark: '+ hoursTilDark);
                 if (hoursTilDark == 0) {
                     player.messages.push(`You scored ${hunter.food} food while hunting.`);
