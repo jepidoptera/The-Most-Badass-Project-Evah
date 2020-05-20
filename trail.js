@@ -24,7 +24,7 @@ const trail = [
         length: 15,
         message: {
             title: 'Your journey begins', 
-            text: "Orepoke, once the world's greatest city, is now wracked by devastating epidemics of cholera and dysentery, as well as terrible shortages of food, wagon axles, and bullets.  Furthermore, the prophets foretell that on Februne the sixth, the Sun will be eclipsed by the dark moon Plutanus, and madness will grip the land.  Only the legendary city of Pokegonemon has the technology to weather the coming storm.  So taking your surviving Mokemon™, you set off on the road...",
+            text: "Orepoke, once the world's greatest city, is now wracked by devastating epidemics of cholera and dysentery, as well as terrible shortages of food, wagon axles, and bullets.  Furthermore, the prophets foretell that on Februne the twelfth, the Sun will be eclipsed by the dark moon Plutanus, and madness will grip the land.  Only the legendary city of Pokegonemon has the technology to weather the coming storm.  So taking your surviving Mokemon™, you set off on the road...",
             button: "begin"
         }
     },
