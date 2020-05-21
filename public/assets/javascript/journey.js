@@ -385,6 +385,7 @@ const events = {
             let illnessLength = events.disease.duration.base 
                 + Math.random() * events.disease.duration.random 
                 + Math.random() * events.disease.duration.immuneDependent / victim.immuneResponse
+            let illnessName = events.disease.name;
 
             // there's not much you can do but rest and hope
             victim.conditions.push ({
@@ -392,15 +393,20 @@ const events = {
                 type: 'disease', 
                 timeRemaining: illnessLength
             });
-            player.messages.push(`${victim.name} caught ${events.disease.name}.`)
-            msgBox ("Outbreak!", `${victim.name} has ${events.disease.name}.`, [{
+            player.messages.push(`${victim.name} caught ${illnessName}.`)
+            msgBox ("Outbreak!", `${victim.name} has ${illnessName}.`, [{
                 text: "euthanize",
                     function: () => victim.die("had to be put down")
             },{
                 text: "rest and quarantine",
                 function: () => {
                     player.posse.forEach(moke => moke.conditions.push({name: 'quarantine', timeRemaining: illnessLength}))
-                    rest(illnessLength / 24, true, () => victim.alive);
+                    rest(illnessLength / 24, true, () => victim.alive, () => {
+                        if (victim.alive) {
+                            msgBox(`${victim.name} has recovered from ${illnessName}.`)
+                            player.messages.push(`${victim.name} survived ${illnessName}.`)
+                        }
+                    });
                 }
             },{
                 text: "ruthlessly carry forward"
@@ -449,7 +455,7 @@ const events = {
             let damage = Math.floor(Math.random() * 11 + 1)
             player.messages.push(`${victim.name} suffered ${damage} damage from a falling tree.`);
             victim.health = Math.max(victim.health - damage, 0);
-            msgBox ("Ouch", `A cactus fell on ${victim.name}.`, [{text: ":_(", function: () => {
+            msgBox ("Ouch", `A tree fell on ${victim.name}.`, [{text: ":_(", function: () => {
                 victim.health += damage;
                 victim.hurt(damage);
             }}])
@@ -482,9 +488,23 @@ const events = {
             victim = player.posse[parseInt(Math.random() * player.posse.length)];
             victim.hurt(1);
             player.messages.push(`${victim.name} was stung by a scorpion.`);
-            msgBox ("Venemous wildlife", `${victim.name} was stung by a scorpion.`, "That's how it goes sometimes")
+            msgBox ("Venemous wildlife", `${victim.name} was stung by a scorpion${victim.alive ? "" : " and died"}.`, "That's how it goes sometimes")
             // put a picture of the victim in there so we can see how bad they're hurt
             $("#msgText").append(mokePortrait(victim));
+        }
+    },
+    sandstorm: {
+        get occurs() {
+            return player.posse.length > 0 && trail.currentLocation.type === "desert" && parseInt(Math.random() * 200) == 0;
+        },
+        function: () => {
+            $("#canvasArea").css({"filter": "sepia(0.5) brightness(1.5)"})
+            msgBox('delays', "Sandstorm.  Lose one day.", [{
+                text: "ok", 
+                function: () => {
+                    killTime(1, 0, () => {$("#canvasArea").css({"filter": "none"})}) 
+                }
+            }]);
         }
     },
     thief: {
@@ -517,7 +537,7 @@ const events = {
                 }}
             ])
             function giveChase() {
-                rest(1, false, undefined, () => {
+                killTime(1, 0, () => {
                     pause();
                     let caught = Math.floor(Math.random() * 1.5);
                     let escaped = Math.floor(Math.random() * 1.2);
@@ -599,6 +619,7 @@ const events = {
             ]
             if (mokesYouDontHave.length === 0) possibleScores.pop();
             let loot = possibleScores[Math.floor(Math.random() * possibleScores.length)];
+            let msgTitle = "score!"
             if (loot.type === "mokemon") {
                 loot.type = mokesYouDontHave[Math.floor(Math.random() * mokesYouDontHave.length)];
                 loot.quantity = ['a', 'e', 'i', 'o', 'u'].includes(loot.type[0]) ? "an" : "a";
@@ -607,14 +628,16 @@ const events = {
                     ' chained to it',
                     ' standing nearby, looking lost'
                 ][Math.floor(Math.random() * 2)]
+                msgTitle = "a new friend"
             }
             else {
                 loot.quantity = Math.floor(Math.random() * loot.quantity);
+                if (loot.quantity) loot.quantity ++; // so we don't have to deal with singular/plural
                 player[loot.type] += loot.quantity;
             }
-            let vehicle = ["segway", 'shopping cart', 'tricycle', 'RV', 'dirt bike', 'go-kart', 'smart car'][Math.floor(Math.random() * 7)]
+            let vehicle = ["segway", 'shopping cart', 'tricycle', 'RV', 'dirt bike', 'go-kart', 'car'][Math.floor(Math.random() * 7)]
             if (loot.quantity) {
-                msgBox('score!', `You find an abandoned ${vehicle} with ${loot.quantity} ${loot.type}.`)
+                msgBox(msgTitle, `You find an abandoned ${vehicle} with ${loot.quantity} ${loot.type}.`)
             }
             else {
                 msgBox('nothing to see here', `You find an abandoned ${vehicle}, but it is empty.`)
@@ -989,16 +1012,32 @@ function arriveAt(location) {
     }
 }
 
+let waitInterval = null;
+function killTime(days = 0, hours = 0, callback) {
+    hours += days * 24;
+    days = hours / 24;
+    waitInterval = setInterval(() => {
+        if (msgBoxActive) return;
+        pause();
+
+        hours --;
+        player.time ++;
+        timelyEvents();
+
+        if (hours <= 1) {
+            clearInterval(waitInterval);
+            unpause();
+            if (callback) callback();
+        }    
+    }, 43 - days * 2);
+}
+
 let restInterval = null;
 let restingHours = 0;
-function rest(days, showPosse, conditionFunction, callback) {
+function rest(days, showPosse, whileCondition, callback) {
     pause();
-    conditionFunction = conditionFunction || (() => true);
+    whileCondition = whileCondition || (() => true);
     restingHours = Math.max(days * 24, restingHours);
-    player.posse.forEach(moke => {
-        moke.conditions = moke.conditions.filter(condition => condition.name != "rest");
-        moke.conditions.push({name: "rest", timeRemaining: restingHours})
-    })
     player.resting = true;
     $(".healthMonitor").remove();
     let mokePosseHealthMonitor = $("<div>").addClass("dialogBox").addClass('healthMonitor').css({"z-index": 1});
@@ -1015,7 +1054,13 @@ function rest(days, showPosse, conditionFunction, callback) {
         player.time ++;
         timelyEvents();
 
-        if (restingHours <= 1 || !conditionFunction()) {
+        // heal mokes
+        player.posse.forEach(moke => {
+            moke.health = Math.min(moke.health + moke.maxHealth / 240, moke.maxHealth) 
+        })
+    
+
+        if (restingHours <= 1 || !whileCondition()) {
             clearInterval(restInterval);
             mokePosseHealthMonitor.remove();
             player.resting = false;
@@ -1031,7 +1076,7 @@ function restDialog() {
     clearDialogs();
 
     let restingDialog = $("<div>").attr('id', 'restingDialog').addClass('dialogBox').appendTo($('#canvasArea'))
-    let restParameters = {text: "rest for how many days?", name: "rest", min: 0, max: Math.min(Math.floor(player.food / player.foodPerDay), 10), number: 1}
+    let restParameters = {text: "rest for how many days?", name: "rest", min: 0, max: Math.min(Math.floor(player.food / player.foodPerDay), 10), number: 0}
     restingDialog.append(
         $("<form>")
             .attr("id", "restForm")
@@ -1150,7 +1195,7 @@ function closeOptions() {
 }
 
 function win () {
-    msgBox("glorious victory", `Let us count the survivors and give you some points! <br> You have: ${player.posse.length} surviving Mokemon.`, "sweet");
+    msgBox("glorious victory", `You have reached the legendary city!  Let us count the survivors and give you some points! <br> You have: ${player.posse.length} surviving Mokemon.`, "sweet");
     let pointsValue = {
         food: .45,
         mokeballs: 6,
@@ -1177,7 +1222,8 @@ function win () {
 }
 
 function lose() {
-    if (player.resting) clearInterval(restInterval);
+    clearInterval(restInterval);
+    clearInterval(waitInterval);
     $(".dialogBox").hide();
     pause();
     $("#sky").css({"background-color": "black"});
