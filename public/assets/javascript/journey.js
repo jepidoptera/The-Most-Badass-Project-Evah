@@ -448,8 +448,11 @@ const events = {
             victim = player.posse[parseInt(Math.random() * player.posse.length)];
             let damage = Math.floor(Math.random() * 11 + 1)
             player.messages.push(`${victim.name} suffered ${damage} damage from a falling tree.`);
-            victim.hurt(damage);
-            msgBox ("Ouch", `A tree fell on ${victim.name}.`, ":_(")
+            victim.health = Math.max(victim.health - damage, 0);
+            msgBox ("Ouch", `A cactus fell on ${victim.name}.`, [{text: ":_(", function: () => {
+                victim.health += damage;
+                victim.hurt(damage);
+            }}])
             // put a picture of the victim in there so we can see how bad they're hurt
             $("#msgText").append(mokePortrait(victim));
         }
@@ -462,8 +465,11 @@ const events = {
             victim = player.posse[parseInt(Math.random() * player.posse.length)];
             let damage = Math.floor(Math.random() * 11 + 1)
             player.messages.push(`${victim.name} suffered ${damage} damage from a cactus.`);
-            victim.hurt(damage);
-            msgBox ("Ouch", `A cactus fell on ${victim.name}.`, ":_(")
+            victim.health = Math.max(victim.health - damage, 0);
+            msgBox ("Ouch", `A cactus fell on ${victim.name}.`, [{text: ":_(", function: () => {
+                victim.health += damage;
+                victim.hurt(damage);
+            }}])
             // put a picture of the victim in there so we can see how bad they're hurt
             $("#msgText").append(mokePortrait(victim));
         }
@@ -490,6 +496,7 @@ const events = {
         alreadyHappening: false,
         function: () => {
             let theftType = ["food", "mokeballs", "money", "mokemon"][Math.floor(Math.random() * 4)];
+            let lossAmount = 0;
             let loss = "";
             let victim = null;
             if (theftType === "mokemon") {
@@ -500,7 +507,6 @@ const events = {
             else {
                 lossAmount = Math.floor(Math.random() * player[theftType]);
                 if (lossAmount < 2) return;
-                player[theftType] -= lossAmount;
                 loss = lossAmount + " " + theftType;
             }
             msgBox ("Theft", "A thief comes in the night and makes off with: " + loss + ".", [
@@ -539,7 +545,7 @@ const events = {
                         victim.die("was stolen by a villainous theif");    
                     }
                     else {
-    
+                        player[theftType] -= lossAmount;
                     }
                     player.messages.push(`${loss} ${["mokeballs", "grenades"].includes(theftType) ? "were" : "was"} lost to a thief.`)
                 }
@@ -574,6 +580,45 @@ const events = {
                 }},
                 {text: "nope"}
             ])
+        }
+    },
+    abandonedVehicle: {
+        get occurs() {
+            return player.day > 3 && !player.resting && Math.random() * 360  < 1;
+        },
+        function: () => {
+            let mokesYouHave = player.posse.map(moke => moke.name.toLowerCase());
+            let mokesYouDontHave = ['dezzy', 'apismanion', 'mallowbear', 'marlequin', 'wingmat', 'zyant', 'shadowdragon']
+                .filter(moke => !mokesYouHave.includes(moke));
+            let possibleScores = [
+                {type: 'food', quantity: 200}, 
+                {type: 'money', quantity: 300}, 
+                {type: 'mokeballs', quantity: 9}, 
+                {type: 'grenades', quantity: 9}, 
+                {type: 'mokemon', quantity: "a"}
+            ]
+            if (mokesYouDontHave.length === 0) possibleScores.pop();
+            let loot = possibleScores[Math.floor(Math.random() * possibleScores.length)];
+            if (loot.type === "mokemon") {
+                loot.type = mokesYouDontHave[Math.floor(Math.random() * mokesYouDontHave.length)];
+                loot.quantity = ['a', 'e', 'i', 'o', 'u'].includes(loot.type[0]) ? "an" : "a";
+                player.posse.push(new mokePosse(loot.type));
+                loot.type += [
+                    ' chained to it',
+                    ' standing nearby, looking lost'
+                ][Math.floor(Math.random() * 2)]
+            }
+            else {
+                loot.quantity = Math.floor(Math.random() * loot.quantity);
+                player[loot.type] += loot.quantity;
+            }
+            let vehicle = ["segway", 'shopping cart', 'tricycle', 'RV', 'dirt bike', 'go-kart', 'smart car'][Math.floor(Math.random() * 7)]
+            if (loot.quantity) {
+                msgBox('score!', `You find an abandoned ${vehicle} with ${loot.quantity} ${loot.type}.`)
+            }
+            else {
+                msgBox('nothing to see here', `You find an abandoned ${vehicle}, but it is empty.`)
+            }
         }
     },
     foodLow: {
@@ -886,12 +931,12 @@ function timelyEvents() {
 function astralMovements() {
     var x = -Math.sin(Math.PI * (0.5 + player.time / 24)) * 50 + 50;
     var y = Math.cos(Math.PI * (0.5 + player.time / 24)) * 40 + 40;
-    $("#sun").css({'top': y + '%', 'left': x + '%'});
+    $("#sun").css({'top': y + '%', 'left': (x*.975) + '%', 'border-color': `rgb(255, ${255 - y ** 2 / 10}, ${150 - y * 10})`});
     // the dark moon. should be at the same place as the sun on day 30 at noon
     let z = (player.day * 24 + player.time) ** 2 / (daysTilEclipse * 24 + 12) ** 2; // 571536;
     x = -Math.sin(Math.PI * (0.333333 + (player.time + 12) / 72 + (player.day % 3) / 3)) * (25 + 25 * z) + 50;
     y = Math.cos(Math.PI * (0.333333 + (player.time + 12) / 72 + (player.day % 3) / 3)) * (40 * z) + 40;
-    $("#darkMoon").css({'top': y + '%', 'left': x + '%', 'width': `${2+3*z}vmin`, 'height': `${2+3*+z}vmin`, 'border-width': `${1+z*1.5}vmin`, 'border-radius': `${1+z*1.5}vmin`});
+    $("#darkMoon").css({'top': y + '%', 'left': (x*.975) + '%', 'width': `${2+3*z}vmin`, 'height': `${2+3*+z}vmin`, 'border-width': `${1+z*1.5}vmin`, 'border-radius': `${1+z*1.5}vmin`});
     if (player.day === daysTilEclipse && player.hour === 12) {
         lose();
     }
@@ -912,7 +957,7 @@ function narrate() {
     if (arrived) distanceTo = trail.nextLocation.length;
     let calendarDay = player.day < 26 
         ? 'Novembruary ' + (74 + player.day) + ((74 + player.day) % 10 === 1 ? "st" : ((74 + player.day) % 10 === 2 ? "nd" : ((74 + player.day) % 10 === 3 ? "rd" : "th")))
-        : 'Februne ' + (player.day - 25) + ((player.day - 25) % 10 === 1 ? "st" : ((player.day - 25) % 10 === 2 ? "nd" : ((player.day - 25) % 10 === 3 ? "rd" : "th")))
+        : 'Februne the ' + (player.day - 25) + ((player.day - 25) % 10 === 1 ? "st" : ((player.day - 25) % 20 === 2 ? "nd" : ((player.day - 25) % 10 === 3 ? "rd" : "th")))
     $("#narrative").html(
         '<span style="color: yellow">tap here or press enter for options</span> <br>' + 
         'Day: ' + calendarDay +
@@ -1107,9 +1152,10 @@ function closeOptions() {
 function win () {
     msgBox("glorious victory", `Let us count the survivors and give you some points! <br> You have: ${player.posse.length} surviving Mokemon.`, "sweet");
     let pointsValue = {
-        food: .75,
-        mokeballs: 15,
-        grenades: 25
+        food: .45,
+        mokeballs: 6,
+        grenades: 15,
+        money: .55
     }
     player.finalScore = Object.keys(pointsValue).reduce((sum, item) => sum + Math.floor(player[item] * pointsValue[item]), 0);
     $("#msgText").append(
@@ -1127,7 +1173,7 @@ function win () {
         $("<p>").text(`total: ${player.finalScore}`)
     )
     saveGame()
-    // TODO
+    // DONE
 }
 
 function lose() {
@@ -1136,6 +1182,8 @@ function lose() {
     pause();
     $("#sky").css({"background-color": "black"});
     $("#darkMoon").css({"box-shadow": "0 0 2.5vmin 2.5vmin white"});
+    $("#canvasArea").css({filter: 'contrast(150%) grayscale(50%'});
+
     setTimeout(() => {
         $("#sky").css("background-image", "url('./assets/images/thunderstorm.jpg')")
     }, 6000);
