@@ -6,6 +6,7 @@ html, body {
     height: 100vh;
     display: block;
     position: absolute;
+    transition: filter 5s;
 }
 #narrative {
     display: block;
