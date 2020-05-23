@@ -787,8 +787,13 @@ $(document).ready(() => {
 
             // count down til dark
             function timeDown() {
-                player.hour += 1;
-                hoursTilDark = parseInt(12 - player.hour); 
+                player.time ++;
+                if (player.time > 24) {
+                    player.time = 0;
+                    player.day ++;
+                }
+                player.hour ++;
+                hoursTilDark = parseInt(14 - player.hour); 
                 $("#time").text('Hours til dark: '+ hoursTilDark);
                 if (hoursTilDark == 0) {
                     player.messages.push(`You scored ${hunter.food} food while hunting.`);
