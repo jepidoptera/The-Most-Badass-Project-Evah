@@ -400,6 +400,7 @@ const events = {
             },{
                 text: "rest and quarantine",
                 function: () => {
+                    player.messages.push("The posse enters lockdown.")
                     player.posse.forEach(moke => moke.conditions.push({name: 'quarantine', timeRemaining: illnessLength}))
                     rest(illnessLength / 24, true, () => victim.alive, () => {
                         if (victim.alive) {
@@ -562,7 +563,7 @@ const events = {
                 events.thief.alreadyHappening = false;
                 if (loss) {
                     if (theftType === "mokemon") {
-                        victim.die("was stolen by a villainous theif");    
+                        victim.die("was stolen by a villainous thief.");    
                     }
                     else {
                         player[theftType] -= lossAmount;
@@ -1034,6 +1035,7 @@ function killTime(days = 0, hours = 0, callback) {
 
 let restInterval = null;
 let restingHours = 0;
+let totalRest = 0;
 function rest(days, showPosse, whileCondition, callback) {
     pause();
     whileCondition = whileCondition || (() => true);
@@ -1051,6 +1053,7 @@ function rest(days, showPosse, whileCondition, callback) {
         )
 
         restingHours --;
+        totalRest ++;
         player.time ++;
         timelyEvents();
 
@@ -1061,6 +1064,7 @@ function rest(days, showPosse, whileCondition, callback) {
     
 
         if (restingHours <= 1 || !whileCondition()) {
+            player.messages.push(`After ${Math.floor(totalRest / 24)} ${totalRest > 48 ? 'days' : 'day'} of rest and recovery, you continue on the trail.`)
             clearInterval(restInterval);
             mokePosseHealthMonitor.remove();
             player.resting = false;
