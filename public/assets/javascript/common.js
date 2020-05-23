@@ -1,18 +1,20 @@
 class Player{
-    constructor() {
+    constructor(name) {
         // give player initial stats
         this.food = 120;
         this.money = 1550;
         this.mokeballs = 27;
         this.grenades = 9;
         this.speed = 4;
-        this.name = this.name || 'simone';
+        this.name = name || 'simone';
         // reset to beginning of trail
         this.progress = 1;
         this.time = 0;
         this.day = 0;
         this.messages = ["You set off on the trail! Next stop: the forest of doom."];
         this.posse = [{name: 'dezzy'}, {name: 'apismanion'}, {name: 'mallowbear'}, {name: 'marlequin'}, {name: 'wingmat'}];
+        let urlParams = new URLSearchParams(location.search)
+        let authtoken = urlParams.get('auth')    
     }
     get foodPerDay() {
         return 5 + player.posse.reduce((sum, moke) => sum + moke.hunger, 0)
