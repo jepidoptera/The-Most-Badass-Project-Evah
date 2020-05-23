@@ -1,0 +1,26 @@
+table {
+    /* display: block;
+    left: 50%;
+    transform: translate(-50%); */
+    text-align: center;
+    width: 100%;
+}
+
+tbody {
+    display:  inline-block;
+    left: 50%;
+    line-height: 24pt;
+}
+
+td, th {
+    width: 200px;
+    border: 1px solid black;
+}
+
+th {
+    border-bottom: 2px solid black;
+}
+
+td {
+    color: white;
+}

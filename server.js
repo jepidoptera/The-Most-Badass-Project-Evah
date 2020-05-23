@@ -103,6 +103,17 @@ app.get ("/hunt", (req, res) => {
 app.get("/betterhunting", (req, res) => {
     res.render("hunt");
 })
+
+app.get("/highscores", (req, res) => {
+    let scores = Object.keys(players)
+        .map(key => players[key])
+        .filter(player => player ? player.finalScore : false)
+        .map(player => {return {name: player.name, score: player.finalScore}})
+        .sort((a, b) => a.score < b.score ? 1 : -1);
+    console.log(scores);
+    res.render("highscore", {highscores: scores});
+})
+
 app.post("/save", (req, res) => {
     req.body = JSON.parse(req.body.data);
     console.log("***saving***", req.body);

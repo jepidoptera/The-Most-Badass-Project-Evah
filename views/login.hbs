@@ -22,6 +22,7 @@
                 <div class="form-group">
                     <button class="btn btn-block" id="loadPlayer">Load Game</button>
                     <button class="btn btn-block" id="newPlayer">Start New</button>
+                    <button class="btn btn-block" id="highscores">High Scores</button>
                 </div>
             </div>
         </form>
@@ -88,6 +89,10 @@
         $('<input name="confirmPassword" minlength="4" type="password" class="form-control" id="confirmPassword" placeholder="confirm password" required>').appendTo($('#passwords'))
 
         isNewPlayer = true;
+    })
+    $("#highscores").click(event => {
+        event.preventDefault();
+        window.location.href = "/highscores";
     })
     $("newOrdLoad").submit(event => {
         event.preventDefault();
