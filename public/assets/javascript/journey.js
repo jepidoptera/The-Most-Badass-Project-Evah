@@ -376,7 +376,7 @@ const events = {
         },
         function: () => {
             // strikes randomly
-            victim = player.posse[weightedRandom(player.posse.map(moke => 1 / moke.immuneResponse))];
+            let victim = player.posse[weightedRandom(player.posse.map(moke => 1 / moke.immuneResponse))];
             if (victim.conditions.map(c => c.name).includes(events.disease.name)) {
                 // can't get it twice
                 console.log(`prevented double occurrence of ${events.disease.name}.`);
@@ -420,14 +420,14 @@ const events = {
         },
         function: () => {
             // most often eats the weakest one
-            victim = player.posse[weightedRandom(player.posse.map(moke => 1 / moke.health))];
+            let victim = player.posse[weightedRandom(player.posse.map(moke => 1 / moke.health))];
             victim.die("was slain by a hungry bear");
             msgBox ("Death", victim.name + " was eaten by a bear.", "damn")
         }
     },
     berries: {
         get occurs() {
-            return trail.currentLocation.type === "forest" && parseInt(Math.random() * 100) == 0;
+            return trail.currentLocation.type === "forest" && !player.resting && parseInt(Math.random() * 100) == 0;
         },
         function: () => {
             let berries = Math.floor(Math.random() * 50 + 25)
@@ -547,13 +547,13 @@ const events = {
                     daysChase ++;
                     if (caught) {
                         msgBox('gotcha', `You caught the thief and administered swift justice!  ${loss} returned!`)
-                        player.messages.push(`After ${daysChase} ${daysChase > 1 ? "days'" : "day's"}, you caught the thief and recovered ${loss}.`)
+                        player.messages.push(`After ${daysChase} ${daysChase > 1 ? "days'" : "day's"} chase, you caught the thief and recovered ${loss}.`)
                         loss = 0;
                         concludeChase();
                     }
                     else if (escaped) {
                         msgBox('the trail has gone cold', 'The thief escaped your pursuit.');
-                        player.messages.push(`After ${daysChase} ${daysChase > 1 ? "days'" : "day's"}, the thief escaped with ${loss}.`)
+                        player.messages.push(`After ${daysChase} ${daysChase > 1 ? "days'" : "day's"} chase, the thief escaped with ${loss}.`)
                         concludeChase();
                     }
                     else {
@@ -893,9 +893,8 @@ $(document).ready(() => {
             // construct mokemon class from simplified objects
             let posse = player.posse;
             player.posse = [];
-            posse.forEach(moke => {
-                player.posse.push(new mokePosse(moke.name, moke.health, moke.conditions));
-            })
+            // add them one at a time so they can be indexed
+            posse.forEach(moke => player.posse.push(new mokePosse(moke.name, moke.health, moke.conditions)));
         
             gameInterval = setInterval(gameLoop, 1000 / canvas.metrics.frameRate);
         });
@@ -904,7 +903,7 @@ $(document).ready(() => {
 })
 
 function newGame() {
-    player = new Player();
+    player = new Player($("#playerName").text());
     Player.currentLocation = trail.locations[1];
     // // remove all background objects
     trail.scenery = [];
@@ -1075,7 +1074,7 @@ function rest(days, showPosse, whileCondition, callback) {
             clearInterval(restInterval);
             mokePosseHealthMonitor.remove();
             player.resting = false;
-            unpause();
+            if (!msgBoxActive) unpause();
             if (callback) callback();
         }    
     }, 43 - days * 2);
@@ -1157,11 +1156,23 @@ function shopDialog(shopItems) {
                             .addClass('msgbutton')
                             .text("done, pay up")
                             .click(() => {
-                                Object.keys(shopItems).forEach(key => {
+                                let msg = "Bought ";
+                                Object.keys(shopItems).forEach((key, i) => {
                                     let item = shopItems[key];
                                     player[item.name] = (player[item.name] || 0) + item.number;
                                     player.money -= item.number * item.price;
+                                    if (i > 0) {
+                                        if (i < Object.keys(shopItems).length - 1) {
+                                            msg += ", ";        
+                                        }
+                                        else {
+                                            msg += " and "
+                                        }
+                                    }
+                                    msg += item.number + " " + item.name;
                                 })
+                                msg += " from " + player.currentLocation.name + ".";
+                                player.messages.push(msg);
                                 unpause();
                                 shoppingDialog.remove(); 
                             })
@@ -1208,15 +1219,15 @@ function closeOptions() {
 function win () {
     msgBox("glorious victory", `You have reached the legendary city!  Let us count the survivors and give you some points! <br> You have: ${player.posse.length} surviving Mokemon.`, "sweet");
     let pointsValue = {
-        food: .45,
-        mokeballs: 6,
-        grenades: 15,
-        money: .55
+        food: .4,
+        mokeballs: 4,
+        grenades: 10,
+        money: .5
     }
     player.finalScore = Object.keys(pointsValue).reduce((sum, item) => sum + Math.floor(player[item] * pointsValue[item]), 0);
     $("#msgText").append(
         ...player.posse.map(moke => {
-            let mokePoints = Math.floor(100 * moke.health / moke.maxHealth + 100);
+            let mokePoints = Math.floor(200 * moke.health / moke.maxHealth + 100);
             player.finalScore += mokePoints;
             return $("<p>").append(
                 mokePortrait(moke),
@@ -1230,6 +1241,7 @@ function win () {
     )
     saveGame()
     // DONE
+    window.location.href = `/highscores/${player.name}`
 }
 
 function lose() {
