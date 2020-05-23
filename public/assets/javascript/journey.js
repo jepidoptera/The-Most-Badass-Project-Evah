@@ -520,6 +520,7 @@ const events = {
             let lossAmount = 0;
             let loss = "";
             let victim = null;
+            let daysChase = 0;
             if (theftType === "mokemon") {
                 victim = player.posse[parseInt(Math.random() * player.posse.length)];
                 if (!victim) return;
@@ -530,6 +531,7 @@ const events = {
                 if (lossAmount < 2) return;
                 loss = lossAmount + " " + theftType;
             }
+            player.messages.push(`A thief stole ${loss}.`)
             msgBox ("Theft", "A thief comes in the night and makes off with: " + loss + ".", [
                 {text: "how unfortunate", function: concludeChase},
                 {text: "give chase!", function: () => {
@@ -542,13 +544,16 @@ const events = {
                     pause();
                     let caught = Math.floor(Math.random() * 1.5);
                     let escaped = Math.floor(Math.random() * 1.2);
+                    daysChase ++;
                     if (caught) {
                         msgBox('gotcha', `You caught the thief and administered swift justice!  ${loss} returned!`)
+                        player.messages.push(`After ${daysChase} ${daysChase > 1 ? "days'" : "day's"}, you caught the thief and recovered ${loss}.`)
                         loss = 0;
                         concludeChase();
                     }
                     else if (escaped) {
                         msgBox('the trail has gone cold', 'The thief escaped your pursuit.');
+                        player.messages.push(`After ${daysChase} ${daysChase > 1 ? "days'" : "day's"}, the thief escaped with ${loss}.`)
                         concludeChase();
                     }
                     else {
@@ -568,7 +573,6 @@ const events = {
                     else {
                         player[theftType] -= lossAmount;
                     }
-                    player.messages.push(`${loss} ${["mokeballs", "grenades"].includes(theftType) ? "were" : "was"} lost to a thief.`)
                 }
             }
         }
@@ -598,6 +602,7 @@ const events = {
                 function: () => {
                     player.posse.push(new mokePosse(offer));
                     player[trade.item] -= trade.quantity;
+                    player.messages.push(`Bought ${offer} from a trader for the price of ${trade.quantity} ${trade.item}.`)
                 }},
                 {text: "nope"}
             ])
@@ -633,15 +638,17 @@ const events = {
             }
             else {
                 loot.quantity = Math.floor(Math.random() * loot.quantity);
-                if (loot.quantity) loot.quantity ++; // so we don't have to deal with singular/plural
+                if (loot.quantity == 1) loot.quantity = 0; // so we don't have to deal with singular/plural
                 player[loot.type] += loot.quantity;
             }
             let vehicle = ["segway", 'shopping cart', 'tricycle', 'RV', 'dirt bike', 'go-kart', 'car'][Math.floor(Math.random() * 7)]
             if (loot.quantity) {
                 msgBox(msgTitle, `You find an abandoned ${vehicle} with ${loot.quantity} ${loot.type}.`)
+                player.messages.push(`Scored ${loot.quantity} ${loot.type} from an abandoned ${vehicle}.`)
             }
             else {
                 msgBox('nothing to see here', `You find an abandoned ${vehicle}, but it is empty.`)
+                player.messages.push(`Passed an empty, abandoned ${vehicle}.`)
             }
         }
     },
