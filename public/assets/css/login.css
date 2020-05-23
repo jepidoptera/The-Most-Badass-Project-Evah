@@ -41,7 +41,8 @@ h1 {
     font-family: 'VT323', monospace;
     font-size: 60px;
     color: #fff;
-    margin-top: 150px;
+    margin-top: 100px;
+    margin-bottom: 50px;
     -webkit-animation: tracking-in-contract 0.8s cubic-bezier(0.215, 0.610, 0.355, 1.000) both;
     animation: tracking-in-contract 0.8s cubic-bezier(0.215, 0.610, 0.355, 1.000) both;
 }
