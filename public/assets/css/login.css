@@ -74,6 +74,16 @@ h1 {
     }
 }
 
+@media (max-width: 600px) {
+    .tracking-in-contract {
+        font-size: 9vw;
+        width: 1000px;
+        position: relative;
+        left: 50%;
+        transform: translate(-50%);
+        margin-top: 50px;
+    }
+}
 form {
     text-align: center;
     margin: auto;
