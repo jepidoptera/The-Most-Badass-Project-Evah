@@ -55,7 +55,7 @@ app.post("/login", (req, res) => {
     console.log("logging in as...", req.body.username);
     let username = req.body.username;
     let password = req.body.password;
-    console.log(req.body);
+    // console.log(req.body);
     if (!players[username]) {
         res.status(404).send('Player not found.')
         return;
@@ -65,25 +65,25 @@ app.post("/login", (req, res) => {
         return;
     }
     authtokens[username] = generateToken();
-    console.log(authtokens[username])
+    // console.log(authtokens[username])
+    console.log(`${username} logged in.`)
     res.json({authtoken: authtokens[username]});
     res.end();
 })
 
 app.get("/logout", (req, res) => {
     res.render("logout");
+    console.log(`${username} was automatically logged out.`)
 })
 
 app.get ("/journey", (req, res) => {
     console.log("let's go")
     let username = req.query.name;
     let authtoken = req.query.auth;
-    if (!authtoken || authtokens[username] != authtoken) {
-        console.log("got auth token " + authtoken + " vs expected " + authtokens[username]);
-        res.render('logout');
-        return;
-    }
+    if (!validateAuth(username, authtoken, res)) return;
+
     if (!players[username]) {
+        // new player
         res.render("journey", {name: username})
         return;
     }
@@ -92,15 +92,12 @@ app.get ("/journey", (req, res) => {
 })
 
 app.get ("/hunt", (req, res) => {
-    console.log("going hunting")
+    console.log(`${req.query.name} is going hunting.`)
     let username = req.query.name;
     let authtoken = req.query.auth;
-    if (!authtoken || authtokens[username] != authtoken) {
-        console.log("got auth token " + authtoken + " vs expected " + authtokens[username]);
-        res.render('logout');
-        return;
+    if (validateAuth(username, authtoken,res)) {
+        res.render("hunt", {...players[username], authtoken: authtoken});
     }
-    res.render("hunt", {...players[username], authtoken: authtoken});
 })
 
 app.get("/betterhunting", (req, res) => {
@@ -114,7 +111,7 @@ app.get("/highscores/:username?", (req, res) => {
         .filter(player => player ? player.finalScore : false)
         .map(player => {return {name: player.name, score: player.finalScore, selected: player.name === selectedUser}})
         .sort((a, b) => a.score < b.score ? 1 : -1);
-    console.log(scores);
+    console.log('Showing high scores');
     res.render("highscore", {highscores: scores});
 })
 
@@ -123,14 +120,12 @@ app.post("/save", (req, res) => {
     console.log("***saving***", req.body);
     let username = req.body.name;
     let authtoken = req.body.authtoken;
-    if (authtoken !== authtokens[username]) {
-        console.log("got auth token " + authtoken + " vs expected " + authtokens[username]);
-        res.render('logout');
-        return;
+
+    if (validateAuth(username, authtoken, res)) {
+        players[username] = {...players[username], ...req.body}
+        firebase.database().ref(`users/${username}`).set(players[username])
+        res.status(200).send("saved.");
     }
-    players[username] = {...players[username], ...req.body}
-    firebase.database().ref(`users/${username}`).set(players[username])
-    res.status(200).send("saved.");
 })
  
 app.post("/new", (req, res) => {
@@ -187,3 +182,12 @@ firebase.database().ref('users').on('child_added', (child) => {
         console.log("loaded player: ", playerName);
     })
 })
+
+function validateAuth(username, authtoken, res) {
+    if (authtoken !== authtokens[username]) {
+        console.log("got auth token " + authtoken + " vs expected " + authtokens[username]);
+        res.render('logout');
+        return false;
+    }
+    else return true;
+}
