@@ -780,7 +780,7 @@ class mokePosse {
             this.hunger = 25;
             this.maxHealth = 25;
             this.immuneResponse = 1;
-            this.description = "Part dragon, part dog, part mantis, pretty big, definitely worth a lot of money.  Eats a crapload, so make sure you've got food."
+            this.description = "Part dragon, part dog, part mantis, pretty big, definitely worth a lot of money.  Eats a ton, so make sure you've got food."
             this.img = $("<img>").attr('src', './assets/images/mokemon/shadowDragon_thumbnail.png')[0];
             break;
 
@@ -1217,7 +1217,13 @@ function closeOptions() {
 }
 
 function win () {
-    msgBox("glorious victory", `You have reached the legendary city!  Let us count the survivors and give you some points! <br> You have: ${player.posse.length} surviving Mokemon.`, "sweet");
+    msgBox("glorious victory", `You have reached the legendary city!  Let us count the survivors and give you some points! <br> You have: ${player.posse.length} surviving Mokemon.`, 
+        [{
+            text: "sweet",
+            function: () => {    // DONE
+                window.location.href = `/highscores/${player.name}`
+            }
+        }]);
     let pointsValue = {
         food: .4,
         mokeballs: 4,
@@ -1240,8 +1246,6 @@ function win () {
         $("<p>").text(`total: ${player.finalScore}`)
     )
     saveGame()
-    // DONE
-    window.location.href = `/highscores/${player.name}`
 }
 
 function lose() {

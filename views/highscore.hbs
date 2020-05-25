@@ -9,11 +9,13 @@
     <div class="col-sm">
         <table>
             <tr>
+                <th style="width: 30px">#</th>
                 <th>Name</th>
                 <th>Score</th>
             </tr>
             {{#each highscores}}
-                <tr>
+                <tr {{#if this.selected}} style='color: yellow; font-weight:700' {{/if}}>
+                    <td style="width: 30px">{{Plusone @index}}</td>
                     <td>{{this.name}}</td>
                     <td>{{this.score}}</td>
                 </tr>

@@ -35,6 +35,9 @@ app.engine(".hbs", exphbs({
         'Capitalize': function(string)
         {
             return string.charAt(0).toUpperCase() + string.slice(1);
+        },
+        'Plusone': function(number) {
+            return number + 1;
         }
     }
 }));
@@ -104,11 +107,12 @@ app.get("/betterhunting", (req, res) => {
     res.render("hunt");
 })
 
-app.get("/highscores", (req, res) => {
+app.get("/highscores/:username?", (req, res) => {
+    let selectedUser = req.params.username || "";
     let scores = Object.keys(players)
         .map(key => players[key])
         .filter(player => player ? player.finalScore : false)
-        .map(player => {return {name: player.name, score: player.finalScore}})
+        .map(player => {return {name: player.name, score: player.finalScore, selected: player.name === selectedUser}})
         .sort((a, b) => a.score < b.score ? 1 : -1);
     console.log(scores);
     res.render("highscore", {highscores: scores});
