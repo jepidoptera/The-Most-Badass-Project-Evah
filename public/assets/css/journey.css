@@ -51,10 +51,10 @@ html, body {
     box-sizing: border-box;
     width: 4vh;
     height: 4vh;
-    border: 2vh solid black;
+    border: 2vh solid #333;
     border-radius: 2vh;
-    box-shadow: 0 0 1vmin .25vmin #330055;
-    background-color: black;
+    box-shadow: 0 0 1vmin .25vmin #007;
+    background-color: #333;
     transition: box-shadow 5s;
 }
 #ground {
