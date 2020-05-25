@@ -4,12 +4,12 @@ table {
     transform: translate(-50%); */
     text-align: center;
     width: 100%;
+    overflow: scroll;
 }
 
 tbody {
     display:  inline-block;
     left: 50%;
-    line-height: 24pt;
 }
 
 td, th {
@@ -23,4 +23,10 @@ th {
 
 tr {
     color: white;
+    line-height: 24pt;
+}
+
+#scoresList {
+    height: Calc(240pt + 22px);
+    display: inline-block;
 }

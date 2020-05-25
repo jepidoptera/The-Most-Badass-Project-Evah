@@ -7,20 +7,19 @@
         <h1 class="tracking-in-contract title">Survivors, Ranked</h1>
     </header>
     <div class="col-sm">
-        <table>
+        {{!-- <table>
             <tr>
                 <th style="width: 30px">#</th>
                 <th>Name</th>
                 <th>Score</th>
             </tr>
-            {{#each highscores}}
-                <tr {{#if this.selected}} style='color: yellow; font-weight:700' {{/if}}>
-                    <td style="width: 30px">{{Plusone @index}}</td>
-                    <td>{{this.name}}</td>
-                    <td>{{this.score}}</td>
-                </tr>
-            {{/each}}
-        </table>
+        </table> --}}
+        <div id="tableContainer">
+            <table id="visibleScores">
+            </table>
+            <div id="scroller" style="overflow-y: scroll; display: block; width: 100%; height: 100%; position:absolute; top: 0">
+            </div>
+        </div>
     </div>
     <form id='back' action="/" style="position: absolute; left: 50%; transform: translate(-50%); bottom: 0">
     <div class="col-sm">
@@ -30,3 +29,57 @@
     </div>
     </form>
 </body>
+
+<script>
+    class HighScore {
+        constructor(name, score, selected = false) {
+            this.score = score;
+            this.name = name;
+            this.selected = selected;
+        }
+    }
+    let scores = [];
+    let scrollX = 0;
+
+    {{#each highscores}}
+        scores.push(new HighScore("{{this.name}}", {{this.score}}{{#if this.selected}}, true{{/if}}))
+        {{#if this.selected}}scrollX = {{@index}}{{/if}}
+    {{/each}}
+
+    // fill up the invisble scrolling element with blank paragraphs to overflow it
+    for (let n = 0; n < 40; n++) {
+        $("#scroller").append("<p>")
+    }
+
+    var scrollTop = 1;
+    $("#scroller").scrollTop(1);
+    $("#scroller").scroll(function(event) {
+        let delta = $(this).scrollTop() - scrollTop;
+        // keep it in scrollable position
+        $(this).scrollTop(1);
+        scrollX = scrollX + Math.sign(Math.round(delta));
+        scrollX = Math.max(Math.min(scrollX, scores.length - 8), 0)
+        displayScores();
+    })
+
+    $(displayScores)
+    
+    function displayScores() {
+        $("#visibleScores").html($("<tr>")
+            .append(
+                $("<th>").text("#").css({width: "30px"}),
+                $("<th>").text("Name"),
+                $("<th>").text("Final Score")
+            )
+        );
+        let startAt = Math.min(Math.max(scrollX - 2, 0), scores.length - 10)
+        for (let i = startAt; i < Math.min(startAt + 10, scores.length); i++) {
+            $("#visibleScores").append($("<tr>").css({color: scores[i].selected ? "yellow" : "white", 'font-weight': scores[i].selected ? 700 : 100}).append(
+                $("<td>").text(i + 1).css({width: "30px"}),
+                $("<td>").text(scores[i].name),
+                $("<td>").text(scores[i].score)
+            ))
+        }
+    }
+
+</script>
