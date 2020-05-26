@@ -869,6 +869,9 @@ $(document).ready(() => {
     horizonHeight = $("#ground").position().top / $("#canvasArea").height();
 
     loadPlayer((playerData) => {
+        if (playerData.finalScore) {
+            window.location.href = `/highscores/${playerData.name}`
+        }
         loadTrail(trailData =>{
 
             trail = new Trail(trailData.map(location => {
