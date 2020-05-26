@@ -14,7 +14,7 @@ class Player{
         this.messages = ["You set off on the trail! Next stop: the forest of doom."];
         this.posse = [{name: 'dezzy'}, {name: 'apismanion'}, {name: 'mallowbear'}, {name: 'marlequin'}, {name: 'wingmat'}];
         let urlParams = new URLSearchParams(location.search)
-        let authtoken = urlParams.get('auth')    
+        this.authtoken = urlParams.get('auth')    
     }
     get foodPerDay() {
         return 5 + player.posse.reduce((sum, moke) => sum + moke.hunger, 0)
