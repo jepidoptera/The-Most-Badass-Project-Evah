@@ -77,9 +77,9 @@ app.get("/logout", (req, res) => {
 })
 
 app.get ("/journey", (req, res) => {
-    console.log("let's go")
     let username = req.query.name;
     let authtoken = req.query.auth;
+    console.log(`let's go ${username} ${authtoken}`)
     if (!validateAuth(username, authtoken, res)) return;
 
     if (!players[username]) {
@@ -121,6 +121,8 @@ app.post("/save", (req, res) => {
     let username = req.body.name;
     let authtoken = req.body.authtoken;
 
+    // console.log(`authtoken = ${authtoken}`)
+
     if (validateAuth(username, authtoken, res)) {
         players[username] = {...players[username], ...req.body}
         firebase.database().ref(`users/${username}`).set(players[username])
@@ -147,11 +149,10 @@ app.get('/load/:username/:authtoken', (req, res) => {
     console.log('loading', req.params['username'])
     let username = req.params['username'];
     let authtoken = req.params['authtoken'];
-    if (authtoken != authtokens[username]) {
-        console.log("got auth token " + authtoken + " vs expected " + authtokens[username]);
-        res.sendStatus(403);
-        return;
-    }
+    console.log({...players[username], authtoken: authtokens[username]});
+
+    if (!validateAuth(username, authtoken, res)) return;
+
     if (!players[username]) {
         console.log('not found.');
         res.sendStatus(404);
@@ -185,7 +186,7 @@ firebase.database().ref('users').on('child_added', (child) => {
 
 function validateAuth(username, authtoken, res) {
     if (authtoken !== authtokens[username]) {
-        console.log("got auth token " + authtoken + " vs expected " + authtokens[username]);
+        console.log(`got auth token ${authtoken} vs expected ${authtokens[username]}`);
         res.render('logout');
         return false;
     }
