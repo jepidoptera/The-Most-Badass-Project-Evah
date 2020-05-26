@@ -991,7 +991,7 @@ function drawCanvas() {
     drawMokeballs();
     // drawAnimals();
     if (frameRate >= 60) requestAnimationFrame(drawCanvas);
-    $('#msg').html(messages.reduce((sum, message) => sum + message + "<br>", ""))
+    $('#msg').html(messages.join("<br>"))
 }
 
 function drawHunter() {
@@ -1195,5 +1195,5 @@ function message (text) {
     messages.push(text);
     setTimeout(() => {
         messages.shift();
-    }, 3000);
+    }, 8000);
 }
