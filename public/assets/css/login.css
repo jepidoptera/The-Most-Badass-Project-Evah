@@ -45,6 +45,10 @@ h1 {
     margin-bottom: 50px;
     -webkit-animation: tracking-in-contract 0.8s cubic-bezier(0.215, 0.610, 0.355, 1.000) both;
     animation: tracking-in-contract 0.8s cubic-bezier(0.215, 0.610, 0.355, 1.000) both;
+    width: 10000px;
+    position: relative;
+    left: 50%;
+    transform: translate(-50%);
 }
 
 @-webkit-keyframes tracking-in-contract {
@@ -77,10 +81,6 @@ h1 {
 @media (max-width: 600px) {
     .tracking-in-contract {
         font-size: 9vw;
-        width: 1000px;
-        position: relative;
-        left: 50%;
-        transform: translate(-50%);
         margin-top: 50px;
     }
 }
