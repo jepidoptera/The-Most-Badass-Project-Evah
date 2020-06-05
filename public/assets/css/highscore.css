@@ -15,6 +15,7 @@ tbody {
 td, th {
     width: 200px;
     border: 1px solid black;
+    font-size: 15pt;
 }
 
 th {
@@ -23,7 +24,7 @@ th {
 
 tr {
     color: white;
-    line-height: 24pt;
+    line-height: 27pt;
 }
 
 #scoresList {
