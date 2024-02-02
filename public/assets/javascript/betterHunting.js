@@ -804,7 +804,7 @@ $(document).ready(() => {
                     }}]);
                 }
                 else {
-                    setTimeout(timeDown, 6400);
+                    setTimeout(timeDown, 9600);
                 }
             }    
             if (player.time) timeDown();
