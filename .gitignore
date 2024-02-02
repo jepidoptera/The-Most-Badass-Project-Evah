@@ -5,3 +5,4 @@ public/assets/images/pokemon
 *.tmp
 public/assets/javascript/unused
 public/assets/css/unused
+package-lock.json
