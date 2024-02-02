@@ -67,7 +67,7 @@ const trail = [
             {type: "deer", frequency: 100},
             {type: "bear", frequency: 20},
             {type: "squirrel", frequency: 300},
-            {type: "Zyant", isMokemon: true, frequency: 5}
+            {type: "Zyant", isMokemon: true, frequency: 10}
         ],
         length: 75 // seconds
 
@@ -84,7 +84,7 @@ const trail = [
             {type: "scorpion", frequency: 100},
             {type: "armadillo", frequency: 50},
             {type: "coyote", frequency: 20},
-            {type: "Dezzy", isMokemon: true, frequency: 5}
+            {type: "Dezzy", isMokemon: true, frequency: 10}
         ],
         length: 57 // seconds
 
@@ -119,7 +119,7 @@ const trail = [
             {type: "scorpion", frequency: 100},
             {type: "armadillo", frequency: 50},
             {type: "coyote", frequency: 20},
-            {type: "Dezzy", isMokemon: true, frequency: 5}
+            {type: "Dezzy", isMokemon: true, frequency: 10}
         ],
         length: 39 // seconds
 
@@ -139,8 +139,8 @@ const trail = [
             {type: "goat", frequency: 85},
             {type: "porcupine", frequency: 85},
             {type: "yeti", frequency: 10},
-            {type: "Apismanion", isMokemon: true, frequency: 5},
-            {type: "Marlequin", isMokemon: true, frequency: 5}
+            {type: "Apismanion", isMokemon: true, frequency: 10},
+            {type: "Marlequin", isMokemon: true, frequency: 10}
         ],
         length: 82 // seconds
 
@@ -155,9 +155,9 @@ const trail = [
         prey: [
             {type: "deer", frequency: 100},
             {type: "goat", frequency: 85},
-            {type: "Wingmat", isMokemon: true, frequency: 5},
-            {type: "Mallowbear", isMokemon: true, frequency: 5},
-            {type: "Shadowdragon", isMokemon: true, frequency: 5}
+            {type: "Wingmat", isMokemon: true, frequency: 10},
+            {type: "Mallowbear", isMokemon: true, frequency: 10},
+            {type: "Shadowdragon", isMokemon: true, frequency: 10}
         ],
         length: 100 // seconds
 
