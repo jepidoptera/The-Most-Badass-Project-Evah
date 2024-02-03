@@ -14,6 +14,7 @@ var canvas;
 var gameInterval;
 const playerName = "{{name}}"
 const daysTilEclipse = 37
+var sunup = false
 
 var trail;
 
@@ -496,7 +497,7 @@ const events = {
     },
     sandstorm: {
         get occurs() {
-            return player.posse.length > 0 && trail.currentLocation.type === "desert" && parseInt(Math.random() * 200) == 0;
+            return trail.currentLocation.type === "desert" && parseInt(Math.random() * 200) == 0;
         },
         function: () => {
             $("#canvasArea").css({"filter": "sepia(0.5) brightness(1.5)"})
@@ -962,17 +963,65 @@ function timelyEvents() {
 }
 
 function astralMovements() {
-    var x = -Math.sin(Math.PI * (0.5 + player.time / 24)) * 50 + 50;
-    var y = Math.cos(Math.PI * (0.5 + player.time / 24)) * 40 + 40;
-    $("#sun").css({'top': y + '%', 'left': (x*.975) + '%', 'border-color': `rgb(255, ${255 - y ** 2 / 10}, ${150 - y * 10})`});
+    var x = -Math.sin(Math.PI * (0.5 + player.time / 24)) * 50 + 50
+    var y = Math.cos(Math.PI * (0.5 + player.time / 24)) * 72 + 72
+    $("#sun").css({'top': y + '%', 'left': (x*.975) + '%', 'border-color': `rgb(255, ${255 - y ** 2 / 10}, ${150 - y * 10})`})
+    glowRadius = Math.max(Math.min(y - 32, 15), 0) / 15
+    $('#glow').css({'box-shadow': `0 0 10vmin 7vmin rgba(255, 0, 0, ${glowRadius}), 0 0 20vmin 20vmin rgba(255, 255, 0, ${glowRadius})`})
+    const lightness = 1 - Math.sqrt(Math.abs(player.time - 12) / 12)
+    $('#sky').css('backgroundColor', `rgb(${Math.min(1500 * lightness, 87)}, ${Math.min(800 * lightness, 206)}, ${Math.min(1000 * lightness, 235)})`)
+    if (player.hour > 21) {
+        if (sunup) {
+            console.log('sunset')
+            sunup = false
+            sunset()
+        }
+    }
+    else if (player.hour < 3) {
+        if (!sunup) {
+            console.log('sunrise')
+            sunup = true
+            sunrise()
+        }
+    }
     // the dark moon. should be at the same place as the sun on day 30 at noon
     let z = (player.day * 24 + player.time) ** 2 / (daysTilEclipse * 24 + 12) ** 2; // 571536;
-    x = -Math.sin(Math.PI * (0.333333 + (player.time + 12) / 72 + (player.day % 3) / 3)) * (25 + 25 * z) + 50;
-    y = Math.cos(Math.PI * (0.333333 + (player.time + 12) / 72 + (player.day % 3) / 3)) * (40 * z) + 40;
-    $("#darkMoon").css({'top': y + '%', 'left': (x*.975) + '%', 'width': `${2+3*z}vmin`, 'height': `${2+3*+z}vmin`, 'border-width': `${1+z*1.5}vmin`, 'border-radius': `${1+z*1.5}vmin`});
+    // moon rises and sets every third day
+    x = -Math.sin(Math.PI * (0.333333 + (player.time + 12) / 72 + (player.day % 3) / 3)) * (25 + 25 * z) + 50
+    y = Math.cos(Math.PI * (0.333333 + (player.time + 12) / 72 + (player.day % 3) / 3)) * (40 * z) + 40
+    $("#darkMoon").css({
+        'top': y + '%', 
+        'left': (x*.975) + '%', 
+        'width': `${2+3*z}vmin`, 
+        'height': `${2+3*+z}vmin`, 
+        'border-width': `${1+z*1.5}vmin`, 
+        'border-radius': `${1+z*1.5}vmin`
+    })
     if (player.day === daysTilEclipse && player.hour === 12) {
         lose();
     }
+}
+
+function sunrise() {
+    var sky = $('#sky')
+    // sky.css('backgroundColor', 'skyblue')
+    // var sunrise = $('#sunrise');
+    // sunrise.css('animation', 'fadeIn 3s linear forward');
+    // setTimeout(() => {
+    //     sky.css('backgroundColor', 'skyblue');
+    //     sunrise.css('animation', 'fadeOut 3s linear forward');
+    // }, 3000);
+}
+
+function sunset() {
+    var sky = $('#sky')
+    // sky.css('backgroundColor', 'black')
+    // var sunrise = $('#sunrise');
+    // sunrise.css('animation', 'fadeIn 3s linear');
+    // setTimeout(() => {
+    //     sky.css('backgroundColor', 'black');
+    //     sunrise.css('animation', 'fadeOut 3s linear');
+    // }, 3000);
 }
 
 function nextDay() {
