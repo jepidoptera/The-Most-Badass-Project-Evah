@@ -491,7 +491,7 @@ class Animal extends Character {
             this.chaseRadius = 6;
             this.attackVerb = "mauls";
             this.damage = 50;
-            this.foodValue = Math.floor(400 * this.size);
+            this.foodValue = Math.floor(200 * this.size);
             this.hp = 30 * this.size;
         }        else {
             this.walkSpeed = 1;
