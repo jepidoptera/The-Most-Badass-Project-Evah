@@ -970,20 +970,6 @@ function astralMovements() {
     $('#glow').css({'box-shadow': `0 0 10vmin 7vmin rgba(255, 0, 0, ${glowRadius}), 0 0 20vmin 20vmin rgba(255, 255, 0, ${glowRadius})`})
     const lightness = 1 - Math.sqrt(Math.abs(player.time - 12) / 12)
     $('#sky').css('backgroundColor', `rgb(${Math.min(1500 * lightness, 87)}, ${Math.min(800 * lightness, 206)}, ${Math.min(1000 * lightness, 235)})`)
-    if (player.hour > 21) {
-        if (sunup) {
-            console.log('sunset')
-            sunup = false
-            sunset()
-        }
-    }
-    else if (player.hour < 3) {
-        if (!sunup) {
-            console.log('sunrise')
-            sunup = true
-            sunrise()
-        }
-    }
     // the dark moon. should be at the same place as the sun on day 30 at noon
     let z = (player.day * 24 + player.time) ** 2 / (daysTilEclipse * 24 + 12) ** 2; // 571536;
     // moon rises and sets every third day
@@ -1000,28 +986,6 @@ function astralMovements() {
     if (player.day === daysTilEclipse && player.hour === 12) {
         lose();
     }
-}
-
-function sunrise() {
-    var sky = $('#sky')
-    // sky.css('backgroundColor', 'skyblue')
-    // var sunrise = $('#sunrise');
-    // sunrise.css('animation', 'fadeIn 3s linear forward');
-    // setTimeout(() => {
-    //     sky.css('backgroundColor', 'skyblue');
-    //     sunrise.css('animation', 'fadeOut 3s linear forward');
-    // }, 3000);
-}
-
-function sunset() {
-    var sky = $('#sky')
-    // sky.css('backgroundColor', 'black')
-    // var sunrise = $('#sunrise');
-    // sunrise.css('animation', 'fadeIn 3s linear');
-    // setTimeout(() => {
-    //     sky.css('backgroundColor', 'black');
-    //     sunrise.css('animation', 'fadeOut 3s linear');
-    // }, 3000);
 }
 
 function nextDay() {
