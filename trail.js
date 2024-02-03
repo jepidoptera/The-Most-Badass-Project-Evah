@@ -155,6 +155,7 @@ const trail = [
         prey: [
             {type: "deer", frequency: 100},
             {type: "goat", frequency: 85},
+            {type: "tiger", frequency: 20},
             {type: "Wingmat", isMokemon: true, frequency: 10},
             {type: "Mallowbear", isMokemon: true, frequency: 10},
             {type: "Shadowdragon", isMokemon: true, frequency: 10}

@@ -481,7 +481,19 @@ class Animal extends Character {
             this.foodValue = Math.floor(400 * this.size);
             this.hp = 40 * this.size;
         }
-        else {
+        else if (type === "tiger") {
+            this.frameCount = {x: 2, y: 2};
+            this.size = Math.random() * .3 + 1;
+            this.width = this.size * 1.7;
+            this.height = this.size;
+            this.walkSpeed = 1;
+            this.runSpeed = 3;
+            this.chaseRadius = 6;
+            this.attackVerb = "mauls";
+            this.damage = 50;
+            this.foodValue = Math.floor(400 * this.size);
+            this.hp = 30 * this.size;
+        }        else {
             this.walkSpeed = 1;
         }
         this.speed = this.walkSpeed;
