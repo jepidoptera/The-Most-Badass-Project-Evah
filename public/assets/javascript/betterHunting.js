@@ -567,13 +567,14 @@ class Animal extends Character {
         let dist = approxDist(this.x, this.y, hunter.x, hunter.y);
         if (dist < 1 && this.attacking == 1) {
             this.attacking = 2
-            if (this.frameCount.x > 1) this.imageFrame.x = 1;
-            this.imageFrame.y = (this.x + this.offset.x > hunter.x + hunter.offset.x) ? 0 : 1;
-            let damage = Math.floor((1 - Math.random() * Math.random()) * this.damage + 1);
+            if (this.frameCount.x > 1) this.imageFrame.x = 1
+            this.imageFrame.y = (this.x + this.offset.x > hunter.x + hunter.offset.x) ? 0 : 1
+            let damage = Math.floor((1 - Math.random() * Math.random()) * this.damage + 1)
             message(`${this.type} ${this.attackVerb} you for ${damage} damage!`)
             setTimeout(() => {
-                this.imageFrame.x = 0;
-                this.attacking = 1;
+                if (this.dead) {return}
+                this.imageFrame.x = 0
+                this.attacking = 1
             }, 1000);
         }
     }
