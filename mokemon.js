@@ -73,15 +73,16 @@ const mokemon = {
         hp: 45,
     },
     "Fragglegod": {
-        frameCount: {x: 1, y: 2},
-        width: 2,
+        frameCount: {x: 1, y: 1},
+        width: 1,
         height: 1.75,
         walkSpeed: .75,
-        runSpeed: 3,
-        chaseRadius: 10,
-        attackVerb: "strikes",
-        damage: 75,
-        foodValue: 350,
+        runSpeed: 1.5,
+        fleeRadius: 10,
+        chaseRadius: 5,
+        attackVerb: "smites",
+        damage: 100,
+        foodValue: 150,
         hp: 45,
     }
 }
