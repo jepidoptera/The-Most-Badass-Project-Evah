@@ -315,6 +315,7 @@ class Hunter extends Character {
     }
     move() {
         if (paused) return;
+        if (this.stopped) return;
 
         super.move();
         viewport.upperbound = {
@@ -482,7 +483,7 @@ class Animal extends Character {
             this.chaseRadius = 6;
             this.attackVerb = "mauls";
             this.damage = 50;
-            this.foodValue = Math.floor(400 * this.size);
+            this.foodValue = Math.floor(275 * this.size);
             this.hp = 40 * this.size;
         }
         else if (type === "tiger") {
@@ -818,12 +819,10 @@ $(document).ready(() => {
                 $("#canvas").on("click", () => {$(".ammo").hide()})
 
                 $("#canvas").mousemove(event => {
-                    hunter.destination.x = Math.floor((event.clientX - $("#canvasFrame").position().left) * canvasScaleFactor / mapHexWidth + viewport.x)
-                    hunter.destination.y = Math.floor((event.clientY - $("#canvasFrame").position().top) * canvasScaleFactor / mapHexHeight + viewport.y - (hunter.destination.x % 2 === 0 ? 0.5 : 0))
                     mouseX = event.clientX
-                    mouseY = event.clientY
+                    mouseY = event.clientY                
                 })
-            
+                
                 $("#canvas").click(event => {
                     hunter.throw(
                         (event.clientX - $("#canvasFrame").position().left) * canvasScaleFactor / mapHexWidth + viewport.x,
@@ -846,6 +845,16 @@ $(document).ready(() => {
                         hunter.ammo = hunter.weapons[(hunter.weapons.indexOf(hunter.ammo) + 1) % hunter.weapons.length]
                     }
                     refreshWeapons();
+                })
+                $(document).keydown(event => {
+                    if (event.key === " ") {
+                        hunter.stopped = true
+                    }
+                })
+                $(document).keyup(event => {
+                    if (event.key === " ") {
+                        hunter.stopped = false
+                    }
                 })
             })
         })
@@ -949,20 +958,23 @@ function drawCanvas() {
     drawCursor();
     drawHunter();
     drawMokeballs();
-    // drawAnimals();
+
     if (frameRate >= 60) requestAnimationFrame(drawCanvas);
     $('#msg').html(messages.join("<br>"))
 }
 
 function drawHunter() {
-    let hunterImgSize = 360;
-    let hunterFrame = 0;
-    if (hunter.travelFrames)  hunterFrame = ((hunter.travelFrames % (frameRate / 3) < frameRate / 6) ? 1 : 2)
+    let hunterImgSize = 360
+    let hunterFrame = 0
+    if (hunter.travelFrames) hunterFrame = ((hunter.travelFrames % (frameRate / 3) < frameRate / 6) ? 1 : 2)
     if (hunter.throwing) hunterFrame = 3
     ctx.drawImage(hunter.image, hunterFrame * hunterImgSize, 0, hunterImgSize, hunterImgSize,
         (hunter.x - viewport.x + hunter.offset.x) * mapHexWidth, 
         (hunter.y - viewport.y + hunter.offset.y + (hunter.x % 2 === 0 ? 0.25 : -0.25)) * mapHexHeight,
-        mapHexHeight * 1.1547, mapHexHeight);
+        mapHexHeight * 1.1547, mapHexHeight)
+    // steer
+    hunter.destination.x = Math.floor((mouseX - $("#canvasFrame").position().left) * canvasScaleFactor / mapHexWidth + viewport.x)
+    hunter.destination.y = Math.floor((mouseY - $("#canvasFrame").position().top) * canvasScaleFactor / mapHexHeight + viewport.y - (hunter.destination.x % 2 === 0 ? 0.5 : 0))
 }
 
 function drawMokeballs() {
@@ -983,8 +995,8 @@ function drawCursor() {
     ctx.save()
     ctx.translate(mouseX - $('#canvas').offset().left, mouseY - $('#canvas').offset().top)
     ctx.rotate(Math.atan2(
-        (hunter.y - viewport.y + 1) * mapHexHeight - mouseY, 
-        (hunter.x - viewport.x + 1) * mapHexWidth - mouseX
+        (hunter.y + hunter.offset.y + .75 - viewport.y) * mapHexHeight - mouseY, 
+        (hunter.x + hunter.offset.x + 1 - viewport.x + 1) * mapHexWidth - mouseX
     ) + Math.PI * 1.5)
     ctx.drawImage(cursorImage, -mapHexWidth / 4, 0, mapHexWidth / 2, mapHexHeight)
     ctx.restore()
