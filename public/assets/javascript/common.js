@@ -118,9 +118,20 @@ function loadTrail(callback) {
         console.log('load error: ', err);
         callback({name: urlParams.get('name')})
     });
-
 }
 
+function loadMokemon(callback) {
+    $.ajax({
+        method: "GET",
+        url: "/load/mokemon"
+    }).done(data => {
+        callback(data)
+    }).fail(err => {
+        console.log('load error: ', err);
+        callback({name: urlParams.get('name')})
+    });
+
+}
 
 function pause() {
     paused = true;
