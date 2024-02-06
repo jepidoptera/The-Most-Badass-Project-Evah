@@ -12,8 +12,9 @@ firebase.initializeApp({
     authDomain: "pokemon-trail.firebaseapp.com",
     databaseURL: "https://pokemon-trail.firebaseio.com",
     projectId: "pokemon-trail",
-    storageBucket: "",
-    messagingSenderId: "726250890927"
+    storageBucket: "pokemon-trail.appspot.com",
+    messagingSenderId: "726250890927",
+    appId: "1:726250890927:web:828d281a656042e046965a"
 })
 // const trail = require('trail')
 
