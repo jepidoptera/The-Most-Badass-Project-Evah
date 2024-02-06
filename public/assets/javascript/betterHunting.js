@@ -3,18 +3,21 @@ const mapHeight = 400;
 let frameRate = 60;
 
 let viewport = {width: 0, height: 0, innerWindow: {width: 0, height: 0}, x: 488, y: 494}
-let map = {};
-let hunter = {};
-let projectiles = [];
-let animals = [];
-var canvas;
-var ctx;
-var canvasScaleFactor = 1;
-var effectiveFrameRate;
-var lastFrame;
-var mapHexWidth, mapHexHeight;
-var messages = [];
-var landImage;
+let map = {}
+let hunter = {}
+let projectiles = []
+let animals = []
+var canvas
+var ctx
+var mouseX, mouseY
+var canvasScaleFactor = 1
+var effectiveFrameRate
+var lastFrame
+var mapHexWidth, mapHexHeight
+var messages = []
+var landImage
+var cursorImage
+var mokeInfo
 
 class Projectile {
     constructor(x, y) {
@@ -104,6 +107,7 @@ class Mokeball extends Projectile {
                 if (dist < margin) {
                     if (animal.hp > 20) {
                         // that shit don't work on bears
+                        animal.hp -= 10
                         this.movement.z = 1 / this.bounceFactor;
                         this.movement.max = Infinity;
                         this.bounced--;
@@ -197,7 +201,7 @@ class Rock extends Projectile {
                 if (animal._onScreen && !animal.dead) {
                     let dist = approxDist(this.x, this.y, animal.x + animal.offset.x + animal.width/2, animal.realY + animal.width/2);
                     if (dist < margin) {
-                        animal.hp -= 1;
+                        animal.hp -= 2;
                         if (animal.hp <= 0) {
                             let messageText = `You killed: ${animal.type}!` 
                             if (animal.foodValue > 0) messageText += `  You gain ${animal.foodValue} food.`;
@@ -533,11 +537,11 @@ class Animal extends Character {
             }
         }
         let dist = approxDist(this.x, this.y, hunter.x, hunter.y);
-        if (dist < this.fleeRadius) {
-            this.flee()
-        }
-        else if (dist < this.chaseRadius) {
+        if (dist < this.chaseRadius) {
             this.attack();
+        }
+        else if (dist < this.fleeRadius) {
+            this.flee()
         }
     }
     get onScreen() {
@@ -640,80 +644,17 @@ class Mokemon extends Animal {
         super(type, x, y);
         this.isMokemon = true;
         this.image =$("<img>").attr('src', `./assets/images/mokemon/${type}.png`)[0]
-        if (this.type==="Apismanion") {
-            this.frameCount = {x: 1, y: 1};
-            this.width = .875;
-            this.height = 1;
-            this.walkSpeed = 1;
-            this.runSpeed = 2;
-            this.fleeRadius = 10;
-            this.foodValue = 100;
-            this.hp = 10;
-        }
-        if (this.type==="Dezzy") {
-            this.frameCount = {x: 1, y: 1};
-            this.width = .75;
-            this.height = 1.2;
-            this.walkSpeed = 1;
-            this.runSpeed = 2;
-            this.fleeRadius = 10;
-            this.foodValue = 160;
-            this.hp = 9;
-        }
-        if (this.type==="Mallowbear") {
-            this.frameCount = {x: 1, y: 1};
-            this.width = 1;
-            this.height = 1.2;
-            this.walkSpeed = 1;
-            this.runSpeed = 2;
-            this.fleeRadius = 6;
-            this.hp = 20;
-            this.foodValue = 200;
-        }
-        if (this.type==="Marlequin"){
-            this.frameCount = {x: 1, y: 1};
-            this.width = .75;
-            this.height = 1;
-            this.walkSpeed = 1;
-            this.runSpeed = 3;
-            this.fleeRadius = 10;
-            this.foodValue = 90;
-            this.hp = 11;
-            this.randomMotion = 3;
-        }
-        if (this.type==="Wingmat"){
-            this.frameCount = {x: 1, y: 1};
-            this.width = 1.75;
-            this.height = 1;
-            this.walkSpeed = 1;
-            this.runSpeed = 2;
-            this.fleeRadius = 10;
-            this.foodValue = 210;
-            this.hp = 10;
-
-        }
-        if (this.type==="Zyant"){
-            this.frameCount = {x: 1, y: 1};
-            this.width = 1.2;
-            this.height = 1.2;
-            this.walkSpeed = 1;
-            this.runSpeed = 2;
-            this.fleeRadius = 10;
-            this.foodValue = 200;
-            this.hp = 15;
-        }
-        if (this.type==="Shadowdragon"){
-            this.frameCount = {x: 1, y: 2};
-            this.width = 2;
-            this.height = 1.75;
-            this.walkSpeed = .75;
-            this.runSpeed = 3;
-            this.chaseRadius = 10;
-            this.attackVerb = "strikes";
-            this.damage = 75;
-            this.foodValue = 350;
-            this.hp = 45;
-        }
+        this.frameCount = mokeInfo[this.type].frameCount
+        this.width = mokeInfo[this.type].width
+        this.height = mokeInfo[this.type].height
+        this.walkSpeed = mokeInfo[this.type].walkSpeed
+        this.runSpeed = mokeInfo[this.type].runSpeed
+        this.fleeRadius = mokeInfo[this.type].fleeRadius
+        this.chaseRadius = mokeInfo[this.type].chaseRadius
+        this.attackVerb = mokeInfo[this.type].attackVerb
+        this.damage = mokeInfo[this.type].damage
+        this.foodValue = mokeInfo[this.type].foodValue
+        this.hp = mokeInfo[this.type].maxHealth
     }
     get onScreen() {
         // disappears if you already have one of this type
@@ -723,12 +664,13 @@ class Mokemon extends Animal {
 }
 
 $(document).ready(() => {
-    canvas = $("#canvas");
-    ctx = canvas[0].getContext("2d");
-    canvas[0].width = canvas.width();
-    canvas[0].height = canvas.height();
-    mapHexHeight = canvas.width() / viewport.width;
-    mapHexWidth = mapHexHeight * .866;
+    canvas = $("#canvas")
+    ctx = canvas[0].getContext("2d")
+    canvas[0].width = canvas.width()
+    canvas[0].height = canvas.height()
+    mapHexHeight = canvas.width() / viewport.width
+    mapHexWidth = mapHexHeight * .866
+    cursorImage = $('<img>').attr('src', './assets/images/arrow3.png')[0]
 
     function sizeCanvas() {
         canvas[0].width = canvas.width() * canvasScaleFactor;
@@ -754,156 +696,155 @@ $(document).ready(() => {
         mapHexWidth = mapHexHeight * .866;
     }
 
-
     loadTrail(trail => {
         loadPlayer(p => {
-            Object.keys(p).forEach(key => {
-                player[key] = p[key];
-            })
-            if (player.mokeballs === undefined) player.mokeballs = 30;
-            if (player.grenades === undefined) player.grenades = 12;
-            if (player.time === undefined) player.time = 0;
-            if (player.food === undefined) player.food = 0;
-            player.hour = 0;
+            loadMokemon(mokemon => {
+                Object.keys(p).forEach(key => {
+                    player[key] = p[key];
+                })
+                if (player.mokeballs === undefined) player.mokeballs = 30
+                if (player.grenades === undefined) player.grenades = 12
+                if (player.time === undefined) player.time = 0
+                if (player.food === undefined) player.food = 0
+                player.hour = 0
 
-            let location = trail[trail.map(location => location.name).indexOf(player.currentLocation || "The Forest of Doom")];
-            landImage = $("<img>").attr('src', `./assets/images/land tiles/${location.type}.png`)[0]
+                mokeInfo = mokemon
+                let location = trail[trail.map(location => location.name).indexOf(player.currentLocation || "The Forest of Doom")];
+                landImage = $("<img>").attr('src', `./assets/images/land tiles/${location.type}.png`)[0]
 
-            map = genMap(location, () => {
-                // if (Math.max(canvas.width(), canvas.height()) > 1000 ) requestAnimationFrame(drawCanvas);
-                // else {
-                    frameRate = 30
-                    effectiveFrameRate = 30;
-                    lastFrame = Date.now();
-                    setTimeout(() => {
-                        message("Click to move.  Right-click or double-tap to throw.")
-                    }, 1000);
-                    setTimeout(() => {
-                        message("Use F and G, or tap the menu to switch weapons.")
-                    }, 3000);
+                map = genMap(location, () => {
+                    // if (Math.max(canvas.width(), canvas.height()) > 1000 ) requestAnimationFrame(drawCanvas);
+                    // else {
+                        frameRate = 30
+                        effectiveFrameRate = 30;
+                        lastFrame = Date.now();
+                        setTimeout(() => {
+                            message("Click to move.  Right-click or double-tap to throw.")
+                        }, 1000);
+                        setTimeout(() => {
+                            message("Use F and G, or tap the menu to switch weapons.")
+                        }, 3000);
 
-                    setInterval(() => {
-                        if (paused) return;
-                        // average over 100 frames
-                        // effectiveFrameRate = effectiveFrameRate * .966666666 + 33 / (Date.now() - lastFrame);
-                        // lastFrame = Date.now();
-                        // let optimalScale = canvasScaleFactor * effectiveFrameRate / 30;
-                        // if (canvasScaleFactor / optimalScale > 1.05 || canvasScaleFactor / optimalScale < .99) {
-                        //     canvasScaleFactor = optimalScale;
-                        //     sizeCanvas();
-                        // }
-                        // if (canvasScaleFactor < 1) canvasScaleFactor += .001
-                        drawCanvas();
-                    }, 1000 / frameRate);
-                // }
-            });
+                        setInterval(() => {
+                            if (paused) return;
+                            // average over 100 frames
+                            // effectiveFrameRate = effectiveFrameRate * .966666666 + 33 / (Date.now() - lastFrame);
+                            // lastFrame = Date.now();
+                            // let optimalScale = canvasScaleFactor * effectiveFrameRate / 30;
+                            // if (canvasScaleFactor / optimalScale > 1.05 || canvasScaleFactor / optimalScale < .99) {
+                            //     canvasScaleFactor = optimalScale;
+                            //     sizeCanvas();
+                            // }
+                            // if (canvasScaleFactor < 1) canvasScaleFactor += .001
+                            drawCanvas();
+                        }, 1000 / frameRate);
+                    // }
+                })
 
-            // count down til dark
-            function timeDown() {
-                player.time ++;
-                if (player.time > 24) {
-                    player.time = 0;
-                    player.day ++;
-                }
-                player.hour ++;
-                hoursTilDark = parseInt(14 - player.hour); 
-                $("#time").text('Hours til dark: '+ hoursTilDark);
-                if (hoursTilDark == 0) {
-                    player.messages.push(`You scored ${hunter.food} food while hunting.`);
-                    saveGame();
-                    msgBox('darkness', `The sun has gone down.  You head back to camp with your day's catch of ${hunter.food} food.`,
-                    [{text: "ok", function: () => {
-                        window.location.href = `/journey?name=${player.name}&auth=${player.authtoken}`;
-                    }}]);
-                }
-                else {
-                    setTimeout(timeDown, 9600);
-                }
-            }    
-            if (player.time) timeDown();
-
-            hunter = new Hunter(mapWidth/2, mapHeight/2);
-            location.prey.forEach(prey => {
-                for (let n = 0; n < prey.frequency; n++) {
-                    if (!prey.isMokemon) {
-                        animals.push(new Animal(prey.type, Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight)));
+                // count down til dark
+                function timeDown() {
+                    player.time ++
+                    if (player.time > 24) {
+                        player.time = 0
+                        player.day ++
+                    }
+                    player.hour ++
+                    hoursTilDark = parseInt(14 - player.hour)
+                    $("#time").text('Hours til dark: '+ hoursTilDark)
+                    if (hoursTilDark == 0) {
+                        player.messages.push(`You scored ${hunter.food} food while hunting.`)
+                        saveGame()
+                        msgBox('darkness', `The sun has gone down.  You head back to camp with your day's catch of ${hunter.food} food.`,
+                        [{text: "ok", function: () => {
+                            window.location.href = `/journey?name=${player.name}&auth=${player.authtoken}`
+                        }}]);
                     }
                     else {
-                        animals.push(new Mokemon(prey.type, Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight)));
+                        setTimeout(timeDown, 9600)
                     }
-                }
-            })
-            window.addEventListener('resize', sizeCanvas);
-            sizeCanvas();
-        
-            hunter.weapons = [
-                'mokeballs',
-                'grenades',
-                'rocks'
-            ]
-            hunter.ammo = "mokeballs";
+                }    
+                if (player.time) timeDown()
 
-            // set player weapons and controls
-            $("#selectedAmmo").text(`mokeballs (${player.mokeballs}) ▼`)
-            hunter.weapons.forEach(weapon => {
-                $("#ammoSelect").append(
-                    $("<div>")
-                    .addClass("ammo")
-                    .addClass("outline")
-                    .attr('name', weapon)
-                )
-            })
-            refreshWeapons();
-            $(".ammo").hide();
-            $("#selectedAmmo").click(() => {
-                $(".ammo").show();
-            })
-            function refreshWeapons() {
-                hunter.weapons.forEach(weapon => {
-                    $(`div[name=${weapon}]`).html(`${weapon} (${player[weapon] !== undefined ? player[weapon] : '∞'})`)
+                hunter = new Hunter(mapWidth/2, mapHeight/2)
+                // add animals and Mokemon
+                location.prey.forEach(prey => {
+                    for (let n = 0; n < prey.frequency; n++) {
+                        animals.push(new Animal(prey.type, Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight)))
+                    }
                 })
-                $("#selectedAmmo").text($(`div[name="${hunter.ammo}"`).text() + " ▼")
-            }
-            $(".ammo").click(event => {
-                hunter.ammo = $(event.target).attr('name');
+                location.mokemon.forEach(mokemon => {
+                    for (let n = 0; n < mokemon.frequency; n++) {
+                        animals.push(new Mokemon(mokemon.type, Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight)))
+                    }
+                })
+                window.addEventListener('resize', sizeCanvas)
+                sizeCanvas()
+            
+                hunter.weapons = [
+                    'mokeballs',
+                    'grenades',
+                    'rocks'
+                ]
+                hunter.ammo = "mokeballs";
+
+                // set player weapons and controls
+                $("#selectedAmmo").text(`mokeballs (${player.mokeballs}) ▼`)
+                hunter.weapons.forEach(weapon => {
+                    $("#ammoSelect").append(
+                        $("<div>")
+                        .addClass("ammo")
+                        .addClass("outline")
+                        .attr('name', weapon)
+                    )
+                })
                 refreshWeapons();
                 $(".ammo").hide();
-            });
-            $("#canvas").on("click", () => {$(".ammo").hide()})
+                $("#selectedAmmo").click(() => {
+                    $(".ammo").show();
+                })
+                function refreshWeapons() {
+                    hunter.weapons.forEach(weapon => {
+                        $(`div[name=${weapon}]`).html(`${weapon} (${player[weapon] !== undefined ? player[weapon] : '∞'})`)
+                    })
+                    $("#selectedAmmo").text($(`div[name="${hunter.ammo}"`).text() + " ▼")
+                }
+                $(".ammo").click(event => {
+                    hunter.ammo = $(event.target).attr('name');
+                    refreshWeapons();
+                    $(".ammo").hide();
+                });
+                $("#canvas").on("click", () => {$(".ammo").hide()})
 
-            $("#canvas").click(event => {
-                // console.log(event.clientX);
-                hunter.destination.x = Math.floor((event.clientX - $("#canvasFrame").position().left) * canvasScaleFactor / mapHexWidth + viewport.x);
-                hunter.destination.y = Math.floor((event.clientY - $("#canvasFrame").position().top) * canvasScaleFactor / mapHexHeight + viewport.y - (hunter.destination.x % 2 === 0 ? 0.5 : 0))
-    
-                // console.log("x", hunter.destination.x, "y", hunter.destination.y);
-                if (map.nodes[hunter.destination.x][hunter.destination.y].object) console.log(map.nodes[hunter.destination.x][hunter.destination.y].object.type, "x", hunter.destination.x, "y", hunter.destination.y);
-    
-                // console.log(findPath(hunter, hunter.destination));
-            })
-        
-            $("#canvas").dblclick(event => {
-                hunter.throw(
-                    (event.clientX - $("#canvasFrame").position().left) * canvasScaleFactor / mapHexWidth + viewport.x,
-                    (event.clientY - $("#canvasFrame").position().top) * canvasScaleFactor / mapHexHeight + viewport.y
-                )
-            })        
-            $("#canvas").contextmenu(event => {
-                event.preventDefault();
-                hunter.throw(
-                    (event.clientX - $("#canvasFrame").position().left) * canvasScaleFactor / mapHexWidth + viewport.x,
-                    (event.clientY - $("#canvasFrame").position().top) * canvasScaleFactor / mapHexHeight + viewport.y
-                )
-            })        
-            $("#msg").contextmenu(event => event.preventDefault())
-            $(document).keypress(event => {
-                if (event.key === "f") {
-                    hunter.ammo = hunter.weapons[(hunter.weapons.indexOf(hunter.ammo) - 1 + hunter.weapons.length) % hunter.weapons.length]
-                }
-                if (event.key === "g") {
-                    hunter.ammo = hunter.weapons[(hunter.weapons.indexOf(hunter.ammo) + 1) % hunter.weapons.length]
-                }
-                refreshWeapons();
+                $("#canvas").mousemove(event => {
+                    hunter.destination.x = Math.floor((event.clientX - $("#canvasFrame").position().left) * canvasScaleFactor / mapHexWidth + viewport.x)
+                    hunter.destination.y = Math.floor((event.clientY - $("#canvasFrame").position().top) * canvasScaleFactor / mapHexHeight + viewport.y - (hunter.destination.x % 2 === 0 ? 0.5 : 0))
+                    mouseX = event.clientX
+                    mouseY = event.clientY
+                })
+            
+                $("#canvas").click(event => {
+                    hunter.throw(
+                        (event.clientX - $("#canvasFrame").position().left) * canvasScaleFactor / mapHexWidth + viewport.x,
+                        (event.clientY - $("#canvasFrame").position().top) * canvasScaleFactor / mapHexHeight + viewport.y
+                    )
+                })        
+                $("#canvas").contextmenu(event => {
+                    event.preventDefault();
+                    hunter.throw(
+                        (event.clientX - $("#canvasFrame").position().left) * canvasScaleFactor / mapHexWidth + viewport.x,
+                        (event.clientY - $("#canvasFrame").position().top) * canvasScaleFactor / mapHexHeight + viewport.y
+                    )
+                })        
+                $("#msg").contextmenu(event => event.preventDefault())
+                $(document).keypress(event => {
+                    if (event.key === "f") {
+                        hunter.ammo = hunter.weapons[(hunter.weapons.indexOf(hunter.ammo) - 1 + hunter.weapons.length) % hunter.weapons.length]
+                    }
+                    if (event.key === "g") {
+                        hunter.ammo = hunter.weapons[(hunter.weapons.indexOf(hunter.ammo) + 1) % hunter.weapons.length]
+                    }
+                    refreshWeapons();
+                })
             })
         })
     })
@@ -981,12 +922,15 @@ function drawCanvas() {
             }
 
             if (mapItems[n].imageFrame) {
-
-                ctx.drawImage(mapItems[n].image, mapItems[n].imageFrame.x * mapItems[n].image.naturalWidth / mapItems[n].frameCount.x, 
+                // animated image   
+                ctx.drawImage(
+                    mapItems[n].image, 
+                    mapItems[n].imageFrame.x * mapItems[n].image.naturalWidth / mapItems[n].frameCount.x, 
                     mapItems[n].imageFrame.y * mapItems[n].image.naturalHeight / mapItems[n].frameCount.y, 
                     mapItems[n].image.naturalWidth / mapItems[n].frameCount.x, mapItems[n].image.naturalHeight / mapItems[n].frameCount.y,
                     0, 0,
-                    mapItems[n].width * mapHexHeight, mapItems[n].height * mapHexHeight);
+                    mapItems[n].width * mapHexHeight, mapItems[n].height * mapHexHeight
+                )
             }
             else {
                 // singleton image
@@ -1000,6 +944,7 @@ function drawCanvas() {
         }
     }
 
+    drawCursor();
     drawHunter();
     drawMokeballs();
     // drawAnimals();
@@ -1029,6 +974,17 @@ function drawMokeballs() {
         remainingBalls.push(ball)
     })
     projectiles = remainingBalls;
+}
+
+function drawCursor() {
+    ctx.save()
+    ctx.translate(mouseX - $('#canvas').offset().left, mouseY - $('#canvas').offset().top)
+    ctx.rotate(Math.atan2(
+        (hunter.y - viewport.y + 1) * mapHexHeight - mouseY, 
+        (hunter.x - viewport.x + 1) * mapHexWidth - mouseX
+    ) + Math.PI * 1.5)
+    ctx.drawImage(cursorImage, -mapHexWidth / 4, 0, mapHexWidth / 2, mapHexHeight)
+    ctx.restore()
 }
 
 function genMap(terrain, callback) {
