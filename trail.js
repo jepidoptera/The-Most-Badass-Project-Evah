@@ -24,7 +24,7 @@ const trail = [
         length: 15,
         message: {
             title: 'Your journey begins', 
-            text: "Orepoke, once the world's greatest city, is now wracked by devastating epidemics of cholera and dysentery, as well as terrible shortages of food, wagon axles, and bullets.  Furthermore, the prophets foretell that on Februne the twelfth, the Sun will be eclipsed by the dark moon Plutanus, and madness will grip the land.  Only the legendary city of Pokegonemon has the technology to weather the coming storm.  So taking your surviving Mokemon™, you set off on the road...",
+            text: "Orepoke, once the world's greatest city, is now wracked by devastating epidemics of cholera and dysentery, as well as terrible shortages of food, wagon axles, and bullets.  Furthermore, the prophets foretell that on Februne the twelfth, the Sun will be eclipsed by the dark moon Plutanus, and madness will grip the land.  Only the legendary city of Pokegonemon has the technology to weather the coming storm.  So taking your surviving Mokemon™, you set off before dawn...",
             button: "begin"
         }
     },
@@ -67,7 +67,10 @@ const trail = [
             {type: "deer", frequency: 100},
             {type: "bear", frequency: 20},
             {type: "squirrel", frequency: 300},
-            {type: "Zyant", isMokemon: true, frequency: 10}
+        ],
+        mokemon: [
+            {type: "Zyant", isMokemon: true, frequency: 10},
+            {type: "Fragglegod", isMokemon: true, frequency: 100}
         ],
         length: 75 // seconds
 
@@ -84,6 +87,8 @@ const trail = [
             {type: "scorpion", frequency: 100},
             {type: "armadillo", frequency: 50},
             {type: "coyote", frequency: 20},
+        ],
+        mokemon: [
             {type: "Dezzy", isMokemon: true, frequency: 10}
         ],
         length: 57 // seconds
@@ -119,7 +124,9 @@ const trail = [
             {type: "scorpion", frequency: 100},
             {type: "armadillo", frequency: 50},
             {type: "coyote", frequency: 20},
-            {type: "Dezzy", isMokemon: true, frequency: 10}
+        ],
+        mokemon: [
+            {type: "Dezzy", frequency: 10}
         ],
         length: 39 // seconds
 
@@ -139,6 +146,8 @@ const trail = [
             {type: "goat", frequency: 85},
             {type: "porcupine", frequency: 85},
             {type: "yeti", frequency: 10},
+        ],
+        mokemon: [
             {type: "Apismanion", isMokemon: true, frequency: 10},
             {type: "Marlequin", isMokemon: true, frequency: 10}
         ],
@@ -156,6 +165,8 @@ const trail = [
             {type: "deer", frequency: 100},
             {type: "goat", frequency: 85},
             {type: "tiger", frequency: 20},
+        ],
+        mokemon: [
             {type: "Wingmat", isMokemon: true, frequency: 10},
             {type: "Mallowbear", isMokemon: true, frequency: 10},
             {type: "Shadowdragon", isMokemon: true, frequency: 10}
