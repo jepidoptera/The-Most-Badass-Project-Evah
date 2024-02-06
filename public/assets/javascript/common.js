@@ -1,18 +1,18 @@
 class Player{
     constructor(name) {
         // give player initial stats
-        this.food = 120;
-        this.money = 1550;
-        this.mokeballs = 27;
-        this.grenades = 9;
-        this.speed = 4;
-        this.name = name || 'simone';
+        this.food = 120
+        this.money = 1550
+        this.mokeballs = 27
+        this.grenades = 9
+        this.speed = 4
+        this.name = name || 'simone'
         // reset to beginning of trail
-        this.progress = 1;
-        this.time = 0;
-        this.day = 0;
-        this.messages = ["You set off on the trail! Next stop: the forest of doom."];
-        this.posse = [{name: 'dezzy'}, {name: 'apismanion'}, {name: 'mallowbear'}, {name: 'marlequin'}, {name: 'wingmat'}];
+        this.progress = 1
+        this.time = 0
+        this.day = 0
+        this.messages = ["You set off on the trail! Next stop: the forest of doom."]
+        this.posse = [{name: 'dezzy'}, {name: 'apismanion'}, {name: 'mallowbear'}, {name: 'marlequin'}, {name: 'wingmat'}]
         let urlParams = new URLSearchParams(location.search)
         this.authtoken = urlParams.get('auth')    
     }
@@ -36,13 +36,13 @@ class Player{
         }
     }
 }
-let player = new Player();
-let paused = false;
-let msgBoxActive = false;
+let player = new Player()
+let paused = false
+let msgBoxActive = false
 
 function msgBox(title, text, buttons = [{text: "ok", function: () => {}}]) {
-    if (pause) pause();
-    msgBoxActive = true;
+    if (pause) pause()
+    msgBoxActive = true
     if (!text) {
         text = title;
         title = "-------"
@@ -62,12 +62,12 @@ function msgBox(title, text, buttons = [{text: "ok", function: () => {}}]) {
             .attr("type", (buttons.length === 1 ? "submit" : "none"))
         )
     })
-    return $("#msgbox");
+    return $("#msgbox")
 }
 
 function clearDialogs() {
-    $("#msgbox").hide();
-    $("#optionsMenu").hide();
+    $("#msgbox").hide()
+    $("#optionsMenu").hide()
 }
 
 function saveGame() {
@@ -94,7 +94,7 @@ function loadPlayer(callback) {
             window.location.href = "/logout"
         }
         callback({name: urlParams.get('name')})
-    });
+    })
     // try {
     //     player = JSON.parse($("#playerInfo").text());
     // }
@@ -117,7 +117,7 @@ function loadTrail(callback) {
     }).fail(err => {
         console.log('load error: ', err);
         callback({name: urlParams.get('name')})
-    });
+    })
 }
 
 function loadMokemon(callback) {
@@ -129,7 +129,7 @@ function loadMokemon(callback) {
     }).fail(err => {
         console.log('load error: ', err);
         callback({name: urlParams.get('name')})
-    });
+    })
 
 }
 
