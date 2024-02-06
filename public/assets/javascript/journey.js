@@ -445,12 +445,12 @@ const events = {
     },
     yeti: {
         get occurs() {
-            // most often eats the weakest one
             return player.posse.length > 0 && trail.currentLocation.type === "mountains" && parseInt(Math.random() * 250) == 0;
         },
         function: () => {
-            victim = player.posse[parseInt(Math.random() * player.posse.length)];
-            victim.die("was devoured by a monstrous yeti");
+            // most often eats the weakest one
+            let victim = player.posse[weightedRandom(player.posse.map(moke => 1 / moke.health))];
+            victim.die("was devoured by a monstrous yeti")
             msgBox ("Death", victim.name + " was eaten by a yeti.", "damn")
         }
     },
@@ -459,11 +459,12 @@ const events = {
             return player.posse.length > 0 && !player.resting && trail.currentLocation.type === "forest" && parseInt(Math.random() * 100) == 0;
         },
         function: () => {
-            victim = player.posse[parseInt(Math.random() * player.posse.length)];
+            victim = player.posse[parseInt(Math.random() * player.posse.length)]
             let damage = Math.floor(Math.random() * 11 + 1)
-            player.messages.push(`${victim.name} suffered ${damage} damage from a falling tree.`);
-            victim.health = Math.max(victim.health - damage, 0);
-            msgBox ("Ouch", `A tree fell on ${victim.name}.`, [{text: ":_(", function: () => {
+            player.messages.push(`${victim.name} suffered ${damage} damage from a falling tree.`)
+            victim.health = Math.max(victim.health - damage, 0)
+            fallingObject = damage > 7 ? "tree" : (damage > 3 ? "branch" : "stick")
+            msgBox ("Ouch", `A ${fallingObject} fell on ${victim.name}.`, [{text: ":_(", function: () => {
                 victim.health += damage;
                 victim.hurt(damage);
             }}])
@@ -477,7 +478,7 @@ const events = {
         },
         function: () => {
             victim = player.posse[parseInt(Math.random() * player.posse.length)];
-            let damage = Math.floor(Math.random() * 11 + 1)
+            let damage = Math.floor(Math.random() * 6 + 6)
             player.messages.push(`${victim.name} suffered ${damage} damage from a cactus.`);
             victim.health = Math.max(victim.health - damage, 0);
             msgBox ("Ouch", `A cactus fell on ${victim.name}.`, [{text: ":_(", function: () => {
@@ -766,7 +767,7 @@ class mokePosse {
         if (this.health <= 0) this.die();
     }
     die(cause) {
-        msgBox('tragedy', this.name + " has died.", [{
+        msgBox('tragedy', `${this.name} ${cause || "has died"}.`, [{
             text: 'ok',
             function: () => {
             } // not much you can do here
