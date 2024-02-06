@@ -327,8 +327,8 @@ class Canvas {
                     totalWidth += mokemon.width + canvas.width/200;
                     this.ctx.drawImage(
                         mokemon.img,
-                        0, 0, // source x, y
-                        mokemon.img.naturalWidth / mokemon.frameCount.x, mokemon.img.naturalHeight / mokemon.frameCount.y, // source width, height
+                        // 0, 0, // source x, y
+                        // mokemon.img.naturalWidth / mokemon.frameCount.x, mokemon.img.naturalHeight / mokemon.frameCount.y, // source width, height
                         canvas.width / 4 - totalWidth, // x
                         mokemon.y - mokemon.z, // y
                         mokemon.width, mokemon.height
@@ -739,7 +739,7 @@ class mokePosse {
         this.z = 0;
         this.health = health || this.maxHealth;
 
-        if (!this.img) this.img = $("<img>").attr('src', './assets/images/mokemon/' + name.toLowerCase() + ".png")[0];
+        if (!this.img) this.img = $("<img>").attr('src', './assets/images/mokemon/thumbnails/' + name.toLowerCase() + ".png")[0];
         this.bounceHeight = this.height / 2;
         this.index = player.posse.length;
     }
@@ -920,7 +920,7 @@ function astralMovements() {
     var sun_y = Math.cos(Math.PI * (0.5 + player.time / 24)) * 100 + 105
     $("#sun").css({'top': sun_y + '%', 'left': (sun_x) + '%', 'border-color': `rgb(255, ${255 - sun_y ** 2 / 10}, ${150 - sun_y * 10})`})
     sunglow = Math.max(Math.min(sun_y - 32, 15), 0) / 12
-    $('#glow').css({'box-shadow': `0 0 15vmin 9vmin rgba(255, 0, 0, ${sunglow}), 0 0 30vmin 28vmin rgba(255, 255, 0, ${sunglow})`})
+    $('#glow').css({'box-shadow': `0 0 15vmin 9vmin rgba(255, 255, 0, ${sunglow}), 0 0 30vmin 28vmin rgba(255, 0, 0, ${sunglow})`})
     const lightness = 1 - Math.abs(player.time - 12) / 10
     $('#sky').css({
         'backgroundColor': `rgb(${Math.min(1500 * lightness, 87)}, ${Math.min(800 * lightness, 206)}, ${Math.min(1000 * lightness, 235)})`,
