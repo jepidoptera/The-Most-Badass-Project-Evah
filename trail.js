@@ -70,7 +70,7 @@ const trail = [
         ],
         mokemon: [
             {type: "Zyant", isMokemon: true, frequency: 10},
-            {type: "Fragglegod", isMokemon: true, frequency: 100}
+            {type: "Fragglegod", isMokemon: true, frequency: 10}
         ],
         length: 75 // seconds
 
@@ -89,7 +89,8 @@ const trail = [
             {type: "coyote", frequency: 20},
         ],
         mokemon: [
-            {type: "Dezzy", isMokemon: true, frequency: 10}
+            {type: "Dezzy", isMokemon: true, frequency: 10},
+            {type: "Fragglegod", isMokemon: true, frequency: 10}
         ],
         length: 57 // seconds
 
@@ -126,7 +127,9 @@ const trail = [
             {type: "coyote", frequency: 20},
         ],
         mokemon: [
-            {type: "Dezzy", frequency: 10}
+            {type: "Dezzy", frequency: 10},
+            {type: "Fragglegod", isMokemon: true, frequency: 10}
+
         ],
         length: 39 // seconds
 
@@ -149,7 +152,8 @@ const trail = [
         ],
         mokemon: [
             {type: "Apismanion", isMokemon: true, frequency: 10},
-            {type: "Marlequin", isMokemon: true, frequency: 10}
+            {type: "Marlequin", isMokemon: true, frequency: 10},
+            {type: "Fragglegod", isMokemon: true, frequency: 10}
         ],
         length: 82 // seconds
 
@@ -169,7 +173,8 @@ const trail = [
         mokemon: [
             {type: "Wingmat", isMokemon: true, frequency: 10},
             {type: "Mallowbear", isMokemon: true, frequency: 10},
-            {type: "Shadowdragon", isMokemon: true, frequency: 10}
+            {type: "Shadowdragon", isMokemon: true, frequency: 10},
+            {type: "Fragglegod", isMokemon: true, frequency: 10}
         ],
         length: 100 // seconds
 
