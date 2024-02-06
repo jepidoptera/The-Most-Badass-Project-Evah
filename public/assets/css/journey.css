@@ -6,7 +6,8 @@ html, body {
     height: 100vh;
     display: block;
     position: absolute;
-    transition: filter 5s;
+    z-index: 3;
+    user-select: none;
 }
 #narrative {
     display: block;
@@ -22,11 +23,8 @@ html, body {
     font-size: 12pt;
     padding: 10px;
 }
-#sky {
+#sky{
     background-color: midnightblue;
-}
-#sunrise, #sky {
-    /* transition: background-color 3s; */
     background-size: 100%;
     background-position: 0 62%;
     position: absolute;
@@ -35,19 +33,17 @@ html, body {
     left: 0;
     width: 100%;
     height: 40%;
+    z-index: 2;
 }
-/* #sunrise {
-    background-image: linear-gradient(rgba(255, 0, 0, 1), rgba(255, 255, 0, 1));
-    opacity: 0;
+#stars {
+    position: absolute;
+    display: block;
+    width: 320%;
+    height: 40%;
+    top: 0;
+    left: 0;
+    z-index: 1;
 }
-@keyframes fadeIn {
-    0% { opacity: 0; }
-    100% { opacity: 1; }
-}
-@keyframes fadeOut {
-    0% { opacity: 1; }
-    100% { opacity: 0; }
-} */
 #sun {
     /* a yellow circle */
     position: absolute;
@@ -57,6 +53,8 @@ html, body {
     height: 5vmin;
     border: 2.5vmin solid yellow;
     border-radius: 2.5vmin;
+    z-index: 2;
+    transform: translate(-50%, -50%);
 }
 #glow {
     position: absolute;
@@ -77,6 +75,8 @@ html, body {
     box-shadow: 0 0 1vmin .25vmin #007;
     background-color: #333;
     transition: box-shadow 5s;
+    z-index: 2;
+    transform: translate(-50%, -50%);
 }
 #ground {
     background-color: green;
@@ -85,6 +85,7 @@ html, body {
     top: 40%;
     width: 100%;
     height: 60%;
+    z-index: 2;
 }
 #path {
     background-color: tan;
@@ -93,6 +94,7 @@ html, body {
     width: 100%;
     height: 5%;
     top: 80%;
+    z-index: 2;
 }
 #canvas {
     position: absolute;
@@ -100,7 +102,7 @@ html, body {
     width: 100%;
     height: 100%;
     top: 0%;
-    z-index: 2;
+    z-index: 3;
 }
 .you {
     top: 82%; 
@@ -109,7 +111,7 @@ html, body {
     height: 5%; 
     width: 3.09%; 
     transform: translate(-50%, -50%);
-    z-index: 1;
+    z-index: 3;
 }
 
 @media (max-aspect-ratio: 34/21) {
