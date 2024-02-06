@@ -753,6 +753,8 @@ $(document).ready(() => {
                     $("#time").text('Hours til dark: '+ hoursTilDark)
                     if (hoursTilDark == 0) {
                         player.messages.push(`You scored ${hunter.food} food while hunting.`)
+                        $("#canvas").css({'cursor': 'pointer'})
+                        drawCanvas()
                         saveGame()
                         msgBox('darkness', `The sun has gone down.  You head back to camp with your day's catch of ${hunter.food} food.`,
                         [{text: "ok", function: () => {
@@ -977,6 +979,7 @@ function drawMokeballs() {
 }
 
 function drawCursor() {
+    if (hoursTilDark < 1) return
     ctx.save()
     ctx.translate(mouseX - $('#canvas').offset().left, mouseY - $('#canvas').offset().top)
     ctx.rotate(Math.atan2(
