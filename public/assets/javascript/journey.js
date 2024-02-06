@@ -9,14 +9,15 @@ var exit = false;
 var trailHeight;
 var horizonHeight;
 
-var timeSpeed = 0.05;
+var timeSpeed = 0.03;
 var canvas;
 var gameInterval;
 const playerName = "{{name}}"
 const daysTilEclipse = 37
 var sunup = false
 
-var trail;
+var trail
+var mokeInfo
 
 class SceneObject {
     constructor(params) {
@@ -324,15 +325,20 @@ class Canvas {
                 let totalWidth = canvas.width/100;
                 player.posse.forEach((mokemon, n) => {
                     totalWidth += mokemon.width + canvas.width/200;
-                    this.ctx.drawImage(mokemon.img, canvas.width / 4 - totalWidth, mokemon.y - mokemon.z, mokemon.width, mokemon.height);
+                    this.ctx.drawImage(
+                        mokemon.img,
+                        0, 0, // source x, y
+                        mokemon.img.naturalWidth / mokemon.frameCount.x, mokemon.img.naturalHeight / mokemon.frameCount.y, // source width, height
+                        canvas.width / 4 - totalWidth, // x
+                        mokemon.y - mokemon.z, // y
+                        mokemon.width, mokemon.height
+                    )
                 })
                 mokesDrawn = true;
             }
         })
     }
 }
-
-
 
 const events = {
     disease: {
@@ -500,11 +506,11 @@ const events = {
             return trail.currentLocation.type === "desert" && parseInt(Math.random() * 200) == 0;
         },
         function: () => {
-            $("#canvasArea").css({"filter": "sepia(0.5) brightness(1.5)"})
+            $("#canvasArea").css({"filter": "sepia(0.5) brightness(1.5)", "transition:": "filter 5s"})
             msgBox('delays', "Sandstorm.  Lose one day.", [{
                 text: "ok", 
                 function: () => {
-                    killTime(1, 0, () => {$("#canvasArea").css({"filter": "none"})}) 
+                    killTime(1, 0, () => {$("#canvasArea").css({"filter": "none", "transition:": "none"})}) 
                 }
             }]);
         }
@@ -674,15 +680,15 @@ const events = {
                 ])
             }
             else {
-                // msgBox("starvation", "You are out of food! Who will you eat to survive?", player.posse.map(moke => {
-                //     return {
-                //         text: `${moke.name} (${moke.foodValue} food, eats ${moke.hunger}/day)`,
-                //         function: () => {
-                //             player.food += moke.foodValue;
-                //             moke.die("had to be sacrificed for the greater good"); 
-                //         }
-                //     }
-                // }))
+                msgBox("starvation", "You are out of food! Who will you eat to survive?", player.posse.map(moke => {
+                    return {
+                        text: `${moke.name} (${moke.foodValue} food, eats ${moke.hunger}/day)`,
+                        function: () => {
+                            player.food += moke.foodValue;
+                            moke.die("had to be sacrificed for the greater good"); 
+                        }
+                    }
+                }))
                 if (player.currentMessage != "You have no food!") {
                     player.messages.push("You have no food!");
                 }
@@ -718,76 +724,16 @@ class mokePosse {
         this.name = name.slice(0, 1).toUpperCase() + name.slice(1).toLowerCase();
         this.conditions = conditions;
         this.alive = true;
-        // this.x = posse.length * 60 + canvas.width / 12;
-        switch (this.name) {
-        case "Dezzy":
-            this.height = 50;
-            this.width = 30;
-            this.foodValue = 160;
-            this.hunger = 4;
-            this.maxHealth = 9;
-            this.immuneResponse = 2;
-            this.description = "A fun-loving flipper-flopper, hardy and disease resistant.  Doesn't eat a whole lot."
-            break;
-        case "Mallowbear":
-            this.height = 50;
-            this.width = 40;
-            this.foodValue = 200;
-            this.hunger = 17;
-            this.maxHealth = 20;
-            this.immuneResponse = .3;
-            this.description = "Strong, sturdy, and stoic.  Eats voraciously.  Susceptible to disease."
-            break;
-        case "Apismanion":
-            this.height = 40;
-            this.width = 35;
-            this.foodValue = 160;
-            this.hunger = 8;
-            this.maxHealth = 10;
-            this.immuneResponse = 1;
-            this.description = "Everyone's first go-to Mokemon.  This guy's been with you a long time.  Its legs don't make sense, but it's cute."
-            break;
-        case "Marlequin":
-            this.height = 40;
-            this.width = 30;
-            this.foodValue = 90;
-            this.hunger = 5;
-            this.maxHealth = 11;
-            this.immuneResponse = .9;
-            this.description = "Enigmatic and rare.  Might have special powers, or maybe it just wants you to think that."
-            break;
-        case "Wingmat":
-            this.height = 40;
-            this.width = 70;
-            this.foodValue = 210;
-            this.hunger = 8;
-            this.maxHealth = 10;
-            this.immuneResponse = 2;
-            this.description = "Looks like it could maybe fly, but can't.  Pretty good to eat in a pinch."
-            break;
-        case "Zyant":
-            this.height = 50;
-            this.width = 50;
-            this.foodValue = 160;
-            this.hunger = 7;
-            this.maxHealth = 15;
-            this.immuneResponse = 2;
-            this.description = "This mysterious deer-thing is found in the woods, lurking behind a tree.  Has antlers and doesn't talk much."
-            break;
-        case "Shadowdragon":
-            this.height = 70;
-            this.width = 70;
-            this.foodValue = 350;
-            this.hunger = 25;
-            this.maxHealth = 25;
-            this.immuneResponse = 1;
-            this.description = "Part dragon, part dog, part mantis, pretty big, definitely worth a lot of money.  Eats a ton, so make sure you've got food."
-            this.img = $("<img>").attr('src', './assets/images/mokemon/shadowDragon_thumbnail.png')[0];
-            break;
-
-        }
-        this.width *= canvas.width / 1920;
-        this.height *= canvas.width / 1920;
+        this.height = mokeInfo[this.name].height
+        this.width = mokeInfo[this.name].width
+        this.frameCount = mokeInfo[this.name].frameCount
+        this.foodValue = mokeInfo[this.name].foodValue
+        this.hunger = mokeInfo[this.name].hunger
+        this.maxHealth = mokeInfo[this.name].maxHealth
+        this.immuneResponse = mokeInfo[this.name].immuneResponse
+        this.description = mokeInfo[this.name].description
+        this.width *= canvas.width / 48;
+        this.height *= canvas.width / 48;
         this.y = trailHeight * canvas.height - this.height;
         this.z = 0;
         this.health = health || this.maxHealth;
@@ -798,9 +744,7 @@ class mokePosse {
     }
     hop() {
         // hoppin' down the trail
-        
         this.z = (Math.cos(Math.PI * (0.5 + (player.time + this._hop % 0.5))) - 0.5) * this.bounceHeight;
-        // position on screen according to object coordinates
     }
     doConditions() {
         // process any conditions this mokemon may have
@@ -873,6 +817,7 @@ $(document).ready(() => {
         if (playerData.finalScore) {
             window.location.href = `/highscores/${playerData.name}`
         }
+        let player2 = new Player(playerData.name);
         loadTrail(trailData =>{
 
             trail = new Trail(trailData.map(location => {
@@ -894,13 +839,16 @@ $(document).ready(() => {
                 player.currentLocation = trail.locationAt(player.progress);
                 trail.loadFrom(player.progress);
             }
-            // construct mokemon class from simplified objects
-            let posse = player.posse;
-            player.posse = [];
-            // add them one at a time so they can be indexed
-            posse.forEach(moke => player.posse.push(new mokePosse(moke.name, moke.health, moke.conditions)));
-        
-            gameInterval = setInterval(gameLoop, 1000 / canvas.metrics.frameRate);
+            loadMokemon((mokesData) => {
+                mokeInfo = mokesData
+                // construct mokePosse from saved data
+                let posse = player.posse;
+                player.posse = [];
+                // add them one at a time so they can be indexed
+                posse.forEach(moke => player.posse.push(new mokePosse(moke.name, moke.health, moke.conditions)));
+            
+                gameInterval = setInterval(gameLoop, 1000 / canvas.metrics.frameRate);
+            })
         });
     })
 
@@ -963,29 +911,38 @@ function timelyEvents() {
 }
 
 function astralMovements() {
-    var x = -Math.sin(Math.PI * (0.5 + player.time / 24)) * 50 + 50
-    var y = Math.cos(Math.PI * (0.5 + player.time / 24)) * 72 + 72
-    $("#sun").css({'top': y + '%', 'left': (x*.975) + '%', 'border-color': `rgb(255, ${255 - y ** 2 / 10}, ${150 - y * 10})`})
-    glowRadius = Math.max(Math.min(y - 32, 15), 0) / 15
-    $('#glow').css({'box-shadow': `0 0 10vmin 7vmin rgba(255, 0, 0, ${glowRadius}), 0 0 20vmin 20vmin rgba(255, 255, 0, ${glowRadius})`})
-    const lightness = 1 - Math.sqrt(Math.abs(player.time - 12) / 12)
-    $('#sky').css('backgroundColor', `rgb(${Math.min(1500 * lightness, 87)}, ${Math.min(800 * lightness, 206)}, ${Math.min(1000 * lightness, 235)})`)
-    // the dark moon. should be at the same place as the sun on day 30 at noon
-    let z = (player.day * 24 + player.time) ** 2 / (daysTilEclipse * 24 + 12) ** 2; // 571536;
-    // moon rises and sets every third day
-    x = -Math.sin(Math.PI * (0.333333 + (player.time + 12) / 72 + (player.day % 3) / 3)) * (25 + 25 * z) + 50
-    y = Math.cos(Math.PI * (0.333333 + (player.time + 12) / 72 + (player.day % 3) / 3)) * (40 * z) + 40
-    $("#darkMoon").css({
-        'top': y + '%', 
-        'left': (x*.975) + '%', 
-        'width': `${2+3*z}vmin`, 
-        'height': `${2+3*+z}vmin`, 
-        'border-width': `${1+z*1.5}vmin`, 
-        'border-radius': `${1+z*1.5}vmin`
-    })
     if (player.day === daysTilEclipse && player.hour === 12) {
-        lose();
+        lose()
+        return
     }
+    var sun_x = -Math.sin(Math.PI * (0.5 + player.time / 24)) * 50 + 50
+    var sun_y = Math.cos(Math.PI * (0.5 + player.time / 24)) * 100 + 105
+    $("#sun").css({'top': sun_y + '%', 'left': (sun_x) + '%', 'border-color': `rgb(255, ${255 - sun_y ** 2 / 10}, ${150 - sun_y * 10})`})
+    sunglow = Math.max(Math.min(sun_y - 32, 15), 0) / 12
+    $('#glow').css({'box-shadow': `0 0 15vmin 9vmin rgba(255, 0, 0, ${sunglow}), 0 0 30vmin 28vmin rgba(255, 255, 0, ${sunglow})`})
+    const lightness = 1 - Math.abs(player.time - 12) / 10
+    $('#sky').css({
+        'backgroundColor': `rgb(${Math.min(1500 * lightness, 87)}, ${Math.min(800 * lightness, 206)}, ${Math.min(1000 * lightness, 235)})`,
+        'opacity': `${Math.min(lightness * 10, 1)}`
+    })
+    $('#stars').css({
+        'left': `-${($('#stars').width() - $('#sky').width()) * (player.day + player.time / 24 - 0.5) / daysTilEclipse}px`
+    })
+    $("#canvas").css({"filter": `brightness(${Math.max(Math.min(lightness * 10, 1), 0.5)})`})
+    $("#ground").css({"filter": `brightness(${Math.max(Math.min(lightness * 10, 1), 0.5)})`})
+    // the dark moon. should be at the same place as the sun on Februne 12th at noon
+    let moon_z = (player.day * 24 + player.time) ** 2 / (daysTilEclipse * 24 + 12) ** 2; // 571536;
+    // moon rises and sets every third day
+    moon_x = -Math.sin(Math.PI * (0.333333 + (player.time + 12) / 72 + (player.day % 3) / 3)) * (25 + 25 * moon_z) + 50
+    moon_y = Math.cos(Math.PI * (0.333333 + (player.time + 12) / 72 + (player.day % 3) / 3)) * (40 * moon_z) + 45
+    $("#darkMoon").css({
+        'top': moon_y + '%', 
+        'left': (moon_x) + '%', 
+        'width': `${2+3*moon_z}vmin`, 
+        'height': `${2+3*+moon_z}vmin`, 
+        'border-width': `${1+moon_z*1.5}vmin`, 
+        'border-radius': `${1+moon_z*1.5}vmin`
+    })
 }
 
 function nextDay() {
@@ -1001,9 +958,22 @@ function narrate() {
     var distanceTo = parseInt(trail.currentLocation.length - trail.currentLocation.progress);
     let arrived = distanceTo === 0;
     if (arrived) distanceTo = trail.nextLocation.length;
-    let calendarDay = player.day < 26 
-        ? 'Novembruary ' + (74 + player.day) + ((74 + player.day) % 10 === 1 ? "st" : ((74 + player.day) % 10 === 2 ? "nd" : ((74 + player.day) % 10 === 3 ? "rd" : "th")))
-        : 'Februne the ' + (player.day - 25) + ((player.day - 25) % 10 === 1 ? "st" : ((player.day - 25) % 20 === 2 ? "nd" : ((player.day - 25) % 10 === 3 ? "rd" : "th")))
+    starting_month = "Novembruary"
+    starting_day = 74
+    month_lengths = {
+        'Novembruary': 79,
+        'Octember': 81,
+        'Februne': 12
+    }
+    // figure out which month it is
+    let month = starting_month;
+    let day = starting_day + player.day;
+    while (day > month_lengths[month]) {
+        day -= month_lengths[month];
+        month = (month === "Novembruary") ? "Octember" : "Februne";
+    }
+    suffix = (day) => {return parseInt(day / 10) == 1 ? "th" : ((day % 10 === 1) ? "st" : ((day % 10 === 2) ? "nd" : (day % 10 === 3) ? "rd" : "th"))}
+    let calendarDay = `${month}${month == 'Februne'? 'the' : ''} ${day}${suffix(day)}`;
     $("#narrative").html(
         '<span style="color: yellow">tap here or press enter for options</span> <br>' + 
         'Day: ' + calendarDay +
@@ -1265,16 +1235,16 @@ function win () {
 }
 
 function lose() {
-    clearInterval(restInterval);
-    clearInterval(waitInterval);
-    $(".dialogBox").hide();
-    pause();
-    $("#sky").css({"background-color": "black"});
-    $("#darkMoon").css({"box-shadow": "0 0 2.5vmin 2.5vmin white"});
-    $("#canvasArea").css({filter: 'contrast(150%) grayscale(50%'});
+    clearInterval(restInterval)
+    clearInterval(waitInterval)
+    $(".dialogBox").hide()
+    pause()
+    $("#sky").css({"transition": "opacity 5s", "opacity": "0"})
+    $("#darkMoon").css({"box-shadow": "0 0 2.5vmin 2.5vmin white", 'left': $('#sun').css('left'), 'top': $('#sun').css('top')})
+    $("#canvasArea").css({filter: 'contrast(150%) grayscale(50%'})
 
     setTimeout(() => {
-        $("#sky").css("background-image", "url('./assets/images/thunderstorm.jpg')")
+        $("#sky").css({"background-image": "url('./assets/images/thunderstorm.jpg')", "opacity": "1", "transition": "none"})
     }, 6000);
     setTimeout(() => {
         msgBox("The End", `The day turns to night.  Madness sweeps over the land.  From across the ${player.currentLocation.type}, wild Mokemon come screaming from all directions.  They fall upon you and tear your hapless corpse to shreds.  You did not reach the legendary city.  You did not survive.`, 
