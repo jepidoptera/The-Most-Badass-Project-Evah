@@ -643,7 +643,7 @@ class Mokemon extends Animal {
     constructor(type, x, y) {
         super(type, x, y);
         this.isMokemon = true;
-        this.image =$("<img>").attr('src', `./assets/images/mokemon/${type}.png`)[0]
+        this.image =$("<img>").attr('src', `./assets/images/mokemon/${type.toLowerCase()}.png`)[0]
         this.frameCount = mokeInfo[this.type].frameCount
         this.width = mokeInfo[this.type].width
         this.height = mokeInfo[this.type].height
