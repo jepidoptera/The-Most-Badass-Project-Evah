@@ -62,6 +62,7 @@ html, body {
     height: 30vmin;
     transform: translate(-50%, 20%);
     border-radius: 25vmin;
+    box-shadow: 0 0 15vmin 9vmin rgb(220, 0, 120), 0 0 30vmin 28vmin rgb(255, 255, 0)
 }
 #darkMoon {
     /* a black circle */
