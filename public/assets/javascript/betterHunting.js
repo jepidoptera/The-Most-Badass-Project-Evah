@@ -312,12 +312,16 @@ class Hunter extends Character {
         this.moveInterval = setInterval(() => {this.move()}, 1000 / this.frameRate);
         this.food = 0;
         this.hp = 40;
+        this.stopped = true
+        this.centerScreen()
     }
     move() {
         if (paused) return;
         if (this.stopped) return;
-
         super.move();
+        this.centerScreen()
+    }
+    centerScreen() {
         viewport.upperbound = {
             x: this.x + this.offset.x - viewport.width / 2 + viewport.width * viewport.innerWindow.width / 2,
             y: this.realY - viewport.height / 2 + viewport.height * viewport.innerWindow.height / 2
@@ -498,7 +502,43 @@ class Animal extends Character {
             this.damage = 50;
             this.foodValue = Math.floor(200 * this.size);
             this.hp = 30 * this.size;
-        }        else {
+        }
+        else if (type === "alligator") {
+            this.frameCount = {x: 1, y: 4};
+            this.size = Math.random() ** 2 * 2 + .8;
+            this.width = this.size * 1.7;
+            this.height = this.size;
+            this.walkSpeed = 1;
+            this.runSpeed = 3;
+            this.chaseRadius = 6;
+            this.attackVerb = "bites";
+            this.damage = 50;
+            this.foodValue = Math.floor(200 * this.size);
+            this.hp = 30 * this.size;
+        }
+        else if (type === "beaver") {
+            this.frameCount = {x: 1, y: 2};
+            this.size = Math.random() * .3 + .5;
+            this.width = this.size * 1.4;
+            this.height = this.size;
+            this.walkSpeed = 1;
+            this.runSpeed = 2;
+            this.fleeRadius = 7;
+            this.foodValue = Math.floor(30 * this.size);
+            this.hp = 5 * this.size;
+        }
+        else if (type === "heron") {
+            this.frameCount = {x: 1, y: 2};
+            this.size = Math.random() * .25 + .6;
+            this.width = this.size;
+            this.height = this.size * 1.2;
+            this.walkSpeed = 1;
+            this.runSpeed = 5;
+            this.fleeRadius = 7;
+            this.foodValue = Math.floor(9 * this.size);
+            this.hp = 2 * this.size;
+        }
+        else {
             this.walkSpeed = 1;
         }
         this.speed = this.walkSpeed;
@@ -529,12 +569,29 @@ class Animal extends Character {
         }, 1000 / this.frameRate);
 
         // face the correct direction
-        if (this.direction && !this.attacking && this.frameCount.y > 1) {
-            if (this.direction.x > 0 || this.direction.x === 0 && this.direction.y > 0) {
-                this.imageFrame.y = 1;
+        if (this.direction) {
+            if (this.frameCount.y == 2) {
+                if (this.direction.x > 0 || this.direction.x === 0 && this.direction.y > 0) {
+                    this.imageFrame.y = 1
+                }
+                else {
+                    this.imageFrame.y = 0
+                }
             }
-            else {
-                this.imageFrame.y = 0;
+            else if (this.frameCount.y == 4) {
+                if (Math.abs(this.direction.x) > Math.abs(this.direction.y) && this.direction.x > 0) {
+                    this.imageFrame.y = 2
+                }
+                else if (Math.abs(this.direction.x) > Math.abs(this.direction.y) && this.direction.x < 0) {
+                    this.imageFrame.y = 0
+                }
+                else if (this.direction.y < 0) {
+                    this.imageFrame.y = 1
+                }
+                else {
+                    this.imageFrame.y = 3
+                }
+            
             }
         }
         let dist = approxDist(this.x, this.y, hunter.x, hunter.y);
@@ -770,9 +827,9 @@ $(document).ready(() => {
 
                 hunter = new Hunter(mapWidth/2, mapHeight/2)
                 // add animals and Mokemon
-                location.prey.forEach(prey => {
-                    for (let n = 0; n < prey.frequency; n++) {
-                        animals.push(new Animal(prey.type, Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight)))
+                location.animals.forEach(animal => {
+                    for (let n = 0; n < animal.frequency; n++) {
+                        animals.push(new Animal(animal.type, Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight)))
                     }
                 })
                 location.mokemon.forEach(mokemon => {
@@ -822,19 +879,13 @@ $(document).ready(() => {
                     mouseX = event.clientX
                     mouseY = event.clientY                
                 })
-                
-                $("#canvas").click(event => {
-                    hunter.throw(
-                        (event.clientX - $("#canvasFrame").position().left) * canvasScaleFactor / mapHexWidth + viewport.x,
-                        (event.clientY - $("#canvasFrame").position().top) * canvasScaleFactor / mapHexHeight + viewport.y
-                    )
-                })        
+                $("#canvas").on('touchmove', event => {
+                    mouseX = event.touches[0].clientX
+                    mouseY = event.touches[0].clientY
+                })
+  
                 $("#canvas").contextmenu(event => {
                     event.preventDefault();
-                    hunter.throw(
-                        (event.clientX - $("#canvasFrame").position().left) * canvasScaleFactor / mapHexWidth + viewport.x,
-                        (event.clientY - $("#canvasFrame").position().top) * canvasScaleFactor / mapHexHeight + viewport.y
-                    )
                 })        
                 $("#msg").contextmenu(event => event.preventDefault())
                 $(document).keypress(event => {
@@ -846,16 +897,33 @@ $(document).ready(() => {
                     }
                     refreshWeapons();
                 })
-                $(document).keydown(event => {
-                    if (event.key === " ") {
-                        hunter.stopped = true
+                function mousedown(event) {
+                    hunter.armed = true
+                    setTimeout(() => {
+                        hunter.armed = false
+                    }, 100);
+                    hunter.stopped = false
+                }
+                $(document).mouseup(event => {
+                    hunter.stopped = true
+                    if (hunter.armed) {
+                        hunter.throw(
+                            (event.clientX - $("#canvasFrame").position().left) * canvasScaleFactor / mapHexWidth + viewport.x,
+                            (event.clientY - $("#canvasFrame").position().top) * canvasScaleFactor / mapHexHeight + viewport.y
+                        )
                     }
                 })
-                $(document).keyup(event => {
-                    if (event.key === " ") {
-                        hunter.stopped = false
+                $(document).on('touchend', event => {
+                    hunter.stopped = true
+                    if (hunter.armed) {
+                        hunter.throw(
+                            (event.touches[0].clientX - $("#canvasFrame").position().left) * canvasScaleFactor / mapHexWidth + viewport.x,
+                            (event.touches[0].clientY - $("#canvasFrame").position().top) * canvasScaleFactor / mapHexHeight + viewport.y
+                        )
                     }
                 })
+                $(document).mousedown(event => {mousedown(event)})
+                $(document).on('touchstart', event => {mousedown(event)})
             })
         })
     })
@@ -995,8 +1063,8 @@ function drawCursor() {
     ctx.save()
     ctx.translate(mouseX - $('#canvas').offset().left, mouseY - $('#canvas').offset().top)
     ctx.rotate(Math.atan2(
-        (hunter.y + hunter.offset.y + .75 - viewport.y) * mapHexHeight - mouseY, 
-        (hunter.x + hunter.offset.x + 1 - viewport.x + 1) * mapHexWidth - mouseX
+        (hunter.y + hunter.offset.y + 0.5 - viewport.y) * mapHexHeight / canvasScaleFactor + $("#canvasFrame").position().top - mouseY, 
+        (hunter.x + hunter.offset.x + 0.5 - viewport.x) * mapHexWidth / canvasScaleFactor + $("#canvasFrame").position().left - mouseX
     ) + Math.PI * 1.5)
     ctx.drawImage(cursorImage, -mapHexWidth / 4, 0, mapHexWidth / 2, mapHexHeight)
     ctx.restore()
@@ -1004,13 +1072,13 @@ function drawCursor() {
 
 function genMap(terrain, callback) {
     let map = {scenery: {}, animalImages: [], backgrounds: [], nodes: []};
-    terrain.scenery.forEach((item, i) => {
+    terrain.hunting_scenery.forEach((item, i) => {
         if (item.frequency > 0) {
             map.scenery[item.type] = [];
             try {
-                map.scenery[item.type] = {type: item.type, images: [], frequency: item.frequency};
+                map.scenery[item.type] = {type: item.type, images: [], frequency: item.frequency, passable: item.passable};
                 for (let n = 0; n < 5; n++) {
-                    map.scenery[item.type].images[n] = $("<img>").attr("src", `/assets/images/${item.type.replace(' ', '')}${n}.png`)[0];
+                    map.scenery[item.type].images[n] = $("<img>").attr("src", `/assets/images/scenery/${item.type}${n}.png`)[0];
                 }
             }
             catch{
@@ -1018,16 +1086,16 @@ function genMap(terrain, callback) {
             }
         }
     })
-    terrain.prey.forEach((animal, i) => {
-        if (animal.frequency > 0 &! animal.isMokemon) {
+    terrain.animals.forEach((animal, i) => {
+        if (animal.frequency > 0) {
             map.animalImages[animal.type] = $("<img>").attr('src', `./assets/images/animals/${animal.type}.png`)[0]
         }
     })
 
     // loading background images
-    for (let n =0; n < 3; n++) {
-        map.backgrounds[n] = $("<img>").attr("src", `/assets/images/land tiles/${terrain.type}${n}.png`)[0]
-    }
+    // for (let n =0; n < 3; n++) {
+    //     map.backgrounds[n] = $("<img>").attr("src", `/assets/images/land tiles/${terrain.type}${n}.png`)[0]
+    // }
     // debug image with clear hex borders
     // let landImage = $("<img>").attr('src', `./assets/images/land tiles/image1.png`)[0];
 
