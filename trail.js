@@ -10,16 +10,16 @@ const trail = [
         length: 1,
         scenery: [
             {type: "orepoke", frequency: 0},
-            {type: "house", frequency: 5},
-            {type: "distant tree", frequency: 10}
+            {type: "house", frequency: 20},
+            {type: "distant tree", frequency: 100}
         ],
     },
     {
         type: 'suburb',
         name: 'Orepoke',
         scenery: [
-            {type: "house", frequency: 5},
-            {type: "distant tree", frequency: 10}
+            {type: "house", frequency: 20},
+            {type: "distant tree", frequency: 100}
         ],
         length: 15,
         message: {
@@ -33,8 +33,8 @@ const trail = [
         name: "Trader Moe's",
         scenery: [
             {type: "trading post", frequency: 0},
-            {type: "house", frequency: 5},
-            {type: "distant tree", frequency: 10}
+            {type: "house", frequency: 15},
+            {type: "distant tree", frequency: 100}
         ],
         length: 1,
         shop: {
@@ -51,8 +51,8 @@ const trail = [
         type: 'suburb',
         name: 'The Outskirts of Orepoke',
         scenery: [
-            {type: "house", frequency: 5},
-            {type: "distant tree", frequency: 10}
+            {type: "house", frequency: 15},
+            {type: "distant tree", frequency: 100}
         ],
         length: 15,
     },
@@ -61,18 +61,23 @@ const trail = [
         name: 'The Forest of Doom',
         scenery: [
             {type: "signpost", frequency: 0},
+            {type: "tree", frequency: 40},
+            {type: "distant tree", frequency: 50},
+            {type: "near tree", frequency: 20}
+        ],
+        hunting_scenery: [
             {type: "tree", frequency: 5}
         ],
-        prey: [
+        animals: [
             {type: "deer", frequency: 100},
             {type: "bear", frequency: 20},
             {type: "squirrel", frequency: 300},
         ],
         mokemon: [
             {type: "Zyant", isMokemon: true, frequency: 10},
-            {type: "Fragglegod", isMokemon: true, frequency: 10}
+            {type: "Fragglegod", isMokemon: true, frequency: 5}
         ],
-        length: 75 // seconds
+        length: 150 // seconds
 
     },
     {
@@ -80,17 +85,21 @@ const trail = [
         name: 'The Desert of Dryness',
         scenery: [
             {type: "signpost", frequency: 0},
+            {type: "cactus", frequency: 10},
+            {type: "rock", frequency: 8}
+        ],
+        hunting_scenery: [
             {type: "cactus", frequency: 2},
             {type: "rock", frequency: 2}
         ],
-        prey: [
+        animals: [
             {type: "scorpion", frequency: 100},
             {type: "armadillo", frequency: 50},
             {type: "coyote", frequency: 20},
         ],
         mokemon: [
             {type: "Dezzy", isMokemon: true, frequency: 10},
-            {type: "Fragglegod", isMokemon: true, frequency: 10}
+            {type: "Fragglegod", isMokemon: true, frequency: 5}
         ],
         length: 57 // seconds
 
@@ -100,7 +109,7 @@ const trail = [
         name: "The Oasis",
         scenery: [
             {type: "oasis", frequency: 0},
-            {type: "rock", frequency: 5},
+            {type: "rock", frequency: 8},
             {type: "cactus", frequency: 10}
         ],
         length: 1,
@@ -118,17 +127,21 @@ const trail = [
         type: 'desert',
         name: 'More Desert',
         scenery: [
+            {type: "cactus", frequency: 10},
+            {type: "rock", frequency: 8}
+        ],
+        hunting_scenery: [
             {type: "cactus", frequency: 2},
             {type: "rock", frequency: 2}
         ],
-        prey: [
+        animals: [
             {type: "scorpion", frequency: 100},
             {type: "armadillo", frequency: 50},
             {type: "coyote", frequency: 20},
         ],
         mokemon: [
             {type: "Dezzy", frequency: 10},
-            {type: "Fragglegod", isMokemon: true, frequency: 10}
+            {type: "Fragglegod", isMokemon: true, frequency: 5}
 
         ],
         length: 39 // seconds
@@ -139,13 +152,17 @@ const trail = [
         name: 'The Mainstay Mountains',
         scenery: [
             {type: "first mountain", frequency: 0},
-            {type: "mountain range", frequency: 0},
-            {type: "rock", frequency: 10},
-            {type: "far moutain", frequency: 0},
-            {type: "near moutain", frequency: 0},
-            {type: "pine tree", frequency: 5}
+            {type: "mountain range", frequency: 5},
+            {type: "rock", frequency: 20},
+            {type: "far moutain", frequency: 5},
+            {type: "near moutain", frequency: 5},
+            {type: "pine tree", frequency: 25}
         ],
-        prey: [
+        hunting_scenery: [
+            {type: "pine tree", frequency: 4},
+            {type: "rock", frequency: 4}
+        ],
+        animals: [
             {type: "goat", frequency: 85},
             {type: "porcupine", frequency: 85},
             {type: "yeti", frequency: 10},
@@ -153,19 +170,46 @@ const trail = [
         mokemon: [
             {type: "Apismanion", isMokemon: true, frequency: 10},
             {type: "Marlequin", isMokemon: true, frequency: 10},
-            {type: "Fragglegod", isMokemon: true, frequency: 10}
+            {type: "Fragglegod", isMokemon: true, frequency: 5}
         ],
-        length: 82 // seconds
+        length: 82 
 
+    },
+    {
+        type: 'swamp',
+        name: 'The Swamp of Despair',
+        scenery: [
+            {type: "signpost", frequency: 0},
+            {type: "pond", frequency: 9},
+            {type: "dead tree", frequency: 24},
+            {type: "cattails", frequency: 40},
+        ],
+        hunting_scenery: [
+            {type: "dead tree", frequency: 3}
+        ],
+        animals: [
+            {type: "alligator", frequency: 30},
+            {type: "heron", frequency: 85},
+            {type: "beaver", frequency: 150},
+        ],
+        mokemon: [
+            {type: "Apismanion", isMokemon: true, frequency: 10},
+            {type: "Marlequin", isMokemon: true, frequency: 10},
+            {type: "Fragglegod", isMokemon: true, frequency: 5}
+        ],
+        length: 170
     },
     {
         type: 'jungle',
         name: 'The Great Palm Jungle',
         scenery: [
             {type: "signpost", frequency: 0},
-            {type: "palm tree", frequency: 10}
+            {type: "palm tree", frequency: 50}
         ],
-        prey: [
+        hunting_scenery: [
+            {type: "palm tree", frequency: 5},
+        ],
+        animals: [
             {type: "deer", frequency: 100},
             {type: "goat", frequency: 85},
             {type: "tiger", frequency: 20},
@@ -176,7 +220,7 @@ const trail = [
             {type: "Shadowdragon", isMokemon: true, frequency: 10},
             {type: "Fragglegod", isMokemon: true, frequency: 10}
         ],
-        length: 100 // seconds
+        length: 210 // seconds
 
     },
     {
