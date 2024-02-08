@@ -13,7 +13,7 @@ var timeSpeed = 0.03;
 var canvas;
 var gameInterval;
 const playerName = "{{name}}"
-const daysTilEclipse = 37
+const daysTilEclipse = 99
 var sunup = false
 
 var trail
@@ -21,8 +21,11 @@ var mokeInfo
 
 class SceneObject {
     constructor(params) {
-        this.type = params.type;
-        this.spacing = params.spacing;
+        this.type = params.type
+        this.spacing = params.spacing
+        this.frequency = params.frequency
+        this.lastPosition = 0
+        this.index = 0
         if (params.height && params.width) {
             this.sizeRange = {
                 min: {x: params.width, y: params.height}, 
@@ -38,7 +41,7 @@ class SceneObject {
         }
         else {
             for (let n = params.imgRange.min; n <= params.imgRange.max; n++) {
-                this.images.push($("<img>").attr("src", './assets/images/' + this.type + n + ".png")[0])
+                this.images.push($("<img>").attr("src", './assets/images/scenery/' + this.type + n + ".png")[0])
             }
         }
         this.isForeground = params.isForeground || (() => false);
@@ -48,163 +51,184 @@ class SceneObject {
     /**
      * @returns {number}
      */
-    get distance() {return this._distance()}
+    get distance() {return this._distance(this.index)}
     set distance(newFunction) {this._distance = newFunction}
     /**
      * @returns {number}
      */
-    get isForeground() {return this._isForeGround()}
+    get isForeground() {return this._isForeGround(this.index)}
     set isForeground(newFunction) {this._isForeGround = newFunction}
     /**
      * @returns {number}
      */
-    get foregroundDistance() {return this._foregroundDistance()}
+    get foregroundDistance() {return this._foregroundDistance(this.index)}
     set foregroundDistance(newFunction) {this._foregroundDistance = newFunction}
 }
 
 const SceneObjects = {
-    rock: new SceneObject ({
+    "rock": {
         type: "rock",
-        spacing: 145,
+        spacing: 0,
         sizeRange: { min: { x: 10, y: 5 }, max: { x: 50, y: 25 } },
         imgRange: { min: 0, max: 3 },
         distance: () => { return Math.random() * 100 },
-    }),
-    far_moutain: new SceneObject ({
+    },
+    "far moutain": {
         type: "mountain",
         spacing: 31,
         sizeRange: { min: { x: 400, y: 225 }, max: { x: 900, y: 600 } },
         imgRange: { min: 0, max: 4 },
         distance: () => 100 - Math.random() * Math.random() * 100,
-    }),
-    near_moutain: new SceneObject ({
+    },
+    "near moutain": {
         type: "mountain",
         spacing: 71,
         sizeRange: { min: { x: 200, y: 112 }, max: { x: 450, y: 300 } },
         imgRange: { min: 0, max: 4 },
         isForeground: () => true,
         foregroundDistance: () => -100,
-    }),
-    mountain_range: new SceneObject ({
+    },
+    "mountain range": {
         type: "mountain range",
         spacing: 100,
         height: 290,
         width: 1280,
-        image: './assets/images/big mountain.png',
+        image: './assets/images/scenery/big mountain.png',
         distance: () => Math.random() * 100,
-    }),
-    first_mountain: new SceneObject ({
+    },
+    "first mountain": {
         type: "mountain range",
         spacing: 0,
         height: 290,
         width: 1280,
-        image: './assets/images/big mountain.png',
+        image: './assets/images/scenery/big mountain.png',
         distance: () => 2,
-    }),
-    pokegonemon: new SceneObject ({
+    },
+    "pokegonemon": {
         type: "city",
-        image: './assets/images/pokegonemon.png',
+        image: './assets/images/scenery/pokegonemon.png',
         height: 500,
         width: 1500,
         isForeground: () => true
-    }),
-    palm_tree: new SceneObject ({
-        type: "palmtree",
-        spacing: 4,
+    },
+    "palm tree": {
+        type: "palm tree",
+        spacing: 0,
         sizeRange: {min: {x: 25, y: 50}, max: {x: 200, y: 200}},
         imgRange: {min: 0, max: 4},
         isForeground: () => (Math.random() * 100 < 1.5) ? true : false,
         distance: () => Math.max(100 - Math.random() * Math.random() * 110, 0),
         foregroundDistance: () => Math.random() * -50
-    }),
-    cactus: new SceneObject ({
+    },
+    "cactus": {
         type: "cactus",
-        spacing: 100,
+        spacing: 1,
         sizeRange: {min: {x: 25, y: 25}, max: {x: 100, y: 100}},
         imgRange: {min: 0, max: 1},
         isForeground: () => (Math.random() * 100 < 1.5) ? true : false,
         distance: () => 100 - Math.random() * Math.random() * 100
-    }),
-    house: new SceneObject ({
+    },
+    "house": {
         type: "house",
-        spacing: 5,
+        spacing: 0.1,
         sizeRange: {min: {x: 25, y: 25}, max: {x: 50, y: 50}},
         imgRange: {min: 0, max: 4},
         isForeground: () => (Math.random() * 100 < 40) ? true : false,
         distance: () => Math.random() * 50,
         foregroundDistance: () => Math.random() * -50
-    }),
-    tree: new SceneObject ({
+    },
+    "tree": {
         type: 'tree',
-        spacing: 1.5,
+        spacing: 0,
         sizeRange: {min: {x: 80, y: 160}, max: {x: 360, y: 360}},
         imgRange: {min: 0, max: 5},
-        isForeground: () => (Math.random() * 100 < 2) ? true : false,
-        distance: () => Math.max(100 - Math.random() * Math.random() * 110, 0),
-        foregroundDistance: () => Math.random() > .5 ? -20 : -50 
-    }),
-    distant_tree: new SceneObject ({
+        isForeground: () => false,
+        distance: (x) => Array(20).fill(0).map((x, i) => i * 5)[x % 20],
+    },
+    "distant tree": {
         type: 'tree',
-        spacing: 2,
+        spacing: 0,
         sizeRange: {min: {x: 80, y: 160}, max: {x: 360, y: 360}},
         imgRange: {min: 0, max: 4},
         distance: () => 100 - Math.random() * Math.random() * 30
-    }),
-    pine_tree: new SceneObject ({
-        type: 'pinetree',
-        spacing: 12,
+    },
+    "near tree": {
+        type: 'tree',
+        spacing: 2,
+        imgRange: {min: 0, max: 5},
+        sizeRange: {min: {x: 80, y: 160}, max: {x: 360, y: 360}},
+        isForeground: () => true,
+        foregroundDistance: () => Math.random() > .5 ? -20 : -50 
+    },
+    "dead tree": {
+        type: 'dead tree',
+        spacing: 1,
+        sizeRange: {min: {x: 80, y: 160}, max: {x: 360, y: 360}},
+        imgRange: {min: 0, max: 8},
+        distance: () => Math.random() * 100
+    },
+    "cattails": {
+        type: 'cattails',
+        spacing: 1,
+        sizeRange: {min: {x: 20, y: 25}, max: {x: 40, y: 25}},
+        imgRange: {min: 1, max: 4},
+        distance: () => Math.random() * 100
+    },
+    "mud": {
+        type: 'mud',
+        spacing: 2,
+        sizeRange: {min: {x: 160, y: 80}, max: {x: 360, y: 180}},
+        imgRange: {min: 1, max: 3},
+        distance: () => Math.random() * 100
+    },
+    "pond": {
+        type: 'pond',
+        spacing: 2,
+        sizeRange: {min: {x: 160, y: 80}, max: {x: 360, y: 180}},
+        imgRange: {min: 1, max: 4},
+        distance: () => Math.random() * 100
+    },
+    "pine tree": {
+        type: 'pine tree',
+        spacing: 0,
         sizeRange: {min: {x: 60, y: 120}, max: {x: 270, y: 270}},
         imgRange: {min: 0, max: 4},
         distance: () => Math.max(100 - Math.random() * Math.random() * 110, 0),
-    }),
-    signpost: new SceneObject ({
+    },
+    "signpost": {
         type: 'signpost',
         height: 50,
         width: 50,
         spacing: 0,
-        image: './assets/images/signpost0.png',
+        image: './assets/images/scenery/signpost0.png',
         distance: () => 1,
-    }),
-    orepoke: new SceneObject ({
+    },
+    "orepoke": {
         type: 'city',
         spacing: 0,
-        image: './assets/images/city0.png',
+        image: './assets/images/scenery/city0.png',
         height: 300,
         width: 600,
         isForeground: () => true
-    }),
-    trading_post: new SceneObject ({
+    },
+    "trading post": {
         type: 'trading post',
         spacing: 0,
-        image: './assets/images/trading post.png',
+        image: './assets/images/scenery/trading post.png',
         height: 150,
         width: 150,
         distance: () => 1,
-    }),
-    oasis: new SceneObject ({
+    },
+    "oasis": {
         type: 'trading post',
         spacing: 0,
-        image: './assets/images/oasis.png',
+        image: './assets/images/scenery/oasis.png',
         height: 150,
         width: 150,
         distance: () => 1,
-    })
+    }
 }
 
-function TrailLocation(params) {
-    trailLocation = params;
-    trailLocation.progress= 0;
-        trailLocation.length = params.length || 0;
-        trailLocation.scenery = params.scenery 
-            ? params.scenery.map(item => {
-                    let sceneItem = item;
-                    sceneItem.spacing = item.spacing || 0;
-                    sceneItem.next = Math.random() * item.spacing;
-                    return sceneItem;
-                })
-            : undefined
-    return trailLocation;
-}
 
 class Trail {
     constructor(locations) {
@@ -221,48 +245,55 @@ class Trail {
         this.currentLocation = this.locationAt(player.progress);
     }
     locationAt(progress) {
-        let progressTotal = 0;
-        let location = this.locations[0];
+        let progressTotal = 0
+        let location = this.locations[0]
         for (let n in this.locations) {
-            progressTotal += this.locations[n].length;
+            progressTotal += this.locations[n].length
             if (progressTotal >= progress) {
-                location = this.locations[n];
-                location.progress = (this.locations[n].length - progressTotal + progress);
-                break;
+                location = this.locations[n]
+                location.progress = (this.locations[n].length - progressTotal + progress)
+                break
             }
         }
         return location;
     }
     travel() {
-        this.updateLocation();
-        player.progress += 1/ canvas.metrics.frameRate;
+        this.updateLocation()
+        player.progress += 1/ canvas.metrics.frameRate
         // make new scenery
         this.atHorizon.scenery.forEach(element => {
-            if (!element.spacing) {
+            if (!element.frequency) {
                 // one-off item
                 if (this.atHorizon != this.currentLocation && this.atHorizon.progress <= 1 / canvas.metrics.frameRate) {
-                    this.scenery.push(new backgroundImage(element));
+                    this.scenery.push(new backgroundImage(element))
                 }
             }
-            else if (Math.random() * element.spacing < 1) {
-                this.scenery.push(new backgroundImage(element));
+            else {
+                while (
+                    player.progress - element.lastPosition >= element.spacing
+                    && Math.random() * element.frequency > Math.random() * 100
+                ) {
+                    element.lastPosition = player.progress
+                    element.index += 1
+                    this.scenery.push(new backgroundImage(element))
+                }
             }
         });
         // move along existing scenery
-        let remainingSceneItems = [];
-        let scrollSpeed = canvas.width / canvas.metrics.screen_length / canvas.metrics.frameRate;
+        let remainingSceneItems = []
+        let scrollSpeed = canvas.width / canvas.metrics.screen_length / canvas.metrics.frameRate
         for (let n in this.scenery) {
-            this.scenery[n].x -= scrollSpeed * (150 - this.scenery[n].distance) / 150;
-            if (this.scenery[n].x > -this.scenery[n].width) remainingSceneItems.push(this.scenery[n]);
+            this.scenery[n].x -= scrollSpeed * (150 - this.scenery[n].distance) / 150
+            if (this.scenery[n].x > -this.scenery[n].width) remainingSceneItems.push(this.scenery[n])
         }
         this.scenery = remainingSceneItems.sort((a, b) => {
             if (a.foreground) {
                 if (b.foreground) {
                     return a.distance > b.distance ? -1 : 1
                 }
-                return 1;
+                return 1
             }
-            if (b.foreground) return -1;
+            if (b.foreground) return -1
             return a.distance > b.distance ? -1 : 1
         })
     }
@@ -270,17 +301,23 @@ class Trail {
         // this.locations.forEach(location => {if (location.scenery) location.scenery.forEach(item => {item.appeared = false})})
         this.scenery = [];
         let progressRate = 1/ canvas.metrics.frameRate;
-        for (let n = 0; n < canvas.metrics.screen_length * canvas.metrics.frameRate; n ++) {
+        for (let n = startingPoint; n < startingPoint + canvas.metrics.screen_length * canvas.metrics.frameRate; n ++) {
             this.currentLocation = this.locationAt(startingPoint - canvas.metrics.screen_length * .2 + n * progressRate);
             this.currentLocation.scenery.forEach(element => {
                 let newElement = null;
-                if (!element.spacing) {
+                if (!element.frequency) {
                     if (this.currentLocation.progress <= 1 / canvas.metrics.frameRate) {
                         newElement = new backgroundImage(element);
                         element.appeared = true;
                     }
                 } 
-                else if (element.spacing && Math.random() * element.spacing < 1) {
+                else if (
+                    element.frequency 
+                    // && element.lastPosition + element.spacing > -n
+                    && Math.random() * element.frequency > Math.random() * 100
+                ) {
+                    element.lastPosition = -n
+                    element.index += 1
                     newElement = new backgroundImage(element);
                 }
                 if (newElement) {
@@ -576,7 +613,7 @@ const events = {
                 events.thief.alreadyHappening = false;
                 if (loss) {
                     if (theftType === "mokemon") {
-                        victim.die("was stolen by a villainous thief.");    
+                        victim.die("was stolen by a villainous thief");    
                     }
                     else {
                         player[theftType] -= lossAmount;
@@ -818,17 +855,21 @@ $(document).ready(() => {
         if (playerData.finalScore) {
             window.location.href = `/highscores/${playerData.name}`
         }
-        let player2 = new Player(playerData.name);
         loadTrail(trailData =>{
 
             trail = new Trail(trailData.map(location => {
                 // console.log(location.name)
-                return new TrailLocation({
+                return {
                     ...location,
+                    progress: 0,
+                    length: location.length || 0,
                     scenery: (location.scenery ? location.scenery.map(scenery => 
-                            SceneObjects[scenery.type.replace(' ', '_')]
-                        ) : [])
-                })
+                            new SceneObject({
+                                ...SceneObjects[scenery.type], 
+                                frequency: scenery.frequency
+                            })
+                    ) : [])
+                }
             }))
             Object.keys(playerData).forEach(key => {
                 player[key] = playerData[key];
@@ -960,13 +1001,13 @@ function narrate() {
     let arrived = distanceTo === 0;
     if (arrived) distanceTo = trail.nextLocation.length;
     starting_month = "Novembruary"
-    starting_day = 74
+    starting_day = 73
     month_lengths = {
         'Novembruary': 79,
         'Octember': 81,
         'Februne': 12
     }
-    // figure out which month it is
+    // figure out which day of which month it is
     let month = starting_month;
     let day = starting_day + player.day;
     while (day > month_lengths[month]) {
@@ -1187,7 +1228,7 @@ function options () {
     $("#foodInfo").text(`food: ${player.food} (-${player.foodPerDay}/day)`);
     $("#moneyInfo").text(`money: ${player.money}`);
     $("#ammoInfo").text(`mokeballs: ${player.mokeballs}, grenades: ${player.grenades}`);
-    if (player.currentLocation.prey)
+    if (player.currentLocation.animals)
         $("#huntButton").show();
     else
         $("#huntButton").hide()
