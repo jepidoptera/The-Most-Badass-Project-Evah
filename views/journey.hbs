@@ -3,45 +3,93 @@
     <link rel="stylesheet" href="assets/css/journey.css">
 </head>
 <body>
-    <section id='canvasArea'>
-        <div id='sky'></div>
-        <img id='stars' src="assets/images/sky/starry sky.png"></div>
-        <div id='sunrise'></div>
-        <div id='sun'><div id="glow"></div></div>
-        <div id='darkMoon'></div>
-        <div id='ground'></div>
-        <div id='path'></div>
-        <canvas id='canvas' width="1920" height="1080"></canvas>
-        <div id="msgbox" class="hidden dialogBox"><div id="msgbuttons"></div></div>    
-        <div id='optionsMenu' class='hidden dialogBox'>
-            <button class="optionButton" onclick="restDialog()">Rest</button>
-            <button id="huntButton" class="optionButton" onclick="saveGame(); window.location.href=`/hunt?name=${player.name}&auth=${player.authtoken}`">Hunt</button>
-            <button class="optionButton" onclick="saveGame(); closeOptions(); msgBox('Game saved.');">Save</button>
-            <button class="optionButton" onclick="window.location.href=window.location.href">Reload</button>
-            <button class="optionButton" onclick="closeOptions()">Continue</button>
-            <section id="infoPanel">
-                <p>Your Mokemon posse:</p>
-                <div id="mokePosse"></div>
-                <div id="mokeStats"></div>
-                <p id="foodInfo"></p>
-                <p id="moneyInfo"></p>
-                <p id="ammoInfo"></p>
-            </section>
+    <section id='canvasContainer'>
+        <div id='canvasArea'>
+            <div id='sky'></div>
+            <img id='stars' src="assets/images/sky/starry sky.png">
+            <div id='sunrise'></div>
+            <div id='sun'>
+                <div id="glow"></div>
+            </div>
+            <div id='darkMoon'></div>
+            <div id='ground'></div>
+            <div id='path'></div>
+            <canvas id='canvas' width="1748" height="1080"></canvas>
+            <div id="msgbox" class="hidden dialogBox">
+                <div id="msgbuttons"></div>
+            </div>    
+            <div id='optionsMenu' class='hidden dialogBox'>
+                <button class="optionButton" onclick="restDialog()">Rest</button>
+                <button id="huntButton" class="optionButton" onclick="saveGame(); window.location.href=`/hunt?name=${player.name}&auth=${player.authtoken}`">Hunt</button>
+                <button class="optionButton" onclick="saveGame(); closeOptions(); msgBox('Game saved.');">Save</button>
+                <button class="optionButton" onclick="window.location.href=window.location.href">Reload</button>
+                <button class="optionButton" onclick="closeOptions()">Continue</button>
+                <section id="infoPanel">
+                    <p>Your Mokemon posse:</p>
+                    <div id="mokePosse"></div>
+                    <div id="mokeStats"></div>
+                    <p id="foodInfo"></p>
+                    <p id="moneyInfo"></p>
+                    <p id="ammoInfo"></p>
+                </section>
+            </div>
         </div>
     </section>
     <section id='narrative' onclick="options()">
     </section>
-    <div id='rest'>
-        Rest for how long?:
-        <form id='restform' action="">
-            <input id="restLength" type="number"> days
-            <br><br>
-            <button type="submit">ok</button>
-            <button type="cancel" onclick="$('#restform').hide()"></button>
-        </form>        
-    </div>
-    <div id='inventory'>
-        Your items:
-    </div>
 </body>
 
+<script>
+    const targetAspectRatio = 34 / 21
+    let targetWidth
+    $(document).ready(function() {
+        targetWidth = $('#canvas').attr('width')
+        console.log('targetWidth: ' + targetWidth)
+    })
+    function debounce(func, timeout = 100){
+        let timer;
+        return (...args) => {
+            clearTimeout(timer);
+            timer = setTimeout(() => { func.apply(this, args); }, timeout);
+        };
+    }
+    function adjustAspectRatio() {
+        const outer = document.querySelector('#canvasContainer')
+        const inner = document.querySelector('#canvasArea')
+        const narrative = document.querySelector('#narrative')
+        
+        let outerWidth = outer.offsetWidth
+        let outerHeight = outer.offsetHeight
+        
+        // Calculate the maximum size of the inner div
+        let innerWidth = outerWidth
+        let innerHeight = innerWidth / targetAspectRatio;
+        
+        if (outerWidth / outerHeight < targetAspectRatio) {
+            innerHeight = outerHeight
+            innerWidth = outerWidth
+            $('#canvas').attr('width', targetWidth * outerWidth / outerHeight / targetAspectRatio)
+            // console.log('canvas width: ' + $('#canvas').attr('width'))
+        }
+        else {
+            $('#canvas').attr('width', targetWidth)
+        }
+        // Adjust height if it exceeds the outer div
+        if (innerHeight > outerHeight) {
+            innerHeight = outerHeight
+            innerWidth = innerHeight * targetAspectRatio
+        }
+        
+        // Center the inner div
+        inner.style.width = `${innerWidth}px`
+        inner.style.height = `${innerHeight}px`
+        // inner.style.top = `${(outerHeight - innerHeight) / 2}px`;
+        // inner.style.left = `${(outerWidth - innerWidth) / 2}px`;
+        canvas.draw()
+    }
+
+    // Adjust on resize
+    window.addEventListener('resize', debounce(adjustAspectRatio, 25))
+    // Initial adjustment
+    adjustAspectRatio()
+</script>
