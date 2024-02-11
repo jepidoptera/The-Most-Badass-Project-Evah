@@ -2,7 +2,11 @@ const trail = [
     {
         type: 'nowhere',
         name: 'what you leave behind',
-        length: -3
+        length: -3,
+        scenery: [
+            {type: "house", frequency: 50},
+            {type: "distant tree", frequency: 50}
+        ],
     },
     {
         type: 'city',
@@ -10,16 +14,16 @@ const trail = [
         length: 1,
         scenery: [
             {type: "orepoke", frequency: 0},
-            {type: "house", frequency: 20},
-            {type: "distant tree", frequency: 100}
+            {type: "house", frequency: 50},
+            {type: "distant tree", frequency: 50}
         ],
     },
     {
         type: 'suburb',
         name: 'Orepoke',
         scenery: [
-            {type: "house", frequency: 20},
-            {type: "distant tree", frequency: 100}
+            {type: "house", frequency: 50},
+            {type: "distant tree", frequency: 50}
         ],
         length: 15,
         message: {
@@ -33,8 +37,8 @@ const trail = [
         name: "Trader Moe's",
         scenery: [
             {type: "trading post", frequency: 0},
-            {type: "house", frequency: 15},
-            {type: "distant tree", frequency: 100}
+            {type: "house", frequency: 40},
+            {type: "distant tree", frequency: 50}
         ],
         length: 1,
         shop: {
@@ -51,8 +55,8 @@ const trail = [
         type: 'suburb',
         name: 'The Outskirts of Orepoke',
         scenery: [
-            {type: "house", frequency: 15},
-            {type: "distant tree", frequency: 100}
+            {type: "house", frequency: 35},
+            {type: "distant tree", frequency: 50}
         ],
         length: 15,
     },
@@ -183,6 +187,7 @@ const trail = [
             {type: "pond", frequency: 9},
             {type: "dead tree", frequency: 24},
             {type: "cattails", frequency: 40},
+            {type: "distant tree", frequency: 2}
         ],
         hunting_scenery: [
             {type: "dead tree", frequency: 3}
