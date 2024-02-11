@@ -313,7 +313,7 @@ class Hunter extends Character {
         this.food = 0;
         this.hp = 40;
         this.stopped = true
-        this.centerScreen()
+        // this.centerScreen()
     }
     move() {
         if (paused) return;
@@ -504,7 +504,7 @@ class Animal extends Character {
             this.hp = 30 * this.size;
         }
         else if (type === "alligator") {
-            this.frameCount = {x: 1, y: 4};
+            this.frameCount = {x: 1, y: 8};
             this.size = Math.random() ** 2 * 2 + .8;
             this.width = this.size * 1.7;
             this.height = this.size;
@@ -571,6 +571,7 @@ class Animal extends Character {
         // face the correct direction
         if (this.direction) {
             if (this.frameCount.y == 2) {
+                // basic image with just left and right
                 if (this.direction.x > 0 || this.direction.x === 0 && this.direction.y > 0) {
                     this.imageFrame.y = 1
                 }
@@ -579,6 +580,7 @@ class Animal extends Character {
                 }
             }
             else if (this.frameCount.y == 4) {
+                // image has 4 different directional frames
                 if (Math.abs(this.direction.x) > Math.abs(this.direction.y) && this.direction.x > 0) {
                     this.imageFrame.y = 2
                 }
@@ -591,7 +593,37 @@ class Animal extends Character {
                 else {
                     this.imageFrame.y = 3
                 }
-            
+            }
+            else if (this.frameCount.y == 8) {
+                // image has 8 different directional frames
+                if (this.direction.y == 0 && this.direction.x > 0) {
+                    this.imageFrame.y = 4
+                }
+                else if (this.direction.y == 0 && this.direction.x < 0) {
+                    this.imageFrame.y = 0
+                }
+                else if (this.direction.y < 0) {
+                    if (this.direction.x < 0) {
+                        this.imageFrame.y = 1
+                    }
+                    if (this.direction.x == 0) {
+                        this.imageFrame.y = 2
+                    }
+                    if (this.direction.x > 0) {
+                        this.imageFrame.y = 3
+                    }
+                }
+                else if (this.direction.y > 0) {
+                    if (this.direction.x > 0) {
+                        this.imageFrame.y = 5
+                    }
+                    if (this.direction.x == 0) {
+                        this.imageFrame.y = 6
+                    }
+                    if (this.direction.x < 0) {
+                        this.imageFrame.y = 7
+                    }
+                }
             }
         }
         let dist = approxDist(this.x, this.y, hunter.x, hunter.y);
@@ -839,6 +871,7 @@ $(document).ready(() => {
                 })
                 window.addEventListener('resize', sizeCanvas)
                 sizeCanvas()
+                hunter.centerScreen()
             
                 hunter.weapons = [
                     'mokeballs',
@@ -877,7 +910,8 @@ $(document).ready(() => {
 
                 $("#canvas").mousemove(event => {
                     mouseX = event.clientX
-                    mouseY = event.clientY                
+                    mouseY = event.clientY
+                    hunter.stopped = false                
                 })
                 $("#canvas").on('touchmove', event => {
                     mouseX = event.touches[0].clientX
