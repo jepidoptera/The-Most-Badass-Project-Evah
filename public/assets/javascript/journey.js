@@ -24,7 +24,7 @@ class SceneObject {
         this.type = params.type
         this.spacing = params.spacing
         this.frequency = params.frequency
-        this.lastPosition = 0
+        this.lastPosition = -Infinity
         this.index = 0
         if (params.height && params.width) {
             this.sizeRange = {
@@ -75,14 +75,14 @@ const SceneObjects = {
     },
     "far moutain": {
         type: "mountain",
-        spacing: 31,
+        spacing: 3,
         sizeRange: { min: { x: 400, y: 225 }, max: { x: 900, y: 600 } },
         imgRange: { min: 0, max: 4 },
         distance: () => 100 - Math.random() * Math.random() * 100,
     },
     "near moutain": {
         type: "mountain",
-        spacing: 71,
+        spacing: 4,
         sizeRange: { min: { x: 200, y: 112 }, max: { x: 450, y: 300 } },
         imgRange: { min: 0, max: 4 },
         isForeground: () => true,
@@ -90,7 +90,7 @@ const SceneObjects = {
     },
     "mountain range": {
         type: "mountain range",
-        spacing: 100,
+        spacing: 11,
         height: 290,
         width: 1280,
         image: './assets/images/scenery/big mountain.png',
@@ -130,7 +130,7 @@ const SceneObjects = {
     },
     "house": {
         type: "house",
-        spacing: 0.1,
+        spacing: 0,
         sizeRange: {min: {x: 25, y: 25}, max: {x: 50, y: 50}},
         imgRange: {min: 0, max: 4},
         isForeground: () => (Math.random() * 100 < 40) ? true : false,
@@ -299,35 +299,10 @@ class Trail {
     }
     loadFrom(startingPoint) {
         // this.locations.forEach(location => {if (location.scenery) location.scenery.forEach(item => {item.appeared = false})})
-        this.scenery = [];
-        let progressRate = 1/ canvas.metrics.frameRate;
-        for (let n = startingPoint; n < startingPoint + canvas.metrics.screen_length * canvas.metrics.frameRate; n ++) {
-            this.currentLocation = this.locationAt(startingPoint - canvas.metrics.screen_length * .2 + n * progressRate);
-            this.currentLocation.scenery.forEach(element => {
-                let newElement = null;
-                if (!element.frequency) {
-                    if (this.currentLocation.progress <= 1 / canvas.metrics.frameRate) {
-                        newElement = new backgroundImage(element);
-                        element.appeared = true;
-                    }
-                } 
-                else if (
-                    element.frequency 
-                    // && element.lastPosition + element.spacing > -n
-                    && Math.random() * element.frequency > Math.random() * 100
-                ) {
-                    element.lastPosition = -n
-                    element.index += 1
-                    newElement = new backgroundImage(element);
-                }
-                if (newElement) {
-                    newElement.x = n * progressRate / canvas.metrics.screen_length * canvas.width;
-                    this.scenery.push(newElement);
-                }
-            });
+        player.progress = startingPoint - canvas.metrics.screen_length * 3
+        while (player.progress < startingPoint) {
+            this.travel()
         }
-        player.progress = startingPoint;
-        this.travel();
     }
 }
 
@@ -423,7 +398,7 @@ const events = {
             let victim = player.posse[weightedRandom(player.posse.map(moke => 1 / moke.immuneResponse))];
             if (victim.conditions.map(c => c.name).includes(events.disease.name)) {
                 // can't get it twice
-                console.log(`prevented double occurrence of ${events.disease.name}.`);
+                // console.log(`prevented double occurrence of ${events.disease.name}.`);
                 return;
             } 
             let illnessLength = events.disease.duration.base 
