@@ -1,0 +1,7 @@
+caught Mokemon should spin!
+move dialog boxes into info panel
+bring Mokemon hunting with you
+Mokemon fighting minigame!
+covered wagon animation
+add crossbow and sword for hunting
+add player hitpoint system so you can die vs animals. Player health icon alongside Mokemon.
