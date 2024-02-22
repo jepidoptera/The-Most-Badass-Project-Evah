@@ -117,10 +117,12 @@ class Mokeball extends Projectile {
                     else {
                         let messageText = `You caught: ${animal.type}!` 
                         if (animal.isMokemon) {
-                            player.posse.push({
-                                name: animal.type,
-                                health: animal.hp
-                            })
+                            setTimeout(() => {
+                                player.posse.push({
+                                    name: animal.type,
+                                    health: animal.hp
+                                })
+                            }, 2000);
                         }
                         else if (animal.foodValue > 0) messageText += `  You gain ${animal.foodValue} food.`;
                         message(messageText);
@@ -1170,6 +1172,10 @@ function genMap(terrain, callback) {
                     }
                     else if (item.type === "cactus") {
                         mapObject.height = 2;
+                        mapObject.width = 1;
+                    }
+                    else if (item.type == "cattails") {
+                        mapObject.height = 1;
                         mapObject.width = 1;
                     }
                     // (mapItems[n].x - viewport.x - mapItems[n].width/ 2 + 0.5) * mapHexWidth, 
