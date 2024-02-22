@@ -65,9 +65,8 @@ const trail = [
         name: 'The Forest of Doom',
         scenery: [
             {type: "signpost", frequency: 0},
-            {type: "tree", frequency: 40},
-            {type: "distant tree", frequency: 50},
-            {type: "near tree", frequency: 20}
+            {type: "tree", frequency: 50},
+            // {type: "near tree", frequency: 1}
         ],
         hunting_scenery: [
             {type: "tree", frequency: 5}
@@ -89,11 +88,11 @@ const trail = [
         name: 'The Desert of Dryness',
         scenery: [
             {type: "signpost", frequency: 0},
-            {type: "cactus", frequency: 10},
+            {type: "cactus", frequency: 5},
             {type: "rock", frequency: 8}
         ],
         hunting_scenery: [
-            {type: "cactus", frequency: 2},
+            {type: "cactus", frequency: 1},
             {type: "rock", frequency: 2}
         ],
         animals: [
@@ -184,13 +183,15 @@ const trail = [
         name: 'The Swamp of Despair',
         scenery: [
             {type: "signpost", frequency: 0},
-            {type: "pond", frequency: 9},
-            {type: "dead tree", frequency: 24},
+            // {type: "pond", frequency: 9},
+            {type: "dead tree", frequency: 16},
+            {type: "tree", frequency: 1},
             {type: "cattails", frequency: 40},
-            {type: "distant tree", frequency: 2}
+            {type: "distant tree", frequency: 1}
         ],
         hunting_scenery: [
-            {type: "dead tree", frequency: 3}
+            {type: "dead tree", frequency: 3},
+            {type: "cattails", frequency: 6, passable: true}
         ],
         animals: [
             {type: "alligator", frequency: 30},
@@ -209,7 +210,7 @@ const trail = [
         name: 'The Great Palm Jungle',
         scenery: [
             {type: "signpost", frequency: 0},
-            {type: "palm tree", frequency: 50}
+            {type: "palm tree", frequency: 60}
         ],
         hunting_scenery: [
             {type: "palm tree", frequency: 5},
