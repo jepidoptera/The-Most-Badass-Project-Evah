@@ -1,7 +1,17 @@
-caught Mokemon should spin!
-move dialog boxes into info panel
-bring Mokemon hunting with you
-Mokemon fighting minigame!
-covered wagon animation
-add crossbow and sword for hunting
-add player hitpoint system so you can die vs animals. Player health icon alongside Mokemon.
+X caught Mokemon should spin!
+/ move dialog boxes into info panel
+  bring Mokemon hunting with you
+  Mokemon fighting minigame!
+X covered wagon animation
+  add crossbow and sword for hunting
+  allow player to camp overnight and keep hunting
+  add player hitpoint system so you can die vs animals. Player health icon alongside Mokemon.
+  allow selling stuff
+  fork in the road
+  another town along the way
+  abandoned city biome
+  dinosaur biome
+  ice biome
+  plague disease event
+X background images on trail
+  actually make background images for the whole trail
