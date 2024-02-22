@@ -3,7 +3,7 @@ html, body {
     background-color: black;
 }
 #canvasContainer {
-    width: 80vw;
+    width: 75vw;
     height: 100vh;
     display: flex;
     justify-content: center;
@@ -21,15 +21,14 @@ html, body {
     user-select: none;
     overflow: hidden;
 }
-#narrative {
+#sidebar {
     box-sizing: border-box;
     /* display: block; */
     position: absolute;
-    height: 49.5vw;
-    width: 20vw;
-    left: 80vw;
-    top: 50%;
-    transform: translate(0, -50%);
+    height: 100vh;
+    width: 25vw;
+    left: 75vw;
+    top: 0;
     z-index: 3;
     background-color: black;
     color: #009900;
@@ -38,8 +37,36 @@ html, body {
     font-size: 12pt;
     padding: 10px;
 }
-@media (min-aspect-ratio: 85/42) {
-    #narrative {
+#mainMenu {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 50%;
+    top: 50%;
+    left: 0;
+    background-color: black;
+    color: white;
+    font-family: 'VT323', monospace;
+    font-size: 12pt;
+    padding: 10px;
+    box-sizing: border-box;
+}
+.menuButton {
+    width: 100%;
+}
+#narrative {
+    position: absolute;
+    display: block;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+@media (min-aspect-ratio: 136/63) {
+    #sidebar {
         top: 0;
         width: calc(100vw - 161vh);
         left: 161vh;
@@ -63,6 +90,17 @@ html, body {
         display: block;
     }
     #narrative {
+        width: 50%;
+    }
+    #mainMenu {
+        top: 0;
+        left: 50%;
+        width: 50%
+    }
+    .menuButton {
+        flex-direction: row;
+    }
+    #sidebar {
         width: 129.5vh;
         height: 20vh;
         bottom: 0;
@@ -77,7 +115,7 @@ html, body {
         width: 100vw;
         height: 61.76vw;
     }
-    #narrative {
+    #sidebar {
         width: 100vw;
         height: calc(100vh - 61.76vw);
         bottom: 0;
@@ -92,9 +130,24 @@ html, body {
         width: 100vw;
         height: 61.76vh;
     }
-    #narrative {
+    #sidebar {
         width: 100vw;
         height: 38.24vh;
+    }
+    #mainMenu {
+        height: 25%;
+        top: 75%;
+        width: 100%;
+        left: 0;
+        flex-direction: row;
+    }
+    .menuButton {
+        flex: 1;
+        height: 100%;
+    }
+    #narrative {
+        width: 100%;
+        height: 75%;
     }
 }
 #sky{
@@ -188,4 +241,49 @@ html, body {
     aspect-ratio: 1/1;
     transform: translate(-50%, -50%);
     z-index: 3;
+}
+.dialogBox {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    z-index: 1000;
+    transform: none;
+    padding: 0;
+    border: none;
+    min-width: none;
+}
+.msgTitle {
+    margin: 0 0 10px;
+    box-sizing: border-box;
+}
+.infoPanel {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    right: 0;
+    top: 0;
+    border-left: 1px solid white;
+    padding: 10px;
+    box-sizing: border-box;
+    overflow: hidden;
+    z-index: 999;
+}
+.healthMonitor {
+    position: absolute;
+    width: 60%;
+    min-width: 400px;
+    max-width: 100%;
+    border: 3px solid white;
+    color: whitesmoke;
+    background-color: black;
+    text-align: justify;
+    top: 20px;
+    left: 50%;
+    transform: translate(-50%);
+    font-size: 10pt;
+    padding: 10px;
+    box-sizing: border-box;
+    overflow: hidden;
 }
