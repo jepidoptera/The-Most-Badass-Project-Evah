@@ -38,7 +38,7 @@ const mokemon = {
         hunger: 17,
         maxHealth: 20,
         immuneResponse: .3,
-        description: "Strong, sturdy, and stoic. Eats voraciously. Susceptible to disease.",
+        description: "Strong, sturdy, and stoic. Eats a lot. Susceptible to disease.",
         frequency: {},
     },
     "Marlequin": {
