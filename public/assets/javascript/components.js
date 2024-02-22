@@ -6,8 +6,8 @@ function mokePortrait (moke) {
             .addClass('mokeIcon')
             .append(
                 $(moke.img).css({
-                    width: `${(moke.width > moke.height ? 1 : moke.width / moke.height) * 4.5}vmin`, 
-                    height: `${(moke.height > moke.width ? 1 : moke.height / moke.width) * 4.5}vmin`,
+                    width: `${(moke.width > moke.height ? 1 : moke.width / moke.height) * 4.5}vh`, 
+                    height: `${(moke.height > moke.width ? 1 : moke.height / moke.width) * 4.5}vh`,
                     display: "block",
                     position: "relative",
                     top: "50%",
@@ -34,7 +34,7 @@ function mokePortrait (moke) {
                         if (!$(event.currentTarget).hasClass("selected")) $("#mokeStats").empty();
                 }),
         $("<div>").css({
-            width: `${moke.health / (moke.maxHealth || 10) * 4.5}vmin`,
+            width: `${moke.health / (moke.maxHealth || 10) * 4.5}vh`,
             height: "5px",
             position: "relative",
             bottom: 0,
