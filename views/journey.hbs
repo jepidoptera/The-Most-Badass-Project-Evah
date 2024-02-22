@@ -1,4 +1,5 @@
     <script src="assets/javascript/components.js"></script>
+    <script src="assets/javascript/glfx.js"></script>
     <script src="assets/javascript/journey.js"></script>
     <link rel="stylesheet" href="assets/css/journey.css">
 </head>
@@ -15,27 +16,40 @@
             <div id='ground'></div>
             <div id='path'></div>
             <canvas id='canvas' width="1748" height="1080"></canvas>
-            <div id="msgbox" class="hidden dialogBox">
-                <div id="msgbuttons"></div>
-            </div>    
-            <div id='optionsMenu' class='hidden dialogBox'>
-                <button class="optionButton" onclick="restDialog()">Rest</button>
-                <button id="huntButton" class="optionButton" onclick="saveGame(); window.location.href=`/hunt?name=${player.name}&auth=${player.authtoken}`">Hunt</button>
-                <button class="optionButton" onclick="saveGame(); closeOptions(); msgBox('Game saved.');">Save</button>
-                <button class="optionButton" onclick="window.location.href=window.location.href">Reload</button>
-                <button class="optionButton" onclick="closeOptions()">Continue</button>
-                <section id="infoPanel">
-                    <p>Your Mokemon posse:</p>
-                    <div id="mokePosse"></div>
-                    <div id="mokeStats"></div>
-                    <p id="foodInfo"></p>
-                    <p id="moneyInfo"></p>
-                    <p id="ammoInfo"></p>
-                </section>
-            </div>
         </div>
     </section>
-    <section id='narrative' onclick="options()">
+    <section id='sidebar'>
+        <div id='narrative'>
+        </div>
+        <div id='mainMenu'>
+            <button class="menuButton" id='menu' onclick="options()">Menu</button>
+            <button class="menuButton" id='pause' onclick="pause(); $('#pause').hide(); $('#unpause').show()">Pause</button>
+            <button class="menuButton" id='unpause' hidden="true" onclick="unpause(); $('#unpause').hide(); $('#pause').show()">Unpause</button>
+            <button class="menuButton" id='info' onclick="infoPanel()">Info</button>
+            <button class="menuButton" id='Mokemon' onclick="mokemon()">Mokemon™</button>
+        </div>
+        <div id="msgbox" class="hidden dialogBox">
+            <div id="msgbuttons"></div>
+        </div>
+        <div id='optionsMenu' class='hidden dialogBox'>
+            <p style="text-align: center">Options: <button class="backButton" onclick="closeOptions()">⮠</button></p>
+            <button class="optionButton" onclick="restDialog()">Rest</button>
+            <button id="huntButton" class="optionButton" onclick="saveGame(); window.location.href=`/hunt?name=${player.name}&auth=${player.authtoken}`">Hunt</button>
+            <button class="optionButton" onclick="saveGame(); closeOptions(); msgBox('Game saved.');">Save</button>
+            <button class="optionButton" onclick="window.location.href=window.location.href">Reload</button>
+        </div>
+        <div id='mokemonMenu' class='hidden infoPanel dialogBox'>
+            <section id="mokemonInfo">
+                <p>Your Mokemon posse:<button class="backButton" onclick="$('#mokemonMenu').hide()">⮠</button></p>
+                <div id="mokePosse"></div>
+                <div id="mokeStats"></div>
+            </section>
+        </div>
+        <div id="playerInfo" class="hidden infoPanel dialogBox">
+            <p>Player Info:<button class="backButton" onclick="$('#playerInfo').hide()">⮠</button></p>
+            <p id="foodInfo"></p>
+            <p id="moneyInfo"></p>
+            <p id="ammoInfo"></p>
     </section>
 </body>
 
@@ -45,6 +59,7 @@
     $(document).ready(function() {
         targetWidth = $('#canvas').attr('width')
         console.log('targetWidth: ' + targetWidth)
+        adjustAspectRatio()
     })
     function debounce(func, timeout = 100){
         let timer;
