@@ -1,17 +1,11 @@
 // jshint esversion: 6
 // jshint multistr: true
-var backgroundImages = [];
+var trailHeight
+var horizonHeight
 
-const you = $('<img>')
-    .attr('src', './assets/images/walking.gif')
-    .addClass('you');
-var exit = false;
-var trailHeight;
-var horizonHeight;
-
-var timeSpeed = 0.03;
-var canvas;
-var gameInterval;
+var timeSpeed = 0.05
+var canvas
+var gameInterval
 const playerName = "{{name}}"
 const daysTilEclipse = 99
 var sunup = false
@@ -69,24 +63,24 @@ const SceneObjects = {
     "rock": {
         type: "rock",
         spacing: 0,
-        sizeRange: { min: { x: 10, y: 5 }, max: { x: 50, y: 25 } },
+        sizeRange: { min: { x: 10, y: 5 }, max: { x: 100, y: 50 } },
         imgRange: { min: 0, max: 3 },
-        distance: () => { return Math.random() * 100 },
+        distance: () => Math.random() * canvas.north_horizon,
     },
     "far moutain": {
         type: "mountain",
         spacing: 3,
         sizeRange: { min: { x: 400, y: 225 }, max: { x: 900, y: 600 } },
         imgRange: { min: 0, max: 4 },
-        distance: () => 100 - Math.random() * Math.random() * 100,
+        distance: () => Math.sqrt(Math.random()) * canvas.north_horizon,
     },
     "near moutain": {
         type: "mountain",
         spacing: 4,
         sizeRange: { min: { x: 200, y: 112 }, max: { x: 450, y: 300 } },
-        imgRange: { min: 0, max: 4 },
+        imgRange: { min: 0, max: 4 },                                                              
         isForeground: () => true,
-        foregroundDistance: () => -100,
+        foregroundDistance: () => -300,
     },
     "mountain range": {
         type: "mountain range",
@@ -117,16 +111,16 @@ const SceneObjects = {
         sizeRange: {min: {x: 25, y: 50}, max: {x: 200, y: 200}},
         imgRange: {min: 0, max: 4},
         isForeground: () => (Math.random() * 100 < 1.5) ? true : false,
-        distance: () => Math.max(100 - Math.random() * Math.random() * 110, 0),
-        foregroundDistance: () => Math.random() * -50
+        distance: () => canvas.south_horizon + Math.sqrt(Math.random()) * (canvas.north_horizon - canvas.south_horizon),
+        foregroundDistance: () => Math.random() * canvas.south_horizon
     },
     "cactus": {
         type: "cactus",
-        spacing: 1,
+        // spacing: 1,
         sizeRange: {min: {x: 25, y: 25}, max: {x: 100, y: 100}},
         imgRange: {min: 0, max: 1},
         isForeground: () => (Math.random() * 100 < 1.5) ? true : false,
-        distance: () => 100 - Math.random() * Math.random() * 100
+        distance: () => Math.random() * canvas.north_horizon
     },
     "house": {
         type: "house",
@@ -134,8 +128,8 @@ const SceneObjects = {
         sizeRange: {min: {x: 25, y: 25}, max: {x: 50, y: 50}},
         imgRange: {min: 0, max: 4},
         isForeground: () => (Math.random() * 100 < 40) ? true : false,
-        distance: () => Math.random() * 50,
-        foregroundDistance: () => Math.random() * -50
+        distance: () => Math.random() * canvas.north_horizon / 2,
+        foregroundDistance: () => Math.random() * canvas.south_horizon
     },
     "tree": {
         type: 'tree',
@@ -143,14 +137,14 @@ const SceneObjects = {
         sizeRange: {min: {x: 80, y: 160}, max: {x: 360, y: 360}},
         imgRange: {min: 0, max: 5},
         isForeground: () => false,
-        distance: (x) => Array(20).fill(0).map((x, i) => i * 5)[x % 20],
+        distance: (y) => y % 71 == 0 ? -100 : Math.random() * canvas.north_horizon // Array(20).fill(0).map((_, i) => i * canvas.north_horizon / 5)[y % 20],
     },
     "distant tree": {
         type: 'tree',
         spacing: 0,
         sizeRange: {min: {x: 80, y: 160}, max: {x: 360, y: 360}},
         imgRange: {min: 0, max: 4},
-        distance: () => 100 - Math.random() * Math.random() * 30
+        distance: () => canvas.north_horizon * (0.7 + Math.random() * 0.3)
     },
     "near tree": {
         type: 'tree',
@@ -165,35 +159,29 @@ const SceneObjects = {
         spacing: 1,
         sizeRange: {min: {x: 80, y: 160}, max: {x: 360, y: 360}},
         imgRange: {min: 0, max: 8},
-        distance: () => Math.random() * 100
+        distance: () => canvas.south_horizon + Math.random() * (canvas.north_horizon - canvas.south_horizon)
     },
     "cattails": {
         type: 'cattails',
-        spacing: 1,
-        sizeRange: {min: {x: 20, y: 25}, max: {x: 40, y: 25}},
+        spacing: 0,
+        sizeRange: {min: {x: 80, y: 50}, max: {x: 150, y: 100}},
         imgRange: {min: 1, max: 4},
-        distance: () => Math.random() * 100
+        distance: () => canvas.south_horizon + Math.random() * (canvas.north_horizon - canvas.south_horizon)
     },
-    "mud": {
-        type: 'mud',
-        spacing: 2,
-        sizeRange: {min: {x: 160, y: 80}, max: {x: 360, y: 180}},
-        imgRange: {min: 1, max: 3},
-        distance: () => Math.random() * 100
-    },
-    "pond": {
-        type: 'pond',
-        spacing: 2,
-        sizeRange: {min: {x: 160, y: 80}, max: {x: 360, y: 180}},
+    "near cattails": {
+        type: 'cattails',
+        spacing: 0,
         imgRange: {min: 1, max: 4},
-        distance: () => Math.random() * 100
+        sizeRange: {min: {x: 80, y: 50}, max: {x: 150, y: 100}},
+        isForeground: () => true,
+        foregroundDistance: () => Math.random() > .5 ? -20 : -50 
     },
     "pine tree": {
         type: 'pine tree',
         spacing: 0,
         sizeRange: {min: {x: 60, y: 120}, max: {x: 270, y: 270}},
         imgRange: {min: 0, max: 4},
-        distance: () => Math.max(100 - Math.random() * Math.random() * 110, 0),
+        distance: () => Math.max((Math.random() * 1.1 - 0.1) * canvas.north_horizon, 0)
     },
     "signpost": {
         type: 'signpost',
@@ -232,17 +220,84 @@ const SceneObjects = {
 
 class Trail {
     constructor(locations) {
-        this.locations = locations;
-        this.locations.forEach((location, n) => {
-            location.next = this.locations[n+1];
+        this.locations = locations.map((location, i) => {
+            return {
+                ...location,
+                progress: 0,
+                length: location.length || 0,
+                scenery: (location.scenery ? location.scenery.map(scenery => 
+                        new SceneObject({
+                            ...SceneObjects[scenery.type], 
+                            frequency: scenery.frequency
+                        })
+                ) : []),
+                background: $("<img>")
+                .attr("src", './assets/images/backgrounds/' + location.name + '.png')
+                .on('error', () => {
+                    this.locations[i].background = null
+                    console.log("background image not found for " + location.name)
+                })[0]
+            }
         })
-        this.scenery = [];
+
+        this.locations.forEach((location, n) => {
+            // // apply perspective transform to the landscape images
+            // var source_image = $("<img>")
+            // source_image.attr("src", './assets/images/backgrounds/' + location.name + '_intro.png')
+            // .on('load' , () => {
+            //     location.intro_pic = canvas.perspectiveTransform(source_image[0])
+            // })
+            // var source_image = $("<img>")
+            // source_image.attr("src", './assets/images/backgrounds/' + location.name + '.png')
+            // .on('load' , () => {
+            //     location.landscape = canvas.perspectiveTransform(source_image[0])
+            // })
+            // link each location to the next
+            location.next = this.locations[n+1]
+        })
+        this.scenery = []
+        this.landscapeSegments = []
         this.currentLocation = this.locations[0]
+        this.onScreenLocations = []
+    }
+    loadImages() {
+        return Promise.all(this.locations.map(location => {
+            return Promise.all([
+                new Promise((resolve) => {
+                    var source_image = $("<img>")
+                    source_image.attr("src", './assets/images/backgrounds/' + location.type + '_intro.png')
+                    .on('load' , () => {
+                        location.intro_pic = canvas.perspectiveTransform(source_image[0])
+                        resolve()
+                    })
+                    .on('error', () => {
+                        resolve()
+                    })
+                }),
+                new Promise((resolve) => {
+                    var source_image = $("<img>")
+                    source_image.attr("src", './assets/images/backgrounds/' + location.type + '.png')
+                    .on('load' , () => {
+                        location.landscape = canvas.perspectiveTransform(source_image[0])
+                        resolve()
+                    })
+                    .on('error', () => {
+                        resolve()
+                    })
+                }),
+            ])
+        }))
     }
     updateLocation() {
-        this.atHorizon = this.locationAt(player.progress + canvas.metrics.screen_length *.8);
-        this.nextLocation = this.currentLocation.next;
-        this.currentLocation = this.locationAt(player.progress);
+        this.atHorizon = this.locationAt(player.progress + canvas.east_horizon / canvas.x_per_hour)
+        if (!this.onScreenLocations.includes(this.atHorizon)) {
+            this.onScreenLocations.push(this.atHorizon)          
+        }
+        this.currentLocation = this.locationAt(player.progress)
+        this.nextLocation = this.currentLocation.next
+        if (this.onScreenLocations[0].x < -this.onScreenLocations[0].length / canvas.metrics.screen_length * canvas.width / canvas.distance_factor) {
+            this.onScreenLocations.shift()
+        }
     }
     locationAt(progress) {
         let progressTotal = 0
@@ -255,46 +310,64 @@ class Trail {
                 break
             }
         }
-        return location;
+        return location
     }
     travel() {
+        const horizon = this.atHorizon
+        player.progress += 1 / canvas.metrics.frameRate
         this.updateLocation()
-        player.progress += 1/ canvas.metrics.frameRate
+        if (this.atHorizon != horizon) {
+            if (this.atHorizon.intro_pic) {
+                this.landscapeSegments.push(new landscapeSegment(this.atHorizon.intro_pic, canvas.east_horizon))  
+            }
+            else if (this.atHorizon.landscape) {
+                this.landscapeSegments.push(new landscapeSegment(this.atHorizon.landscape, canvas.east_horizon))
+            }
+        }
+        const lastLand = this.landscapeSegments[this.landscapeSegments.length - 1]
+        if (lastLand) {
+            if (lastLand.x + lastLand.img.width < canvas.west_horizon) {
+                this.landscapeSegments.shift()
+            }
+            else if (lastLand.x + lastLand.effectiveWidth < canvas.east_horizon && this.atHorizon.landscape) {
+                this.landscapeSegments.push(new landscapeSegment(this.atHorizon.landscape, lastLand.x + lastLand.effectiveWidth - 1))
+            }
+        }
+
         // make new scenery
         this.atHorizon.scenery.forEach(element => {
             if (!element.frequency) {
-                // one-off item
+                // one-off item (sign, trading post)
                 if (this.atHorizon != this.currentLocation && this.atHorizon.progress <= 1 / canvas.metrics.frameRate) {
                     this.scenery.push(new backgroundImage(element))
                 }
             }
             else {
+                // repeating item (trees, rocks, etc.)
                 while (
-                    player.progress - element.lastPosition >= element.spacing
-                    && Math.random() * element.frequency > Math.random() * 100
+                    Math.random() * element.frequency > Math.random() * 100
                 ) {
                     element.lastPosition = player.progress
                     element.index += 1
                     this.scenery.push(new backgroundImage(element))
                 }
             }
-        });
+        })
         // move along existing scenery
         let remainingSceneItems = []
         let scrollSpeed = canvas.width / canvas.metrics.screen_length / canvas.metrics.frameRate
+        for (let n in this.landscapeSegments) {
+            this.landscapeSegments[n].x -= scrollSpeed // * canvas.scale_at(canvas.south_horizon) 
+        }
         for (let n in this.scenery) {
-            this.scenery[n].x -= scrollSpeed * (150 - this.scenery[n].distance) / 150
-            if (this.scenery[n].x > -this.scenery[n].width) remainingSceneItems.push(this.scenery[n])
+            this.scenery[n].x -= scrollSpeed
+            this.scenery[n].scale = canvas.scale_at(this.scenery[n].y)
+            if (this.scenery[n].x + this.scenery[n].width > canvas.west_horizon * canvas.distance_factor / this.scenery[n].scale) {
+                remainingSceneItems.push(this.scenery[n])
+            }
         }
         this.scenery = remainingSceneItems.sort((a, b) => {
-            if (a.foreground) {
-                if (b.foreground) {
-                    return a.distance > b.distance ? -1 : 1
-                }
-                return 1
-            }
-            if (b.foreground) return -1
-            return a.distance > b.distance ? -1 : 1
+            return b.y - a.y
         })
     }
     loadFrom(startingPoint) {
@@ -308,47 +381,142 @@ class Trail {
 
 class Canvas {
     constructor () {
-        this._canvas = document.getElementById("canvas");
-        this._canvas.width = Math.max(screen.width, screen.height);
-        this._canvas.height = this._canvas.width * 0.618;
-        this.height = this._canvas.height;
-        this.width = this._canvas.width;
-        this.ctx = this._canvas.getContext('2d');
+        // the coordinate system used by this canvas is:
+        // player in the center at 0, 0
+        // north is positive y
+        // this is neat because the player is at the center of our perspective, and we're doing a lot with perspective.
+        this._canvas = document.getElementById("canvas")
+        this._canvas.width = Math.max(screen.width, screen.height)
+        this._canvas.height = this._canvas.width * 0.618
+        this.height = this._canvas.height
+        this.width = this._canvas.width
+        this.trail_height = this.height * 0.05
+        this.ctx = this._canvas.getContext('2d')
+        this.distance_factor = 1/3  // the ratio in size between an object at trail_y vs one at north_horizon
+        this.origin_y = this.height * 0.8
+        this.origin_x = this.width / 2
+        this.trail_bottom = this.height * 0.85
+        this.east_horizon = this.width / this.distance_factor / 2
+        this.west_horizon = this.width / this.distance_factor / -2
+        this.north_horizon = this.height * 0.4
+        this.south_horizon = this.height * -0.2
+        this.x_per_hour = this.width / 20
     }
     metrics = {
         frameRate: 30,
-        screen_length: 20 // seconds
+        screen_length: 20, // seconds
     }
-
     draw = () => {
         this.ctx.globalAlpha = 1;
+        this.origin_x = this._canvas.width / 2
         this.ctx.clearRect(0, 0, this.width, this.height);
-        let mokesDrawn = false;
-        trail.scenery.forEach((sceneObject, n) => {
-            if (sceneObject.foreground) {
-                this.ctx.globalAlpha = (200 + sceneObject.distance) / 200;
-            }
-            this.ctx.drawImage(sceneObject.img, 
-                sceneObject.x, sceneObject.y,
-                sceneObject.width, sceneObject.height)
+        trail.landscapeSegments.forEach(seg => {
+            this.paralaxDraw(seg.img, seg.x)
+        })
 
-            if (!mokesDrawn && (n == trail.scenery.length - 1 || trail.scenery[n+1].foreground)) {
-                this.ctx.globalAlpha = 1;
-                let totalWidth = canvas.width/100;
+        let mokesDrawn = false
+        let processionLength = canvas.width / 100
+
+        trail.scenery.forEach((sceneObject) => {
+            let scale = this.scale_at(sceneObject.y)
+            let {x, y} = this.translate_coordinates(sceneObject.x, sceneObject.y)
+            if (!mokesDrawn && y > this.origin_y) {
                 player.posse.forEach((mokemon, n) => {
-                    totalWidth += mokemon.width + canvas.width/200;
+                    processionLength += mokemon.width + canvas.width/200
                     this.ctx.drawImage(
                         mokemon.img,
                         // 0, 0, // source x, y
                         // mokemon.img.naturalWidth / mokemon.frameCount.x, mokemon.img.naturalHeight / mokemon.frameCount.y, // source width, height
-                        canvas.width / 4 - totalWidth, // x
-                        mokemon.y - mokemon.z, // y
+                        parseInt(canvas.origin_x - processionLength), // x
+                        parseInt(mokemon.y - mokemon.z), // y
                         mokemon.width, mokemon.height
                     )
                 })
-                mokesDrawn = true;
+                this.ctx.drawImage(
+                    player.img,
+                    0, player.img.height * parseInt(player.frame) / 5,
+                    player.img.width, player.img.height / 5,
+                    canvas.origin_x, canvas.origin_y - player.height / 2,
+                    player.width, player.height,
+                )
+                player.frame = (player.frame + 0.25) % 4
+                mokesDrawn = true
             }
+            let draw_y = y - sceneObject.height * scale
+            if (
+                // object is in front of the player, so make it transparent
+                draw_y < this.origin_y && sceneObject.y < 0 && x < this.origin_x + player.width 
+                && x + sceneObject.width * scale > this.origin_x - processionLength
+            ) {
+                this.ctx.globalAlpha = 0.5
+            }
+            else { this.ctx.globalAlpha = 1 }
+            this.ctx.drawImage(
+                sceneObject.img,
+                x, draw_y,
+                sceneObject.width * scale, sceneObject.height * scale
+            )
         })
+    }
+    scale_at(y) {
+        // this is y in the trail coordinate system
+        return 1 - (1 - this.distance_factor) * y / this.north_horizon
+    }
+    translate_coordinates(x, y) {
+        // translate from trail coordinates (origin at the player, perspective toward horizon) 
+        // to canvas coordinates (flat, origin at the top left corner of the canvas)
+        if (y < 0) {y -= this.trail_height}
+        let scale = this.scale_at(y)
+        let return_x = x * scale + this.origin_x
+        let return_y = this.origin_y - this.north_horizon + (this.north_horizon - y) // * scale
+        // if (return_y < this.north_horizon) {
+        //     return_y = this.north_horizon * 2 - return_y
+        // }
+        return {x: return_x, y: return_y}
+    }
+    perspectiveTransform(source_image) {
+        // warp an image to give it a perspective effect
+        var fxcanvas = fx.canvas()
+        var texture = fxcanvas.texture(source_image)
+        let distance_factor = this.scale_at(this.north_horizon) / this.scale_at(this.south_horizon)
+        fxcanvas.draw(texture).perspective(
+            [
+                -source_image.width * (1 / distance_factor - 1) / 2, 0,
+                source_image.width * (1 + (1 / distance_factor - 1) / 2), 0,
+                source_image.width, source_image.height,
+                0, source_image.height
+            ], [
+                0, 0,
+                source_image.width, 0,
+                source_image.width, source_image.height,
+                0, source_image.height
+            ]
+        ).update()
+        return fxcanvas
+    }
+    paralaxDraw(img, x) {
+        // this.ctx.drawImage(img, 0, 0, img.width, img.height)
+        // return 
+        this.ctx.save()
+        const draw_height = this.north_horizon - this.south_horizon
+        const draw_width = img.width  // draw_height * img.width / img.height
+        const top_x = x * this.distance_factor + this.origin_x
+        const bottom_x = x * this.scale_at(this.south_horizon) + this.origin_x
+        // x = ax + cy + e
+        this.ctx.translate(0, this.height - draw_height)
+        this.ctx.transform(
+            1, 0, (1 - this.distance_factor) / 2 * draw_width / draw_height - ((top_x - bottom_x) / draw_height), 
+            1, -draw_width * (1 - this.distance_factor) / 2, 0
+        )
+        // ctx.transform(1, 0, 0.25 * draw_width / draw_height - ((this.top_x - this.bottom_x) / draw_height), 1, -draw_width / 4, 0)
+
+        this.ctx.drawImage(img, top_x, 0, draw_width, draw_height)
+        this.ctx.restore()
+        // ctx.beginPath()
+        // ctx.strokeStyle = 'red'
+        // ctx.moveTo(this.top_x, ch / 2)
+        // ctx.lineTo(this.bottom_x, ch / 2 + draw_height)
+        // ctx.stroke()
     }
 }
 
@@ -506,10 +674,11 @@ const events = {
             return player.posse.length > 0 && trail.currentLocation.type === "desert" && parseInt(Math.random() * 200) == 0;
         },
         function: () => {
-            victim = player.posse[parseInt(Math.random() * player.posse.length)];
-            victim.hurt(1);
-            player.messages.push(`${victim.name} was stung by a scorpion.`);
-            msgBox ("Venemous wildlife", `${victim.name} was stung by a scorpion${victim.alive ? "" : " and died"}.`, "That's how it goes sometimes")
+            victim = player.posse[parseInt(Math.random() * player.posse.length)]
+            victim.hurt(1)
+            message = `${victim.name} was stung by a scorpion${victim.alive ? "" : " and died"}.`
+            player.messages.push(message);
+            msgBox ("Venemous wildlife", message, "That's how it goes sometimes")
             // put a picture of the victim in there so we can see how bad they're hurt
             $("#msgText").append(mokePortrait(victim));
         }
@@ -634,8 +803,8 @@ const events = {
         },
         function: () => {
             let mokesYouHave = player.posse.map(moke => moke.name.toLowerCase());
-            let mokesYouDontHave = ['dezzy', 'apismanion', 'mallowbear', 'marlequin', 'wingmat', 'zyant', 'shadowdragon']
-                .filter(moke => !mokesYouHave.includes(moke));
+            let mokesYouDontHave = Object.keys(mokeInfo).map(moke => moke.toLowerCase())
+                .filter(moke => !mokesYouHave.includes(moke))
             let possibleScores = [
                 {type: 'food', quantity: 200}, 
                 {type: 'money', quantity: 300}, 
@@ -693,15 +862,15 @@ const events = {
                 ])
             }
             else {
-                msgBox("starvation", "You are out of food! Who will you eat to survive?", player.posse.map(moke => {
-                    return {
-                        text: `${moke.name} (${moke.foodValue} food, eats ${moke.hunger}/day)`,
-                        function: () => {
-                            player.food += moke.foodValue;
-                            moke.die("had to be sacrificed for the greater good"); 
-                        }
-                    }
-                }))
+                // msgBox("starvation", "You are out of food! Who will you eat to survive?", player.posse.map(moke => {
+                //     return {
+                //         text: `${moke.name} (${moke.foodValue} food, eats ${moke.hunger}/day)`,
+                //         function: () => {
+                //             player.food += moke.foodValue;
+                //             moke.die("had to be sacrificed for the greater good"); 
+                //         }
+                //     }
+                // }))
                 if (player.currentMessage != "You have no food!") {
                     player.messages.push("You have no food!");
                 }
@@ -795,26 +964,34 @@ class mokePosse {
 
 class backgroundImage {
     constructor (prototype) {
-        this.x = canvas.width;
-        this.img = prototype.images[Math.floor(Math.random() * prototype.images.length)];
-        this.distance = prototype.distance;
-        this.foreground = prototype.isForeground;
-        this.type = prototype.type;
+        this.x = canvas.east_horizon
+        this.img = prototype.images[Math.floor(Math.random() * prototype.images.length)]
+        this.distance = prototype.distance
+        this.foreground = prototype.isForeground
+        this.type = prototype.type
         if (this.foreground) {
             if (prototype.foregroundDistance) this.distance = prototype.foregroundDistance;
         }
+        this.size = Math.random()
+        this.width = (prototype.sizeRange.min.x + this.size * (prototype.sizeRange.max.x - prototype.sizeRange.min.x))
+        this.height = (prototype.sizeRange.min.y + this.size * (prototype.sizeRange.max.y - prototype.sizeRange.min.y))
+        this.width *= canvas.width / 1920
+        this.height *= canvas.width / 1920
 
-        let distanceFactor = (100 - this.distance) / 100;
-        this.size = Math.random();
-        this.width = 25 + (prototype.sizeRange.min.x + this.size * (prototype.sizeRange.max.x - prototype.sizeRange.min.x)) * distanceFactor;
-        this.height = 25 + (prototype.sizeRange.min.y + this.size * (prototype.sizeRange.max.y - prototype.sizeRange.min.y)) * distanceFactor;
-        this.width *= canvas.width / 1920;
-        this.height *= canvas.width / 1920;
-
-        let floor = (this.foreground) ? canvas.height * 1.1 : canvas.height * trailHeight;
-        let ceiling = this.foreground ? canvas.height * (trailHeight + .05) : canvas.height * horizonHeight ;
-        if (this.foreground) distanceFactor -= 1;
-        this.y = ceiling + distanceFactor * (floor - ceiling) - this.height;
+        if (this.foreground) {
+            this.y = this.distance
+        }
+        else {
+            this.y = this.distance
+        }
+    }
+}
+class landscapeSegment {
+    constructor (img, x) {
+        this.img = img
+        this.width = img.width
+        this.effectiveWidth = img.width / canvas.scale_at(canvas.south_horizon)
+        this.x = x
     }
 }
 
@@ -822,8 +999,7 @@ $(document).ready(() => {
     console.log("ready!");
     canvas = new Canvas();
 
-    $('#canvasArea').append(you);
-    trailHeight = $("#path").position().top / $("#canvasArea").height();
+    trailHeight = 4/5 // $("#path").position().top / $("#canvasArea").height();
     horizonHeight = $("#ground").position().top / $("#canvasArea").height();
 
     loadPlayer((playerData) => {
@@ -831,40 +1007,32 @@ $(document).ready(() => {
             window.location.href = `/highscores/${playerData.name}`
         }
         loadTrail(trailData =>{
-
-            trail = new Trail(trailData.map(location => {
-                // console.log(location.name)
-                return {
-                    ...location,
-                    progress: 0,
-                    length: location.length || 0,
-                    scenery: (location.scenery ? location.scenery.map(scenery => 
-                            new SceneObject({
-                                ...SceneObjects[scenery.type], 
-                                frequency: scenery.frequency
-                            })
-                    ) : [])
+            trail = new Trail(trailData)
+            trail.loadImages().then(() => {
+                Object.keys(playerData).forEach(key => {
+                    player[key] = playerData[key];
+                })
+                if (!player.progress) { 
+                    newGame();
                 }
-            }))
-            Object.keys(playerData).forEach(key => {
-                player[key] = playerData[key];
-            })
-            if (!player.progress) { 
-                newGame();
-            }
-            else {
-                player.currentLocation = trail.locationAt(player.progress);
-                trail.loadFrom(player.progress);
-            }
-            loadMokemon((mokesData) => {
-                mokeInfo = mokesData
-                // construct mokePosse from saved data
-                let posse = player.posse;
-                player.posse = [];
-                // add them one at a time so they can be indexed
-                posse.forEach(moke => player.posse.push(new mokePosse(moke.name, moke.health, moke.conditions)));
-            
-                gameInterval = setInterval(gameLoop, 1000 / canvas.metrics.frameRate);
+                else {
+                    player.currentLocation = trail.locationAt(player.progress);
+                    trail.loadFrom(player.progress);
+                }
+                player.img = $('<img>').attr('src', '/assets/images/wagon.png')[0]
+                player.width = 150
+                player.height = 75
+                player.frame = 0
+                loadMokemon((mokesData) => {
+                    mokeInfo = mokesData
+                    // construct mokePosse from saved data
+                    let posse = player.posse;
+                    player.posse = [];
+                    // add them one at a time so they can be indexed
+                    posse.forEach(moke => player.posse.push(new mokePosse(moke.name, moke.health, moke.conditions)));
+                
+                    gameInterval = setInterval(gameLoop, 1000 / canvas.metrics.frameRate);
+                })
             })
         });
     })
@@ -1051,7 +1219,7 @@ function rest(days, showPosse, whileCondition, callback) {
     restingHours = Math.max(days * 24, restingHours);
     player.resting = true;
     $(".healthMonitor").remove();
-    let mokePosseHealthMonitor = $("<div>").addClass("dialogBox").addClass('healthMonitor').css({"z-index": 1});
+    let mokePosseHealthMonitor = $("<div>").addClass('healthMonitor').css({"z-index": 4});
     if (showPosse) mokePosseHealthMonitor.appendTo($("#canvasArea"));
     if (restInterval) clearInterval(restInterval);
     restInterval = setInterval(() => {
@@ -1070,7 +1238,6 @@ function rest(days, showPosse, whileCondition, callback) {
         player.posse.forEach(moke => {
             moke.health = Math.min(moke.health + moke.maxHealth / 240, moke.maxHealth) 
         })
-    
 
         if (restingHours <= 1 || !whileCondition()) {
             player.messages.push(`After ${Math.floor(totalRest / 24)} ${totalRest > 48 ? 'days' : 'day'} of rest and recovery, you continue on the trail.`)
@@ -1088,7 +1255,7 @@ function restDialog() {
     pause();
     clearDialogs();
 
-    let restingDialog = $("<div>").attr('id', 'restingDialog').addClass('dialogBox').appendTo($('#canvasArea'))
+    let restingDialog = $("<div>").attr('id', 'restingDialog').addClass('dialogBox').appendTo($('#sidebar'))
     let restParameters = {text: "rest for how many days?", name: "rest", min: 0, max: Math.min(Math.floor(player.food / player.foodPerDay), 10), number: 0}
     restingDialog.append(
         $("<form>")
@@ -1192,31 +1359,27 @@ $(document).on('keypress', (event) => {
     }
 })
 
-function options () {
-    if (paused) return;
-    pause();
-    $("#optionsMenu").show(); 
+function options() {
+    $("#optionsMenu").show()
+}
+
+function mokemon() {
     $("#mokePosse").empty().append(player.posse.map(moke => 
         mokePortrait(moke)
     ))
-    $("#mokeStats").empty();
-    $("#foodInfo").text(`food: ${player.food} (-${player.foodPerDay}/day)`);
-    $("#moneyInfo").text(`money: ${player.money}`);
-    $("#ammoInfo").text(`mokeballs: ${player.mokeballs}, grenades: ${player.grenades}`);
-    if (player.currentLocation.animals)
-        $("#huntButton").show();
-    else
-        $("#huntButton").hide()
-    if (player.currentLocation.shop)
-        $("#shopButton").show();
-    else
-        $("#shopButton").hide()
+    $("#mokeStats").empty()
+    $("#mokemonMenu").show()
 }
 
+function infoPanel() {
+    $("#foodInfo").text(`food: ${player.food} (-${player.foodPerDay}/day)`)
+    $("#moneyInfo").text(`money: ${player.money}`)
+    $("#ammoInfo").text(`mokeballs: ${player.mokeballs}, grenades: ${player.grenades}`)
+    $("#playerInfo").show()
+}
 
 function closeOptions() {
     $("#optionsMenu").hide();
-    unpause();
 }
 
 function win () {
