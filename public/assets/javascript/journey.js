@@ -478,7 +478,7 @@ class mokePosse {
         this.height *= canvas.width / 48;
         this.y = trailHeight * canvas.height - this.height;
         this.z = 0;
-        this.health = health || this.max_hp;
+        this.hp = health || this.max_hp;
 
         if (!this.img) this.img = $("<img>").attr('src', './assets/images/mokemon/thumbnails/' + name.toLowerCase() + ".png")[0];
         this.bounceHeight = this.height / 2;
@@ -504,8 +504,8 @@ class mokePosse {
         this.conditions = activeConditions;
     }
     hurt(damage) {
-        this.health -= damage;
-        if (this.health <= 0) this.die();
+        this.hp -= damage;
+        if (this.hp <= 0) this.die();
     }
     die(cause) {
         msgBox('tragedy', `${this.name} ${cause || "has died"}.`, [{
@@ -579,7 +579,7 @@ $(document).ready(() => {
                     let posse = player.posse;
                     player.posse = [];
                     // add them one at a time so they can be indexed
-                    posse.forEach(moke => player.posse.push(new mokePosse(moke.name, moke.health, moke.conditions)));
+                    posse.forEach(moke => player.posse.push(new mokePosse(moke.name, moke.hp, moke.conditions)));
                 
                     gameInterval = setInterval(gameLoop, 1000 / canvas.metrics.frameRate)
                     requestAnimationFrame(canvas.draw)
@@ -789,7 +789,7 @@ function rest(days, showPosse, whileCondition, callback) {
 
         // heal mokes
         player.posse.forEach(moke => {
-            moke.health = Math.min(moke.health + moke.max_hp / 240, moke.max_hp) 
+            moke.hp = Math.min(moke.hp + moke.max_hp / 240, moke.max_hp) 
         })
 
         if (restingHours <= 1 || !whileCondition()) {
@@ -953,11 +953,11 @@ function win () {
     player.finalScore = Object.keys(pointsValue).reduce((sum, item) => sum + Math.floor(player[item] * pointsValue[item]), 0);
     $("#msgText").append(
         ...player.posse.map(moke => {
-            let mokePoints = Math.floor(200 * moke.health / moke.max_hp + 100);
+            let mokePoints = Math.floor(200 * moke.hp / moke.max_hp + 100);
             player.finalScore += mokePoints;
             return $("<p>").append(
                 mokePortrait(moke),
-                `${moke.name}: ${Math.floor(moke.health * 10) / 10}/${moke.max_hp} hp = ${mokePoints}`,
+                `${moke.name}: ${Math.floor(moke.hp * 10) / 10}/${moke.max_hp} hp = ${mokePoints}`,
             )
         }),
         ...Object.keys(pointsValue).map(item => 
@@ -1084,7 +1084,7 @@ const events = {
         },
         function: () => {
             // most often eats the weakest one
-            let victim = player.posse[weightedRandom(player.posse.map(moke => 1 / moke.health))];
+            let victim = player.posse[weightedRandom(player.posse.map(moke => 1 / moke.hp))];
             victim.die("was slain by a hungry bear");
             msgBox ("Death", victim.name + " was eaten by a bear.", "damn")
         }
@@ -1106,7 +1106,7 @@ const events = {
         },
         function: () => {
             // most often eats the weakest one
-            let victim = player.posse[weightedRandom(player.posse.map(moke => 1 / moke.health))];
+            let victim = player.posse[weightedRandom(player.posse.map(moke => 1 / moke.hp))];
             victim.die("was devoured by a monstrous yeti")
             msgBox ("Death", victim.name + " was eaten by a yeti.", "damn")
         }
@@ -1119,10 +1119,10 @@ const events = {
             victim = player.posse[parseInt(Math.random() * player.posse.length)]
             let damage = Math.floor(Math.random() * 11 + 1)
             player.messages.push(`${victim.name} suffered ${damage} damage from a falling tree.`)
-            victim.health = Math.max(victim.health - damage, 0)
+            victim.hp = Math.max(victim.hp - damage, 0)
             fallingObject = damage > 7 ? "tree" : (damage > 3 ? "branch" : "stick")
             msgBox ("Ouch", `A ${fallingObject} fell on ${victim.name}.`, [{text: ":_(", function: () => {
-                victim.health += damage;
+                victim.hp += damage;
                 victim.hurt(damage);
             }}])
             // put a picture of the victim in there so we can see how bad they're hurt
@@ -1137,9 +1137,9 @@ const events = {
             victim = player.posse[parseInt(Math.random() * player.posse.length)];
             let damage = Math.floor(Math.random() * 6 + 6)
             player.messages.push(`${victim.name} suffered ${damage} damage from a cactus.`);
-            victim.health = Math.max(victim.health - damage, 0);
+            victim.hp = Math.max(victim.hp - damage, 0);
             msgBox ("Ouch", `A cactus fell on ${victim.name}.`, [{text: ":_(", function: () => {
-                victim.health += damage;
+                victim.hp += damage;
                 victim.hurt(damage);
             }}])
             // put a picture of the victim in there so we can see how bad they're hurt
@@ -1373,6 +1373,6 @@ const effects = {
     ebola: (victim) => { victim.hurt(.01 * victim.max_hp) },
     sars: (victim) => { victim.hurt(.005 * victim.max_hp) },
     rest: (moke) => { 
-        moke.health = Math.min(moke.health + moke.max_hp / 240, moke.max_hp) 
+        moke.hp = Math.min(moke.hp + moke.max_hp / 240, moke.max_hp) 
     } // ten days to fully heal
 }
