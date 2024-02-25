@@ -56,16 +56,16 @@ app.get('/', (req, res) => {
 app.post("/login", (req, res) => {
     console.log("logging in as...", req.body.username)
     let username = req.body.username
-    let password = req.body.password
+    let password = '1111' // req.body.password
     // console.log(req.body);
     if (!players[username]) {
         res.status(404).send('Player not found.')
         return
     }
-    else if ((players[username].password || password) && password != players[username].password) {
-        res.status(403).send('Wrong password.')
-        return
-    }
+    // else if ((players[username].password || password) && password != players[username].password) {
+    //     res.status(403).send('Wrong password.')
+    //     return
+    // }
     authtokens[username] = generateToken()
     // console.log(authtokens[username])
     console.log(`${username} logged in.`)
@@ -135,7 +135,7 @@ app.post("/save", (req, res) => {
 app.post("/new", (req, res) => {
     console.log("creating new player...", req.body.name)
     let username = req.body.username
-    let password = req.body.password
+    let password = '1111' // req.body.password
     if (players[username]) {
         res.status(403).send('Username already exists.')
     }
