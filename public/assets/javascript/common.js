@@ -2,9 +2,10 @@ class Player{
     constructor(name) {
         // give player initial stats
         this.food = 120
-        this.money = 1550
-        this.mokeballs = 27
-        this.grenades = 9
+        this.money = 3000
+        this.mokeballs = 0
+        this.grenades = 0
+        this.arrows = 0
         this.speed = 4
         this.name = name || 'simone'
         // reset to beginning of trail
