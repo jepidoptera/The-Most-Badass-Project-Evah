@@ -18,6 +18,7 @@ var messages = []
 var landImage
 var cursorImage
 var mokeInfo
+var hoursTilDark
 
 class Projectile {
     constructor(x, y) {
@@ -37,10 +38,10 @@ class Projectile {
     throw(target) {
         this.visible = true;
         this.target = target;
-        this.x = hunter.x + hunter.offset.x + 0.5;
-        this.y = hunter.realY;
+        this.x = hunter.center_x;
+        this.y = hunter.center_y;
         this.z = 0;
-        let xdist = (this.target.x - this.x) * .75;
+        let xdist = (this.target.x - this.x) * 0.75;
         let ydist = this.target.y - this.y;
         let dist = Math.sqrt(xdist ** 2 + ydist ** 2);
         if (dist > this.range) {
@@ -90,29 +91,49 @@ class Projectile {
         }
     }
     land() {
+        this.x = this.target.x
+        this.y = this.target.y
+    }
+    hurt(animal, hp) {
+        animal.hurt(hp)
+        if (animal.hp <= 0) {
+            let messageText = `You killed: ${animal.type}!` 
+            if (animal.foodValue > 0) messageText += `  You gain ${animal.foodValue} food.`
+            player.food += animal.foodValue
+            hunter.food += animal.foodValue
+            message(messageText)
+            animal.die()
+            saveGame()
+        }
+        if (animal.fleeRadius > 0) {
+            animal.flee()
+        }
+        else if (animal.chaseRadius > 0) {
+            animal.attack()
+        }
     }
 }
 
 class Mokeball extends Projectile {
     constructor(x, y) {
-        super(x, y);
-        this.image = document.createElement('img');
-        this.image.src = "./assets/images/mokeball.png";
+        super(x, y)
+        this.image = document.createElement('img')
+        this.image.src = "./assets/images/mokeball.png"
     }
     land() {
         animals.forEach((animal, n) => {
-            let margin = 1;
+            let margin = 1
             if (animal._onScreen && !animal.dead) {
                 let dist = approxDist(this.x, this.y, animal.x + animal.offset.x + animal.width/2, animal.realY + animal.width/2);
                 if (dist < margin) {
                     if (animal.hp > 20) {
                         // that shit don't work on bears
                         animal.hp -= 10
-                        this.movement.z = 1 / this.bounceFactor;
-                        this.movement.max = Infinity;
-                        this.bounced--;
-                        this.bounce();
-                        if (animal.chaseRadius > 0) animal.attack();
+                        this.movement.z = 1 / this.bounceFactor
+                        this.movement.max = Infinity
+                        this.bounced--
+                        this.bounce()
+                        if (animal.chaseRadius > 0) animal.attack()
                     }
                     else {
                         let messageText = `You caught: ${animal.type}!` 
@@ -122,17 +143,17 @@ class Mokeball extends Projectile {
                                     name: animal.type,
                                     health: animal.hp
                                 })
-                            }, 2000);
+                            }, 2000)
                         }
-                        else if (animal.foodValue > 0) messageText += `  You gain ${animal.foodValue} food.`;
-                        message(messageText);
-                        player.food += animal.foodValue;
-                        hunter.food += animal.foodValue;
-                        animal.catch(this.x, this.y - this.z);
+                        else if (animal.foodValue > 0) messageText += `  You gain ${animal.foodValue} food.`
+                        message(messageText)
+                        player.food += animal.foodValue
+                        hunter.food += animal.foodValue
+                        animal.catch(this.x, this.y - this.z)
                         // stop bouncing
-                        this.bounced = this.bounces;
-                        this.visible = false;
-                        saveGame();
+                        this.bounced = this.bounces
+                        this.visible = false
+                        saveGame()
                     }
                 }
             }
@@ -169,17 +190,7 @@ class Grenade extends Projectile {
                         console.log('blast radius: ', dist);
                         let damage = Math.min(40 / dist / Math.max(dist - 1, 1), 40);
                         console.log('damage: ', damage);
-                        animal.hp -= damage;
-                        if (animal.hp <= 0) {
-                            let messageText = `You killed: ${animal.type}!` 
-                            if (animal.foodValue > 0) messageText += `  You gain ${animal.foodValue} food.`;
-                            message(messageText);
-                            player.food += animal.foodValue;
-                            hunter.food += animal.foodValue;
-                            animal.explode(this.x, this.y - this.z);
-                            saveGame();
-                        }
-                        else if (animal.chaseRadius > 0) animal.attack();
+                        this.hurt(animal, damage)
                     }
                     // all visible animals flee
                     if (animal.fleeRadius != 0 && !animal.attacking) animal.flee();
@@ -194,51 +205,69 @@ class Rock extends Projectile {
         super(x, y);
         this.image = document.createElement('img');
         this.image.src = `./assets/images/rock${Math.floor(Math.random() * 5)}.png`;
-        this.range = 10;
+        this.range = 10
     }
     land() {
         if (this.bounced === 0) {
             animals.forEach((animal, n) => {
-                let margin = animal.size + .15;
+                let margin = animal.size + .15
                 if (animal._onScreen && !animal.dead) {
-                    let dist = approxDist(this.x, this.y, animal.x + animal.offset.x + animal.width/2, animal.realY + animal.width/2);
+                    let dist = approxDist(this.x, this.y, animal.center_x, animal.center_y)
                     if (dist < margin) {
-                        animal.hp -= 2;
-                        if (animal.hp <= 0) {
-                            let messageText = `You killed: ${animal.type}!` 
-                            if (animal.foodValue > 0) messageText += `  You gain ${animal.foodValue} food.`;
-                            player.food += animal.foodValue;
-                            hunter.food += animal.foodValue;
-                            message(messageText);
-                            animal.die();
-                            saveGame();
-                        }
-                        else {
+                        this.hurt(animal, 2)
+                        if (animal.hp > 0) {
                             // didn't die
-                            let xmove = this.movement.x;
-                            let ymove = this.movement.y;
+                            let xmove = this.movement.x
+                            let ymove = this.movement.y
                             // bounce off at 90 degrees
                             if (Math.random() > .5) {
-                                xmove = -this.movement.y;
-                                ymove = this.movement.x;
+                                xmove = -this.movement.y
+                                ymove = this.movement.x
                             }
                             else {
-                                xmove = this.movement.y;
-                                ymove = -this.movement.x;
+                                xmove = this.movement.y
+                                ymove = -this.movement.x
                             }
-                            this.movement.x = xmove * 2;
-                            this.movement.y = ymove * 2;
-                            if (animal.fleeRadius > 0) {
-                                animal.flee();
-                            }
-                            else if (animal.chaseRadius > 0) {
-                                animal.attack();
-                            }
+                            this.movement.x = xmove * 2
+                            this.movement.y = ymove * 2
                         }
                     }
                 }
             })
         }
+    }
+}
+
+class Arrow extends Projectile {
+    constructor(x, y) {
+        super(x, y);
+        this.image = document.createElement('img');
+        this.image.src = `./assets/images/pointy arrow.png`;
+        this.range = 12
+        this.speed = 15
+        this.bounces = 0
+        this.gravity = .5
+        this.type = "arrow"
+        this.size = 50
+    }
+    bounce () {}
+    land() {
+        super.land()
+        clearInterval(this.throwInterval)
+        animals.forEach((animal, n) => {
+            let margin = animal.size
+            if (animal._onScreen && !animal.dead) {
+                let dist = approxDist(this.x, this.y, animal.center_x, animal.center_y);
+                if (dist < margin) {
+                    this.hurt(animal, 20 * (margin - dist) / margin)
+                    this.x = animal.center_x
+                    this.y = animal.center_y
+                    if (animal.hp > 0) {
+                        this.visible = false
+                    }
+                }
+            }
+        })
     }
 }
 
@@ -256,7 +285,38 @@ class Character {
         this.moving = false;
         this.nextNode = map.nodes[this.x][this.y];
     }
+    get center_x() {
+        return this.x + this.offset.x + this.width / 2
+    }
+    get center_y() {
+        return this.y - (this.z || 0) + this.offset.y + (this.x % 2 === 0 ? 0.25 : -0.25) + this.height / 2
+    }
+    hurt(hp) {
+        this.hp = Math.max(this.hp - hp, 0)
+        this.reelCounter = 0
+        this.rotation = 0
+        this.stopped = true
+        if (this.hp > 0) {
+            this.healthBar = true
+            this.rotation += 25
+            this.stopped = true
+            setTimeout(() => {
+                this.stopped = false
+                this.rotation -= 25
+            }, Math.min(1000, hp / this.max_hp * 2000))
+            setTimeout(() => {
+                this.healthBar = false
+            }, 1000)
+        }
+    }
+    drawHealthBar() {
+        ctx.fillStyle = "green"
+        ctx.fillRect(0, -20, mapHexWidth * this.hp / this.max_hp, 5)
+        ctx.fillStyle = "red"
+        ctx.fillRect(mapHexWidth * this.hp / this.max_hp, -20, mapHexWidth * (1 - this.hp / this.max_hp), 5)
+    }
     move() {
+        if (this.stopped) return
         if (this.x !== this.destination.x || this.y !== this.destination.y) {
             this.moving = true;
             if (this.travelFrames === 0) {
@@ -309,17 +369,20 @@ class Hunter extends Character {
         super('human', x, y);
         this.speed = 2.5;
         this.frameRate = 60;
-        this.ammo = "mokeballs";
+        this.ammo = "arrows";
         this.image = $("<img>").attr('src', './assets/images/hunter.png')[0];
         this.moveInterval = setInterval(() => {this.move()}, 1000 / this.frameRate);
-        this.food = 0;
-        this.hp = 40;
+        this.food = 0
+        this.max_hp = 100
+        this.hp = 100
         this.stopped = true
+        this.width = 1
+        this.height = 1
         // this.centerScreen()
     }
     move() {
         if (paused) return;
-        if (this.stopped) return;
+        if (this.stopped || this.aiming) return
         super.move();
         this.centerScreen()
     }
@@ -336,36 +399,52 @@ class Hunter extends Character {
         viewport.y = Math.min(Math.max(Math.min(viewport.y, viewport.upperbound.y), viewport.lowerbound.y, 0), mapHeight - viewport.height)
     }
     throw(x, y) {
-        if (this.throwDelay) return;
-        let projectile;
+        if (this.throwDelay) return
+        let projectile
         if (hunter.ammo === "mokeballs") {
-            if (player.mokeballs <= 0) return;
-            player.mokeballs--;
-            projectile = new Mokeball();
-            this.throwDelay = 1;
+            if (player.mokeballs <= 0) return
+            player.mokeballs--
+            projectile = new Mokeball()
+            this.throwDelay = 1
         }
         else if (hunter.ammo === "grenades") {
-            if (player.grenades <= 0) return;
-            player.grenades--;
-            projectile = new Grenade();
-            this.throwDelay = 2;
+            if (player.grenades <= 0) return
+            player.grenades--
+            projectile = new Grenade()
+            this.throwDelay = 2
         }
         else if (hunter.ammo === "rocks") {
-            projectile = new Rock();
-            this.throwDelay = .5;
+            projectile = new Rock()
+            this.throwDelay = .5
+        }
+        else if (hunter.ammo === "arrows") {
+            if (player.arrows <= 0) return
+            player.arrows--
+            projectile = new Arrow()
+            this.throwDelay = 1
         }
         $('div[name="mokeballs"').html(`mokeballs (${player.mokeballs})`)
         $('div[name="grenades"').html(`grenades (${player.grenades})`)
         $("#selectedAmmo").text($(`div[name="${hunter.ammo}"`).text() + " ▼")
 
         projectiles.push(projectile.throw({x, y}))
-        hunter.throwing = true;
-        hunter.destination.x = hunter.nextNode.xindex || hunter.x;
-        hunter.destination.y = hunter.nextNode.yindex || hunter.y;
+        hunter.throwing = true
+        hunter.destination.x = hunter.nextNode.xindex || hunter.x
+        hunter.destination.y = hunter.nextNode.yindex || hunter.y
         setTimeout(() => {
-            this.throwDelay = 0;
-            this.throwing = false;
-        }, 1000 * this.throwDelay);
+            this.throwDelay = 0
+            this.throwing = false
+        }, 1000 * this.throwDelay)
+    }
+    hurt(hp, attacker) {
+        super.hurt(hp)
+        if (this.hp <= 0) {
+            this.dead = true
+            msgBox("You died.", `While hunting, you were slain by ${['a', 'e', 'i', 'o', 'u'].includes(attacker.type[0]) ? 'an' : 'a'} ${attacker.type}. Game over.`)
+            setTimeout(() => {
+                location = '/'
+            }, 3000)
+        }
     }
 }
 
@@ -386,7 +465,7 @@ class Animal extends Character {
             this.runSpeed = 3.5;
             this.fleeRadius = 9;
             this.foodValue = Math.floor(90 * this.size);
-            this.hp = 10 * this.size;
+            this.max_hp = 10 * this.size;
         }
         else if (type === "bear") {
             this.frameCount = {x: 2, y: 2};
@@ -400,7 +479,7 @@ class Animal extends Character {
             this.attackVerb = "mauls";
             this.damage = 20;
             this.foodValue = Math.floor(240 * this.size);
-            this.hp = 25 * this.size;
+            this.max_hp = 25 * this.size;
         }
         else if (type === "squirrel") {
             this.frameCount = {x: 1, y: 2};
@@ -408,10 +487,10 @@ class Animal extends Character {
             this.width = this.size;
             this.height = this.size;
             this.walkSpeed = 2;
-            this.runSpeed = 2.5;
+            this.runSpeed = 3.5;
             this.fleeRadius = 5;
             this.foodValue = Math.floor(6 * this.size);
-            this.hp = 1;
+            this.max_hp = 1;
             this.randomMotion = 3;
         }
         else if (type === "scorpion") {
@@ -425,7 +504,7 @@ class Animal extends Character {
             this.attackVerb = "stings";
             this.damage = 1;
             this.foodValue = 1;
-            this.hp = 1;
+            this.max_hp = 1;
             this.randomMotion = 2;
         }
         else if (type === "armadillo") {
@@ -437,7 +516,7 @@ class Animal extends Character {
             this.runSpeed = 2;
             this.fleeRadius = 7;
             this.foodValue = Math.floor(20 * this.size);
-            this.hp = 10 * this.size;
+            this.max_hp = 10 * this.size;
             this.randomMotion = 3;
         }
         else if (type === "coyote") {
@@ -449,7 +528,7 @@ class Animal extends Character {
             this.runSpeed = 3.5;
             this.fleeRadius = 10;
             this.foodValue = Math.floor(60 * this.size);
-            this.hp = 15 * this.size;
+            this.max_hp = 15 * this.size;
             this.randomMotion = 6;
         }
         else if (type === "goat") {
@@ -461,7 +540,7 @@ class Animal extends Character {
             this.runSpeed = 2.5;
             this.fleeRadius = 8;
             this.foodValue = Math.floor(80 * this.size);
-            this.hp = 15 * this.size;
+            this.max_hp = 15 * this.size;
             this.randomMotion = 6;
         }
         else if (type === "porcupine") {
@@ -476,7 +555,7 @@ class Animal extends Character {
             this.damage = 3;
             this.attackVerb = "pokes";
             this.foodValue = Math.floor(20 * this.size);
-            this.hp = 5 * this.size;
+            this.max_hp = 5 * this.size;
             this.randomMotion = 3;
         }
         else if (type === "yeti") {
@@ -490,7 +569,7 @@ class Animal extends Character {
             this.attackVerb = "mauls";
             this.damage = 50;
             this.foodValue = Math.floor(275 * this.size);
-            this.hp = 40 * this.size;
+            this.max_hp = 40 * this.size;
         }
         else if (type === "tiger") {
             this.frameCount = {x: 2, y: 2};
@@ -503,7 +582,7 @@ class Animal extends Character {
             this.attackVerb = "mauls";
             this.damage = 50;
             this.foodValue = Math.floor(200 * this.size);
-            this.hp = 30 * this.size;
+            this.max_hp = 30 * this.size;
         }
         else if (type === "alligator") {
             this.frameCount = {x: 1, y: 8};
@@ -516,7 +595,7 @@ class Animal extends Character {
             this.attackVerb = "bites";
             this.damage = 50;
             this.foodValue = Math.floor(200 * this.size);
-            this.hp = 30 * this.size;
+            this.max_hp = 30 * this.size;
         }
         else if (type === "beaver") {
             this.frameCount = {x: 1, y: 2};
@@ -527,7 +606,7 @@ class Animal extends Character {
             this.runSpeed = 2;
             this.fleeRadius = 7;
             this.foodValue = Math.floor(30 * this.size);
-            this.hp = 5 * this.size;
+            this.max_hp = 5 * this.size;
         }
         else if (type === "heron") {
             this.frameCount = {x: 1, y: 2};
@@ -538,17 +617,18 @@ class Animal extends Character {
             this.runSpeed = 5;
             this.fleeRadius = 7;
             this.foodValue = Math.floor(9 * this.size);
-            this.hp = 2 * this.size;
+            this.max_hp = 2 * this.size;
         }
         else {
             this.walkSpeed = 1;
         }
-        this.speed = this.walkSpeed;
-        this._onScreen = false;
-        this.rotation = 0;
-        this.dead = false;
-        this.frameRate = this.onScreen ? 30 : 1; // keep it here until the animal comes on screen
-        this.move();
+        this.speed = this.walkSpeed
+        this.hp = this.max_hp
+        this._onScreen = false
+        this.rotation = 0
+        this.dead = false
+        this.frameRate = this.onScreen ? 30 : 1 // keep it here until the animal comes on screen
+        this.move()
     }
     move() {
         if (this.dead) return;
@@ -666,6 +746,7 @@ class Animal extends Character {
             if (this.frameCount.x > 1) this.imageFrame.x = 1
             this.imageFrame.y = (this.x + this.offset.x > hunter.x + hunter.offset.x) ? 0 : 1
             let damage = Math.floor((1 - Math.random() * Math.random()) * this.damage + 1)
+            hunter.hurt(damage, this)
             message(`${this.type} ${this.attackVerb} you for ${damage} damage!`)
             setTimeout(() => {
                 if (this.dead) {return}
@@ -682,52 +763,52 @@ class Animal extends Character {
         // (this.x + this.offset.x) * mapHexWidth === x
         // so
         this.dieAnimation = setInterval(() => {
-            if (paused) return;
+            if (paused) return
 
-            this.rotation -= 600 / this.frameRate;
-            this.dead ++;
-            this.height *= .96;
-            this.width *= .96;
+            this.rotation -= 600 / this.frameRate
+            this.dead ++
+            this.height *= .96
+            this.width *= .96
             if (this.dead > 100) {
-                this.gone = true;
-                clearInterval(this.dieAnimation);
+                this.gone = true
+                clearInterval(this.dieAnimation)
             }
-            this.offset.y = this.offset.y * .95 + ((y - (this.x % 2 === 0 ? 0.25 : -0.25) - this.width/ 2) - this.y) * .05;
-            this.offset.x = this.offset.x * .95 + ((x - this.width / 2) - this.x) * .05;
-            }, 1000 / this.frameRate);
-        this.rotation = 180;
+            this.offset.y = this.offset.y * .95 + ((y - (this.x % 2 === 0 ? 0.25 : -0.25) - this.width/ 2) - this.y) * .05
+            this.offset.x = this.offset.x * .95 + ((x - this.width / 2) - this.x) * .05
+            }, 1000 / this.frameRate)
+        this.rotation = 180
     }
     explode(x, y) {
-        this.dead = 1;
+        this.dead = 1
         // this.rotation = 180;
-        let xdist = this.x + this.offset.x - this.width/2 - x;
-        let ydist = this.realY - this.height/2 - y;
-        let dist = approxDist(this.x + this.offset.x, this.realY, x, y);
-        this.z = 0;
+        let xdist = this.x + this.offset.x - this.width/2 - x
+        let ydist = this.realY - this.height/2 - y
+        let dist = approxDist(this.x + this.offset.x, this.realY, x, y)
+        this.z = 0
         this.motion = {
             x: xdist / Math.min(dist, 2) / this.size / this.frameRate * 1.155,
             y: ydist / Math.min(dist, 2) / this.size / this.frameRate,
             z: 5 / Math.min(dist, 1) / this.size / this.frameRate
         }
         this.dieAnimation = setInterval(() => {
-            if (paused) return;
+            if (paused) return
 
-            this.x += this.motion.x;
-            this.y += this.motion.y;
-            this.z += this.motion.z;
-            this.realY = this.y;
-            this.motion.z -= .5 / frameRate;
-            if (this.rotation < 180) this.rotation += 360/frameRate;
+            this.x += this.motion.x
+            this.y += this.motion.y
+            this.z += this.motion.z
+            this.realY = this.y
+            this.motion.z -= .5 / frameRate
+            if (this.rotation < 180) this.rotation += 360/frameRate
             if (this.z <= 0) {
-                this.z = 0;
-                this.rotation = 180;
-                clearInterval(this.dieAnimation);
+                this.z = 0
+                this.rotation = 180
+                clearInterval(this.dieAnimation)
             }
-        }, 1000 / this.frameRate);
+        }, 1000 / this.frameRate)
     }
     die() {
-        this.dead = true;
-        this.rotation = 180;
+        this.dead = true
+        this.rotation = 180
     }
 }
 
@@ -746,12 +827,16 @@ class Mokemon extends Animal {
         this.attackVerb = mokeInfo[this.type].attackVerb
         this.damage = mokeInfo[this.type].damage
         this.foodValue = mokeInfo[this.type].foodValue
-        this.hp = mokeInfo[this.type].maxHealth
+        this.hp = mokeInfo[this.type].max_hp
     }
     get onScreen() {
         // disappears if you already have one of this type
         this._onScreen = super.onScreen;
         return (player.posse.map(moke => moke.name).includes(this.type) ? false : super.onScreen);
+    }
+    attack() {
+        if (!this.onScreen) return
+        super.attack()
     }
 }
 
@@ -817,19 +902,19 @@ $(document).ready(() => {
                             message("Use F and G, or tap the menu to switch weapons.")
                         }, 3000);
 
-                        setInterval(() => {
-                            if (paused) return;
-                            // average over 100 frames
-                            // effectiveFrameRate = effectiveFrameRate * .966666666 + 33 / (Date.now() - lastFrame);
-                            // lastFrame = Date.now();
-                            // let optimalScale = canvasScaleFactor * effectiveFrameRate / 30;
-                            // if (canvasScaleFactor / optimalScale > 1.05 || canvasScaleFactor / optimalScale < .99) {
-                            //     canvasScaleFactor = optimalScale;
-                            //     sizeCanvas();
-                            // }
-                            // if (canvasScaleFactor < 1) canvasScaleFactor += .001
-                            drawCanvas();
-                        }, 1000 / frameRate);
+                        // setInterval(() => {
+                        //     if (paused) return;
+                        //     // average over 100 frames
+                        //     // effectiveFrameRate = effectiveFrameRate * .966666666 + 33 / (Date.now() - lastFrame);
+                        //     // lastFrame = Date.now();
+                        //     // let optimalScale = canvasScaleFactor * effectiveFrameRate / 30;
+                        //     // if (canvasScaleFactor / optimalScale > 1.05 || canvasScaleFactor / optimalScale < .99) {
+                        //     //     canvasScaleFactor = optimalScale;
+                        //     //     sizeCanvas();
+                        //     // }
+                        //     // if (canvasScaleFactor < 1) canvasScaleFactor += .001
+                        //     drawCanvas();
+                        // }, 1000 / frameRate);
                     // }
                 })
 
@@ -874,13 +959,15 @@ $(document).ready(() => {
                 window.addEventListener('resize', sizeCanvas)
                 sizeCanvas()
                 hunter.centerScreen()
+                requestAnimationFrame(drawCanvas)
             
                 hunter.weapons = [
                     'mokeballs',
                     'grenades',
-                    'rocks'
+                    'rocks',
+                    'arrows'
                 ]
-                hunter.ammo = "mokeballs";
+                hunter.ammo = "arrows";
 
                 // set player weapons and controls
                 $("#selectedAmmo").text(`mokeballs (${player.mokeballs}) ▼`)
@@ -925,19 +1012,35 @@ $(document).ready(() => {
                 })        
                 $("#msg").contextmenu(event => event.preventDefault())
                 $(document).keypress(event => {
-                    if (event.key === "f") {
-                        hunter.ammo = hunter.weapons[(hunter.weapons.indexOf(hunter.ammo) - 1 + hunter.weapons.length) % hunter.weapons.length]
-                    }
                     if (event.key === "g") {
-                        hunter.ammo = hunter.weapons[(hunter.weapons.indexOf(hunter.ammo) + 1) % hunter.weapons.length]
+                        hunter.ammo = "grenades"
                     }
-                    refreshWeapons();
+                    if (event.key === "r") {
+                        hunter.ammo = "rocks"
+                    }
+                    if (event.key === "a") {
+                        hunter.ammo = "arrows"
+                    }
+                    if (event.key === "m") {
+                        hunter.ammo = "mokeballs"
+                    }
+                    refreshWeapons()
+                })
+                $(document).keydown(event => {
+                    if (event.key === " ") {
+                        hunter.aiming = true
+                    }
+                })
+                $(document).keyup(event => {
+                    if (event.key === " ") {
+                        hunter.aiming = false
+                    }
                 })
                 function mousedown(event) {
                     hunter.armed = true
                     setTimeout(() => {
                         hunter.armed = false
-                    }, 100);
+                    }, 250);
                     hunter.stopped = false
                 }
                 $(document).mouseup(event => {
@@ -966,20 +1069,7 @@ $(document).ready(() => {
 })
 
 function drawCanvas() {
-    // ctx.clearRect(0,0,canvas[0].width, canvas[0].height)
-
-    // for (let x = -1; x < viewport.width + 1; x++) {
-    //     for (let y = -1; y < viewport.height + 1; y++) {
-    //         if (map.nodes[x + Math.floor(viewport.x)]){
-    //             if (map.nodes[x + Math.floor(viewport.x)][y + Math.floor(viewport.y)]) {
-    //                 ctx.drawImage(map.nodes[x + Math.floor(viewport.x)][y + Math.floor(viewport.y)].land.image, 
-    //                 (x - viewport.x % 1) * mapHexWidth, 
-    //                 (y + (map.nodes[x + Math.floor(viewport.x)][y + Math.floor(viewport.y)].xindex % 2 === 0 ? 0.5 : 0) - viewport.y % 1) * mapHexHeight, 
-    //                 mapHexHeight * 1.1547, mapHexHeight)
-    //             }
-    //         }
-    //     }
-    // }
+    if (paused) return
     let textureOffset = {
         x: viewport.x * mapHexWidth % canvas[0].width,
         y: viewport.y * mapHexHeight % canvas[0].height,
@@ -1028,6 +1118,8 @@ function drawCanvas() {
             ctx.translate((mapItems[n].x - viewport.x + mapItems[n].offset.x) * mapHexWidth, 
             (mapItems[n].y - (mapItems[n].z || 0) - viewport.y + mapItems[n].offset.y + (mapItems[n].x % 2 === 0 ? 0.25 : -0.25)) * mapHexHeight);
     
+            if (mapItems[n].healthBar) mapItems[n].drawHealthBar()
+            
             if (mapItems[n].rotation) {
                 ctx.translate(mapItems[n].width / 2 * mapHexHeight, mapItems[n].height / 2 * mapHexHeight);
 
@@ -1063,7 +1155,7 @@ function drawCanvas() {
     drawHunter();
     drawMokeballs();
 
-    if (frameRate >= 60) requestAnimationFrame(drawCanvas);
+    requestAnimationFrame(drawCanvas)
     $('#msg').html(messages.join("<br>"))
 }
 
@@ -1072,10 +1164,15 @@ function drawHunter() {
     let hunterFrame = 0
     if (hunter.travelFrames) hunterFrame = ((hunter.travelFrames % (frameRate / 3) < frameRate / 6) ? 1 : 2)
     if (hunter.throwing) hunterFrame = 3
+    ctx.save()
+    ctx.translate((hunter.x - viewport.x + hunter.offset.x) * mapHexWidth,
+        (hunter.y - viewport.y + hunter.offset.y + (hunter.x % 2 === 0 ? 0.25 : -0.25)) * mapHexHeight)
     ctx.drawImage(hunter.image, hunterFrame * hunterImgSize, 0, hunterImgSize, hunterImgSize,
-        (hunter.x - viewport.x + hunter.offset.x) * mapHexWidth, 
-        (hunter.y - viewport.y + hunter.offset.y + (hunter.x % 2 === 0 ? 0.25 : -0.25)) * mapHexHeight,
-        mapHexHeight * 1.1547, mapHexHeight)
+        0, 0, mapHexHeight * 1.1547, mapHexHeight)
+    if (hunter.healthBar) {
+        hunter.drawHealthBar()
+    }
+    ctx.restore()
     // steer
     hunter.destination.x = Math.floor((mouseX - $("#canvasFrame").position().left) * canvasScaleFactor / mapHexWidth + viewport.x)
     hunter.destination.y = Math.floor((mouseY - $("#canvasFrame").position().top) * canvasScaleFactor / mapHexHeight + viewport.y - (hunter.destination.x % 2 === 0 ? 0.5 : 0))
@@ -1084,11 +1181,23 @@ function drawHunter() {
 function drawMokeballs() {
     remainingBalls = [];
     projectiles.forEach(ball => {
-        if (!ball.visible) return;
-        ctx.drawImage(ball.image, 
+        if (!ball.visible) return
+        if (ball.type === "arrow") {
+            ctx.save()
+            ctx.translate((ball.x - viewport.x) * mapHexWidth, (ball.y - ball.z - viewport.y) * mapHexHeight)
+            ctx.rotate(Math.atan2(ball.movement.y, ball.movement.x) + Math.PI * 0.5)
+            ctx.drawImage(
+                ball.image, -5, 0, 
+                ball.apparentSize * ball.image.width / ball.image.height, ball.apparentSize    
+            )
+            ctx.restore()
+        }
+        else {
+            ctx.drawImage(ball.image, 
             (ball.x - viewport.x) * mapHexWidth - ball.apparentSize/2, 
             (ball.y - ball.z - viewport.y) * mapHexHeight - ball.apparentSize/2, 
             ball.apparentSize, ball.apparentSize)
+        }
         remainingBalls.push(ball)
     })
     projectiles = remainingBalls;
