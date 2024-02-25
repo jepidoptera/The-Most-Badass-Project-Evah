@@ -1,6 +1,6 @@
 // custom jquery form components
 function mokePortrait (moke) {
-    let healthColor = `rgb(${768 - moke.health / (moke.maxHealth || 10) * 768}, ${(moke.health / (moke.maxHealth || 10) - 1/3) * 768}, 0)`
+    let healthColor = `rgb(${768 - moke.hp / (moke.max_hp || 10) * 768}, ${(moke.hp / (moke.max_hp || 10) - 1/3) * 768}, 0)`
     let portrait = $("<div>").addClass('thumbnailContainer').append(
         $("<div>")
             .addClass('mokeIcon')
@@ -25,7 +25,7 @@ function mokePortrait (moke) {
                     $(".mokeIcon").removeClass("selected");
                 }
             })
-            .hover(() => {
+            .hover((event) => {
                     // mouseenter
                         $("#mokeStats").empty().append(mokeStats(moke));
                         if (!$(event.currentTarget).hasClass("selected")) $(".mokeIcon").removeClass("selected");
@@ -34,7 +34,7 @@ function mokePortrait (moke) {
                         if (!$(event.currentTarget).hasClass("selected")) $("#mokeStats").empty();
                 }),
         $("<div>").css({
-            width: `${moke.health / (moke.maxHealth || 10) * 4.5}vh`,
+            width: `${moke.hp / (moke.max_hp || 10) * 4.5}vh`,
             height: "5px",
             position: "relative",
             bottom: 0,
@@ -46,7 +46,7 @@ function mokePortrait (moke) {
 function mokeStats (moke) {
     return [
         $("<p>").text(moke.name),
-        $("<p>").text(`Health: ${Math.floor(moke.health * 10) / 10}/${moke.maxHealth}`),
+        $("<p>").text(`Health: ${Math.floor(moke.hp * 10) / 10}/${moke.max_hp}`),
         ...moke.conditions.map(condition => $("<p>").html("<span style='color:red'> has " + condition.name + "</span>")),
         $("<p>").text(moke.description)
     ]

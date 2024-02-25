@@ -31,7 +31,7 @@ class Player{
             posse: player.posse.map(moke => {return {
                 type: moke.type,
                 name: moke.name,
-                health: moke.health,
+                hp: moke.hp,
                 conditions: moke.conditions
             }})
         }
