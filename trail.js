@@ -1,8 +1,8 @@
 const trail = [
     {
-        type: 'nowhere',
+        type: 'city',
         name: 'what you leave behind',
-        length: -3,
+        length: 0,
         scenery: [
             {type: "house", frequency: 50},
             {type: "distant tree", frequency: 50}
@@ -19,7 +19,7 @@ const trail = [
         ],
     },
     {
-        type: 'suburb',
+        type: 'city',
         name: 'Orepoke',
         scenery: [
             {type: "house", frequency: 50},
@@ -33,7 +33,7 @@ const trail = [
         }
     },
     {
-        type: 'shop',
+        type: 'city',
         name: "Trader Moe's",
         scenery: [
             {type: "trading post", frequency: 0},
@@ -47,12 +47,13 @@ const trail = [
             items: [
                 {name: "mokeballs", price: 20},
                 {name: "grenades", price: 50},
+                {name: "arrows", price: 2.5, increment: 20},
                 {name: "food", price: 1, increment: 10}
             ]
         }
     },
     {
-        type: 'suburb',
+        type: 'city',
         name: 'The Outskirts of Orepoke',
         scenery: [
             {type: "house", frequency: 35},
@@ -66,6 +67,7 @@ const trail = [
         scenery: [
             {type: "signpost", frequency: 0},
             {type: "tree", frequency: 50},
+            {type: "fern", frequency: 50}
             // {type: "near tree", frequency: 1}
         ],
         hunting_scenery: [
@@ -155,10 +157,9 @@ const trail = [
         name: 'The Mainstay Mountains',
         scenery: [
             {type: "first mountain", frequency: 0},
-            {type: "mountain range", frequency: 5},
+            {type: "mountain range", frequency: 2},
             {type: "rock", frequency: 20},
-            {type: "far moutain", frequency: 5},
-            {type: "near moutain", frequency: 5},
+            {type: "mountain", frequency: 4},
             {type: "pine tree", frequency: 25}
         ],
         hunting_scenery: [
@@ -183,14 +184,14 @@ const trail = [
         name: 'The Swamp of Despair',
         scenery: [
             {type: "signpost", frequency: 0},
-            // {type: "pond", frequency: 9},
-            {type: "dead tree", frequency: 16},
-            {type: "tree", frequency: 1},
+            {type: "dead tree", frequency: 8},
+            {type: "tree", frequency: 0.7},
             {type: "cattails", frequency: 40},
             {type: "distant tree", frequency: 1}
         ],
         hunting_scenery: [
             {type: "dead tree", frequency: 3},
+            {type: "tree", frequency: 0.3},
             {type: "cattails", frequency: 6, passable: true}
         ],
         animals: [
@@ -210,7 +211,8 @@ const trail = [
         name: 'The Great Palm Jungle',
         scenery: [
             {type: "signpost", frequency: 0},
-            {type: "palm tree", frequency: 60}
+            {type: "palm tree", frequency: 50},
+            {type: "fern", frequency: 40},
         ],
         hunting_scenery: [
             {type: "palm tree", frequency: 5},
