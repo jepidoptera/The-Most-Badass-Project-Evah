@@ -12,9 +12,9 @@
             <div class="form-group"> 
                 <input name="username" minlength="4" type="text" class="form-control" id="username" placeholder="username" required>
             </div>
-            <div class="form-group" id="passwords">
+            {{!-- <div class="form-group" id="passwords">
                 <input name="password" minlength="4" type="password" class="form-control" id="password" placeholder="password">
-            </div>
+            </div> --}}
             <button type="submit" class="btn btn-block" id="submit">Go!</button>
         </form>
         <form id='newOrLoad'>
@@ -86,7 +86,7 @@
         event.preventDefault();
         $('#newOrLoad').hide();
         $("#login-form").show();
-        $('<input name="confirmPassword" minlength="4" type="password" class="form-control" id="confirmPassword" placeholder="confirm password" required>').appendTo($('#passwords'))
+        // $('<input name="confirmPassword" minlength="4" type="password" class="form-control" id="confirmPassword" placeholder="confirm password" required>').appendTo($('#passwords'))
 
         isNewPlayer = true;
     })
@@ -101,14 +101,14 @@
         event.preventDefault();
         let url = "";
         let username = $("input[name='username']").val();
-        let password = $("input[name='password']").val();
-        let confirmPassword = $("input[name='confirmPassword']").val();
+        // let password = $("input[name='password']").val();
+        // let confirmPassword = $("input[name='confirmPassword']").val();
         if (isNewPlayer) {
             url = "/new";
-            if (password !== confirmPassword) {
-                $(".errorMsg").text("Passwords don't match.")
-                return;
-            }
+            // if (password !== confirmPassword) {
+            //     $(".errorMsg").text("Passwords don't match.")
+            //     return;
+            // }
         }
         else url = "/login";
         $.ajax({
@@ -116,7 +116,7 @@
             url: url,
             data: {
                 username: username,
-                password: password,
+                // password: password,
             }
         }).done((data) => {
             if (data.authtoken) {
