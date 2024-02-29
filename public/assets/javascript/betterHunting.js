@@ -450,12 +450,12 @@ class Hunter extends Character {
 
 class Animal extends Character {
     constructor(type, x, y) {
-        super(type, x, y);
-        this.frameRate = 60;
-        this.image = map.animalImages[type];
-
-        this.imageFrame = {x: 0, y: 0};
-        this.frameCount = {x: 1, y: 1};
+        super(type, x, y)
+        this.frameRate = 60
+        this.image = map.animalImages[type]
+        this.imageFrame = {x: 0, y: 0}
+        this.frameCount = {x: 1, y: 1}
+        
         if (type === "deer") {
             this.frameCount = {x: 1, y: 2};
             this.size = Math.random() * .5 + .75;
@@ -631,8 +631,8 @@ class Animal extends Character {
         this.move()
     }
     move() {
-        if (this.dead) return;
-        if (paused) return;
+        if (this.dead) return
+        if (paused) return
 
         // wander around
         if (!this.moving || Math.random() * this.randomMotion * this.frameRate < 1 && this.speed == this.walkSpeed) {
@@ -814,8 +814,8 @@ class Animal extends Character {
 
 class Mokemon extends Animal {
     constructor(type, x, y) {
-        super(type, x, y);
-        this.isMokemon = true;
+        super(type, x, y)
+        this.isMokemon = true
         this.image =$("<img>").attr('src', `./assets/images/mokemon/${type.toLowerCase()}.png`)[0]
         this.frameCount = mokeInfo[this.type].frameCount
         this.width = mokeInfo[this.type].width
@@ -831,8 +831,7 @@ class Mokemon extends Animal {
     }
     get onScreen() {
         // disappears if you already have one of this type
-        this._onScreen = super.onScreen;
-        return (player.posse.map(moke => moke.name).includes(this.type) ? false : super.onScreen);
+        return (player.posse.map(moke => moke.name).includes(this.type) ? false : super.onScreen)
     }
     attack() {
         if (!this.onScreen) return
@@ -850,27 +849,27 @@ $(document).ready(() => {
     cursorImage = $('<img>').attr('src', './assets/images/arrow3.png')[0]
 
     function sizeCanvas() {
-        canvas[0].width = canvas.width() * canvasScaleFactor;
-        canvas[0].height = canvas.height() * canvasScaleFactor;
+        canvas[0].width = canvas.width() * canvasScaleFactor
+        canvas[0].height = canvas.height() * canvasScaleFactor
         // canvasScaleFactor = 1;
         playerWithinViewport = {
             x: (hunter.x - viewport.x) / viewport.width,
             y: (hunter.y - viewport.y) / viewport.height
         }
         if (canvas.width() > canvas.height()) {
-            viewport.width = 31;
-            viewport.height = 17;
+            viewport.width = 31
+            viewport.height = 17
         }
         else {
-            viewport.height = 28;
-            viewport.width = 20;
+            viewport.height = 28
+            viewport.width = 20
         }
         // viewport.width /= .866;
 
-        viewport.x = Math.min(Math.max(0, hunter.x - playerWithinViewport.x * viewport.width), mapWidth - viewport.width);
-        viewport.y = Math.min(Math.max(0, hunter.y - playerWithinViewport.y * viewport.height), mapHeight - viewport.height);
-        mapHexHeight = canvas[0].width / viewport.width * 1.1547;
-        mapHexWidth = mapHexHeight * .866;
+        viewport.x = Math.min(Math.max(0, hunter.x - playerWithinViewport.x * viewport.width), mapWidth - viewport.width)
+        viewport.y = Math.min(Math.max(0, hunter.y - playerWithinViewport.y * viewport.height), mapHeight - viewport.height)
+        mapHexHeight = canvas[0].width / viewport.width * 1.1547
+        mapHexWidth = mapHexHeight * .866
     }
 
     loadTrail(trail => {
@@ -890,34 +889,11 @@ $(document).ready(() => {
                 landImage = $("<img>").attr('src', `./assets/images/land tiles/${location.type}.png`)[0]
 
                 map = genMap(location, () => {
-                    // if (Math.max(canvas.width(), canvas.height()) > 1000 ) requestAnimationFrame(drawCanvas);
-                    // else {
-                        frameRate = 30
-                        effectiveFrameRate = 30;
-                        lastFrame = Date.now();
-                        setTimeout(() => {
-                            message("Click to move.  Right-click or double-tap to throw.")
-                        }, 1000);
-                        setTimeout(() => {
-                            message("Use F and G, or tap the menu to switch weapons.")
-                        }, 3000);
-
-                        // setInterval(() => {
-                        //     if (paused) return;
-                        //     // average over 100 frames
-                        //     // effectiveFrameRate = effectiveFrameRate * .966666666 + 33 / (Date.now() - lastFrame);
-                        //     // lastFrame = Date.now();
-                        //     // let optimalScale = canvasScaleFactor * effectiveFrameRate / 30;
-                        //     // if (canvasScaleFactor / optimalScale > 1.05 || canvasScaleFactor / optimalScale < .99) {
-                        //     //     canvasScaleFactor = optimalScale;
-                        //     //     sizeCanvas();
-                        //     // }
-                        //     // if (canvasScaleFactor < 1) canvasScaleFactor += .001
-                        //     drawCanvas();
-                        // }, 1000 / frameRate);
-                    // }
+                    frameRate = 30
+                    effectiveFrameRate = 30
+                    lastFrame = Date.now()
                 })
-
+                day_length = 10333
                 // count down til dark
                 function timeDown() {
                     player.time ++
@@ -926,20 +902,44 @@ $(document).ready(() => {
                         player.day ++
                     }
                     player.hour ++
-                    hoursTilDark = parseInt(14 - player.hour)
+                    hoursTilDark = parseInt(13 - player.hour)
                     $("#time").text('Hours til dark: '+ hoursTilDark)
                     if (hoursTilDark == 0) {
-                        player.messages.push(`You scored ${hunter.food} food while hunting.`)
                         $("#canvas").css({'cursor': 'pointer'})
-                        drawCanvas()
-                        saveGame()
-                        msgBox('darkness', `The sun has gone down.  You head back to camp with your day's catch of ${hunter.food} food.`,
-                        [{text: "ok", function: () => {
-                            window.location.href = `/journey?name=${player.name}&auth=${player.authtoken}`
-                        }}]);
+                        msgBox(
+                            'darkness', `The sun has gone down. Do you want to head back or make camp and keep hunting tomorrow?`,
+                            [
+                                {text: "head back", function: () => {
+                                    player.messages.push(`You scored ${hunter.food} food while hunting.`)
+                                    saveGame()
+                                    msgBox('finished', `You head back to camp with your catch of ${hunter.food} food.`,
+                                    [{text: "ok", function: () => {
+                                        window.location.href = `/journey?name=${player.name}&auth=${player.authtoken}`
+                                    }}])
+                                }},
+                                {text: "keep hunting", function: () => {
+                                    player.hour = 0
+                                    player.time = 0
+                                    player.day += 1
+                                    // go dark
+                                    $('#blackout').css({'opacity': 1, 'display': 'block'})
+                                    $('#blackout').animate({'opacity': 0}, 2000)
+                                    $("#canvas").css({'cursor': 'none'})
+                                    setTimeout(() => {
+                                        $('#blackout').css({'display': 'none'})
+                                        unpause()
+                                        timeDown()
+                                        requestAnimationFrame(drawCanvas)
+                                        animals.forEach(animal => {
+                                            animal.move()
+                                        })
+                                    }, 2000)
+                                }}
+                            ]
+                        )
                     }
                     else {
-                        setTimeout(timeDown, 9600)
+                        setTimeout(timeDown, day_length)
                     }
                 }    
                 if (player.time) timeDown()
@@ -1044,7 +1044,7 @@ $(document).ready(() => {
                     hunter.stopped = false
                 }
                 $(document).mouseup(event => {
-                    hunter.stopped = true
+                    // hunter.stopped = true
                     if (hunter.armed) {
                         hunter.throw(
                             (event.clientX - $("#canvasFrame").position().left) * canvasScaleFactor / mapHexWidth + viewport.x,
@@ -1053,7 +1053,7 @@ $(document).ready(() => {
                     }
                 })
                 $(document).on('touchend', event => {
-                    hunter.stopped = true
+                    // hunter.stopped = true
                     if (hunter.armed) {
                         hunter.throw(
                             (event.touches[0].clientX - $("#canvasFrame").position().left) * canvasScaleFactor / mapHexWidth + viewport.x,
