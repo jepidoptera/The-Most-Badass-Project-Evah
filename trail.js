@@ -1,3 +1,4 @@
+animals = require('./public/assets/javascript/animals.js');
 const trail = [
     {
         type: 'city',
@@ -28,7 +29,7 @@ const trail = [
         length: 15,
         message: {
             title: 'Your journey begins', 
-            text: "Orepoke, once the world's greatest city, is now wracked by devastating epidemics of cholera and dysentery, as well as terrible shortages of food, wagon axles, and bullets.  Furthermore, the prophets foretell that on Februne the twelfth, the Sun will be eclipsed by the dark moon Plutanus, and madness will grip the land.  Only the legendary city of Pokegonemon has the technology to weather the coming storm.  So taking your surviving Mokemon™, you set off before dawn...",
+            text: "Orepoke, once the world's greatest city, is now wracked by devastating epidemics of cholera and dysentery, as well as terrible shortages of food, wagon axles, and bullets. Furthermore, the prophets foretell that on Februne the twelfth, the Sun will be eclipsed by the dark moon Plunepiter, and madness will grip the land. Only the legendary city of Pokegonemon has the technology to weather the coming storm. So taking your surviving Mokemon™, you set off before dawn...",
             button: "begin"
         }
     },
@@ -43,7 +44,7 @@ const trail = [
         length: 1,
         shop: {
             title: "Trader Moe's trading post", 
-            text: "Heading out, eh?  I don't blame you. <br><br>  Don't forget to stock up on grenades.  There are bears in those woods up ahead.",
+            text: "Heading out, eh? I don't blame you. <br><br> Don't forget to stock up on grenades. There are bears in those woods up ahead.",
             items: [
                 {name: "mokeballs", price: 20},
                 {name: "grenades", price: 50},
@@ -71,7 +72,11 @@ const trail = [
             // {type: "near tree", frequency: 1}
         ],
         hunting_scenery: [
-            {type: "tree", frequency: 5}
+            {type: "tree", frequency: 5},
+            {type: "fern", frequency: 5, passable: true}
+        ],
+        powerups: [
+            {type: "berry bush", frequency: 50},
         ],
         animals: [
             {type: "deer", frequency: 100},
@@ -79,8 +84,8 @@ const trail = [
             {type: "squirrel", frequency: 300},
         ],
         mokemon: [
-            {type: "Zyant", isMokemon: true, frequency: 10},
-            {type: "Fragglegod", isMokemon: true, frequency: 5}
+            {type: "Zyant", frequency: 10},
+            {type: "Fragglegod", frequency: 5}
         ],
         length: 150 // seconds
 
@@ -103,8 +108,8 @@ const trail = [
             {type: "coyote", frequency: 20},
         ],
         mokemon: [
-            {type: "Dezzy", isMokemon: true, frequency: 10},
-            {type: "Fragglegod", isMokemon: true, frequency: 5}
+            {type: "Dezzy", frequency: 10},
+            {type: "Fragglegod", frequency: 5}
         ],
         length: 57 // seconds
 
@@ -120,7 +125,7 @@ const trail = [
         length: 1,
         shop: {
             title: "The Desert Oasis", 
-            text: "Welcome, welcome.  Hope you haven't had to eat too many of your Mokemon.  The moon's getting bigger, isn't it?  Please buy some stuff. ",
+            text: "Welcome, welcome. Hope you haven't had to eat too many of your Mokemon. The moon's getting bigger, isn't it? Please buy some stuff.",
             items: [
                 {name: "mokeballs", price: 20},
                 {name: "grenades", price: 50},
@@ -146,7 +151,7 @@ const trail = [
         ],
         mokemon: [
             {type: "Dezzy", frequency: 10},
-            {type: "Fragglegod", isMokemon: true, frequency: 5}
+            {type: "Fragglegod", frequency: 5}
 
         ],
         length: 39 // seconds
@@ -172,9 +177,12 @@ const trail = [
             {type: "yeti", frequency: 10},
         ],
         mokemon: [
-            {type: "Apismanion", isMokemon: true, frequency: 10},
-            {type: "Marlequin", isMokemon: true, frequency: 10},
-            {type: "Fragglegod", isMokemon: true, frequency: 5}
+            {type: "Apismanion", frequency: 10},
+            {type: "Marlequin", frequency: 10},
+            {type: "Fragglegod", frequency: 5}
+        ],
+        powerups: [
+            {type: "gold nugget", frequency: 50},
         ],
         length: 82 
 
@@ -192,7 +200,7 @@ const trail = [
         hunting_scenery: [
             {type: "dead tree", frequency: 3},
             {type: "tree", frequency: 0.3},
-            {type: "cattails", frequency: 6, passable: true}
+            {type: "cattails", frequency: 10, passable: true}
         ],
         animals: [
             {type: "alligator", frequency: 30},
@@ -200,9 +208,9 @@ const trail = [
             {type: "beaver", frequency: 150},
         ],
         mokemon: [
-            {type: "Apismanion", isMokemon: true, frequency: 10},
-            {type: "Marlequin", isMokemon: true, frequency: 10},
-            {type: "Fragglegod", isMokemon: true, frequency: 5}
+            {type: "Apismanion", frequency: 10},
+            {type: "Marlequin", frequency: 10},
+            {type: "Fragglegod", frequency: 5}
         ],
         length: 170
     },
@@ -216,6 +224,7 @@ const trail = [
         ],
         hunting_scenery: [
             {type: "palm tree", frequency: 5},
+            {type: "fern", frequency: 4, passable: true}
         ],
         animals: [
             {type: "deer", frequency: 100},
@@ -223,10 +232,10 @@ const trail = [
             {type: "tiger", frequency: 20},
         ],
         mokemon: [
-            {type: "Wingmat", isMokemon: true, frequency: 10},
-            {type: "Mallowbear", isMokemon: true, frequency: 10},
-            {type: "Shadowdragon", isMokemon: true, frequency: 10},
-            {type: "Fragglegod", isMokemon: true, frequency: 10}
+            {type: "Wingmat", frequency: 10},
+            {type: "Mallowbear", frequency: 10},
+            {type: "Shadowdragon", frequency: 10},
+            {type: "Fragglegod", frequency: 10}
         ],
         length: 210 // seconds
 
