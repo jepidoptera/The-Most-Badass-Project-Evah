@@ -57,7 +57,7 @@ const SceneObjects = {
     },
     "mountain": {
         type: "mountain",
-        sizeRange: { min: { x: 600, y: 400 }, max: { x: 1200, y: 750 } },
+        sizeRange: { min: { x: 400, y: 300 }, max: { x: 800, y: 500 } },
         imgRange: { min: 0, max: 4 },
         distance: (y) => y % 7 == 0 ? -300 : Math.random() * canvas.north_horizon
     },
@@ -97,7 +97,7 @@ const SceneObjects = {
     "cactus": {
         type: "cactus",
         sizeRange: {min: {x: 25, y: 25}, max: {x: 100, y: 100}},
-        imgRange: {min: 0, max: 1},
+        imgRange: {min: 0, max: 4},
         distance: () => canvas.south_horizon + Math.random() * (canvas.north_horizon - canvas.south_horizon)
     },
     "house": {
@@ -386,8 +386,12 @@ class Canvas {
                 && !sceneObject.solid
             ) {
                 // this.ctx.globalAlpha = 0.5
-                let closeness = Math.min(this.origin_x + player.width + 100 - x, x + sceneObject.width * scale - this.origin_x + processionLength + 100)
-                this.ctx.globalAlpha = Math.max(0.5, 1 - closeness / 200)
+                let margin = 100
+                let closeness = Math.min(
+                    this.origin_x + player.width + margin - x, 
+                    x + sceneObject.width * scale - this.origin_x + processionLength + margin
+                )
+                this.ctx.globalAlpha = Math.max(0.25, 1 - closeness / margin / 2)
             }
             else { this.ctx.globalAlpha = 1 }
             this.ctx.drawImage(
@@ -467,7 +471,7 @@ class mokePosse {
         this.conditions = conditions;
         this.alive = true;
         this.height = mokeInfo[this.name].height
-        this.width = mokeInfo[this.name].width
+        this.width = mokeInfo[this.name].thumbnailWidth || mokeInfo[this.name].width
         this.frameCount = mokeInfo[this.name].frameCount
         this.foodValue = mokeInfo[this.name].foodValue
         this.hunger = mokeInfo[this.name].hunger
@@ -669,10 +673,13 @@ function astralMovements() {
     $("#canvas").css({"filter": `brightness(${Math.max(Math.min(lightness * 10, 1), 0.5)})`})
     $("#ground").css({"filter": `brightness(${Math.max(Math.min(lightness * 10, 1), 0.5)})`})
     // the dark moon. should be at the same place as the sun on Februne 12th at noon
-    let moon_z = (player.day * 24 + player.time) ** 2 / (daysTilEclipse * 24 + 12) ** 2; // 571536;
+    // so moon_z will be exactly 1 at the time of the eclipse
+    const moon_z = (player.day * 24 + player.time) / (daysTilEclipse * 24 + 12) // 571536;
     // moon rises and sets every third day
-    moon_x = -Math.sin(Math.PI * (0.333333 + (player.time + 12) / 72 + (player.day % 3) / 3)) * (25 + 25 * moon_z) + 50
-    moon_y = Math.cos(Math.PI * (0.333333 + (player.time + 12) / 72 + (player.day % 3) / 3)) * (40 * moon_z) + 45
+    // moon_x = -Math.sin(Math.PI * (0.333333 + (player.time + 12) / 72 + (player.day % 3) / 3)) * (25 + 25 * moon_z) + 50
+    const moon_x = Math.sin(Math.PI * ((player.time - 12) / 72 + (player.day - daysTilEclipse) / 3)) * (25 + 25 * moon_z) + 50
+    // moon_y = Math.cos(Math.PI * (0.333333 + (player.time + 12) / 72 + (player.day % 3) / 3)) * (40 * moon_z) + 45
+    const moon_y = Math.cos(Math.PI + Math.PI * ((player.time - 12) / 72 +  (player.day - daysTilEclipse) / 3)) * (40 * moon_z) + 45
     $("#darkMoon").css({
         'top': moon_y + '%', 
         'left': (moon_x) + '%', 
@@ -711,7 +718,7 @@ function narrate() {
         month = (month === "Novembruary") ? "Octember" : "Februne";
     }
     suffix = (day) => {return parseInt(day / 10) == 1 ? "th" : ((day % 10 === 1) ? "st" : ((day % 10 === 2) ? "nd" : (day % 10 === 3) ? "rd" : "th"))}
-    let calendarDay = `${month}${month == 'Februne'? 'the' : ''} ${day}${suffix(day)}`;
+    let calendarDay = `${month}${month == 'Februne'? ' the ' : ''} ${day}${suffix(day)}`;
     $("#narrative").html(
         '<span style="color: yellow">tap here or press enter for options</span> <br>' + 
         'Day: ' + calendarDay +
@@ -1002,7 +1009,7 @@ const events = {
         pathogens: [
             {
                 name: "ebola",
-                rarity: 100,
+                get rarity() {return player.currentLocation.type === 'jungle' ? 100 : 10000},
                 duration: {
                     base: 50,
                     random: 10,
@@ -1010,12 +1017,12 @@ const events = {
                 },
                 get contagionLevel() {player.posse.reduce((sum, moke) => 
                     sum + moke.conditions.reduce((sum, condition) => 
-                        sum + (condition.name === "ebola" ? 1.5: 0) + (condition.name === "quarantine" ? -1.25: 0), 0), 0
-                    ) + (trail.currentLocation.type === "jungle" ? 1 : 0)
+                        sum + (condition.name === "ebola" ? 1: 0) + (condition.name === "quarantine" ? -.92: 0), 0), 0
+                    )
                 }
             }, {
                 name: "sars",
-                rarity: 500,
+                rarity: 200,
                 duration: { // in hours
                     base: 80,
                     random: 20,
@@ -1023,9 +1030,20 @@ const events = {
                 },
                 get contagionLevel() {return player.posse.reduce((sum, moke) => 
                     sum + moke.conditions.reduce((sum, condition) => 
-                        sum + (condition.name === "sars" ? 7.5: 0) + (condition.name === "quarantine" ? -7.2: 0), 0), 1
+                        sum + (condition.name === "sars" ? 1: 0) + (condition.name === "quarantine" ? -.96: 0), 0), 1
                     )                 
                 }   
+            }, {
+                name: "the plague",
+                rarity: 100,
+                duration: { // in hours
+                    base: 90,
+                    random: 20,
+                    immuneDependent: 50
+                },
+                get contagionLevel() {return player.posse.reduce((sum, moke) => {
+                    return sum + (moke.conditions.includes("the plague") ? (moke.conditions.includes("quarantine") ? .133: 1) : 0)}, 1
+                )}
             }
         ],
         get occurs() {
@@ -1045,13 +1063,12 @@ const events = {
                 // can't get it twice
                 // console.log(`prevented double occurrence of ${events.disease.name}.`);
                 return;
-            } 
+            }
             let illnessLength = events.disease.duration.base 
                 + Math.random() * events.disease.duration.random 
                 + Math.random() * events.disease.duration.immuneDependent / victim.immuneResponse
             let illnessName = events.disease.name;
 
-            // there's not much you can do but rest and hope
             victim.conditions.push ({
                 name: events.disease.name,
                 type: 'disease', 
@@ -1074,13 +1091,13 @@ const events = {
                     });
                 }
             },{
-                text: "ruthlessly carry forward"
+                text: "ruthlessly carry forward" // do nothing, so there is no function
             }]);
         }
     },
     bear: {
         get occurs() {
-            return player.posse.length > 0 && trail.currentLocation.type === "forest" && parseInt(Math.random() * 150) == 0;
+            return player.posse.length > 0 && trail.currentLocation.type === "forest" && parseInt(Math.random() * 200) == 0;
         },
         function: () => {
             // most often eats the weakest one
@@ -1372,6 +1389,7 @@ const events = {
 const effects = {
     ebola: (victim) => { victim.hurt(.01 * victim.max_hp) },
     sars: (victim) => { victim.hurt(.005 * victim.max_hp) },
+    "the plague": (victim) => { victim.hurt(.015 * victim.max_hp) },
     rest: (moke) => { 
         moke.hp = Math.min(moke.hp + moke.max_hp / 240, moke.max_hp) 
     } // ten days to fully heal
