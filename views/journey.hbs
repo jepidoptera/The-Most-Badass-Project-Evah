@@ -23,6 +23,7 @@
         </div>
         <div id='mainMenu'>
             <button class="menuButton" id='menu' onclick="options()">Menu</button>
+            <button class="menuButton" id="huntButton" onclick="saveGame(); window.location.href=`/hunt?name=${player.name}&auth=${player.authtoken}`">Hunt</button>
             <button class="menuButton" id='pause' onclick="pause(); $('#pause').hide(); $('#unpause').show()">Pause</button>
             <button class="menuButton" id='unpause' hidden="true" onclick="unpause(); $('#unpause').hide(); $('#pause').show()">Unpause</button>
             <button class="menuButton" id='info' onclick="infoPanel()">Info</button>
@@ -34,7 +35,6 @@
         <div id='optionsMenu' class='hidden dialogBox'>
             <p style="text-align: center">Options: <button class="backButton" onclick="closeOptions()">⮠</button></p>
             <button class="optionButton" onclick="restDialog()">Rest</button>
-            <button id="huntButton" class="optionButton" onclick="saveGame(); window.location.href=`/hunt?name=${player.name}&auth=${player.authtoken}`">Hunt</button>
             <button class="optionButton" onclick="saveGame(); closeOptions(); msgBox('Game saved.');">Save</button>
             <button class="optionButton" onclick="window.location.href=window.location.href">Reload</button>
         </div>
