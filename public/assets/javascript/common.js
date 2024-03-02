@@ -7,6 +7,7 @@ class Player{
         this.grenades = 0
         this.arrows = 0
         this.speed = 4
+        this.inventory = []
         this.name = name || 'simone'
         // reset to beginning of trail
         this.progress = 1
