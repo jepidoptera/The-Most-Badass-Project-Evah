@@ -4,10 +4,14 @@ X actually make background images for the whole trail
 X hunt with arrows
 X add player hitpoint system so you can die vs animals. 
 X covered wagon animation
+X plague disease event
+X make hunter go and collect a dead animal before getting food from it
+X make dark come on gradually in hunting mode
+X allow player to camp overnight and keep hunting
+X powerups in hunting mode (berries, gold nuggets, etc)
 / move dialog boxes into info panel
   bring Mokemon hunting with you
   Mokemon fighting minigame!
-  allow player to camp overnight and keep hunting
   player health icon alongside Mokemon
   allow selling stuff
   fork in the road
@@ -15,4 +19,6 @@ X covered wagon animation
   abandoned city biome
   dinosaur biome
   ice biome
-  plague disease event
+  weapons buttons with icons in hunting screen
+  use promise.all for loading animals
+  save and load in localstorage
