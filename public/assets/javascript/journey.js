@@ -169,7 +169,6 @@ const SceneObjects = {
     }
 }
 
-
 class Trail {
     constructor(locations) {
         this.locations = locations.map((location, i) => {
@@ -506,10 +505,6 @@ class mokePosse {
             }
         });
         this.conditions = activeConditions;
-    }
-    hurt(damage) {
-        this.hp -= damage;
-        if (this.hp <= 0) this.die();
     }
     die(cause) {
         msgBox('tragedy', `${this.name} ${cause || "has died"}.`, [{
@@ -1015,6 +1010,7 @@ const events = {
                     random: 10,
                     immuneDependent: 70
                 },
+                damage: 0.01,
                 get contagionLevel() {player.posse.reduce((sum, moke) => 
                     sum + moke.conditions.reduce((sum, condition) => 
                         sum + (condition.name === "ebola" ? 1: 0) + (condition.name === "quarantine" ? -.92: 0), 0), 0
@@ -1022,12 +1018,13 @@ const events = {
                 }
             }, {
                 name: "sars",
-                rarity: 200,
+                rarity: 150,
                 duration: { // in hours
                     base: 80,
                     random: 20,
                     immuneDependent: 100
                 },
+                damage: 0.005,
                 get contagionLevel() {return player.posse.reduce((sum, moke) => 
                     sum + moke.conditions.reduce((sum, condition) => 
                         sum + (condition.name === "sars" ? 1: 0) + (condition.name === "quarantine" ? -.96: 0), 0), 1
@@ -1035,12 +1032,13 @@ const events = {
                 }   
             }, {
                 name: "the plague",
-                rarity: 100,
+                rarity: 300,
                 duration: { // in hours
                     base: 90,
                     random: 20,
                     immuneDependent: 50
                 },
+                damage: 0.015,
                 get contagionLevel() {return player.posse.reduce((sum, moke) => {
                     return sum + (moke.conditions.includes("the plague") ? (moke.conditions.includes("quarantine") ? .133: 1) : 0)}, 1
                 )}
@@ -1050,11 +1048,12 @@ const events = {
             events.disease.name = "";
             events.disease.pathogens.forEach(disease => {
                 if (disease.contagionLevel > Math.random() * disease.rarity) {
-                    events.disease.name = disease.name;
-                    events.disease.duration = disease.duration;
+                    events.disease.name = disease.name
+                    events.disease.duration = disease.duration
+                    events.disease.damage = disease.damage
                 }
             })
-            return events.disease.name;
+            return events.disease.name
         },
         function: () => {
             // strikes randomly
@@ -1062,18 +1061,21 @@ const events = {
             if (victim.conditions.map(c => c.name).includes(events.disease.name)) {
                 // can't get it twice
                 // console.log(`prevented double occurrence of ${events.disease.name}.`);
-                return;
+                return
             }
             let illnessLength = events.disease.duration.base 
                 + Math.random() * events.disease.duration.random 
                 + Math.random() * events.disease.duration.immuneDependent / victim.immuneResponse
-            let illnessName = events.disease.name;
+            let illnessName = events.disease.name
 
             victim.conditions.push ({
-                name: events.disease.name,
+                name: illnessName,
                 type: 'disease', 
-                timeRemaining: illnessLength
-            });
+                timeRemaining: illnessLength,
+                effect: () => {
+                    victim.hp -= events.disease.damage
+                }
+            })
             player.messages.push(`${victim.name} caught ${illnessName}.`)
             msgBox ("Outbreak!", `${victim.name} has ${illnessName}.`, [{
                 text: "euthanize",
@@ -1128,39 +1130,30 @@ const events = {
             msgBox ("Death", victim.name + " was eaten by a yeti.", "damn")
         }
     },
-    tree: {
+    falling_object: {
         get occurs() {
-            return player.posse.length > 0 && !player.resting && trail.currentLocation.type === "forest" && parseInt(Math.random() * 100) == 0;
+            return player.posse.length > 0 && !player.resting && (
+                trail.currentLocation.type == "forest" && parseInt(Math.random() * 100) == 0
+                || trail.currentLocation.type == "desert" && parseInt(Math.random() * 200) == 0
+            )
         },
         function: () => {
             victim = player.posse[parseInt(Math.random() * player.posse.length)]
-            let damage = Math.floor(Math.random() * 11 + 1)
-            player.messages.push(`${victim.name} suffered ${damage} damage from a falling tree.`)
+            if (trail.currentLocation.type === "forest") {
+                let damage = Math.floor(Math.random() * 11 + 1)
+                fallingObject = damage > 7 ? "tree" : (damage > 3 ? "branch" : "stick")
+            }
+            else if (trail.currentLocation.type === "desert") {
+                let damage = Math.floor(Math.random() * 6 + 6)
+                fallingObject = "cactus"
+            }
+            player.messages.push(`${victim.name} suffered ${damage} damage from a falling ${fallingObject}.`)
             victim.hp = Math.max(victim.hp - damage, 0)
-            fallingObject = damage > 7 ? "tree" : (damage > 3 ? "branch" : "stick")
             msgBox ("Ouch", `A ${fallingObject} fell on ${victim.name}.`, [{text: ":_(", function: () => {
-                victim.hp += damage;
-                victim.hurt(damage);
+                if (victim.hp <= 0) victim.die(`Was crushed by a ${fallingObject}`)
             }}])
             // put a picture of the victim in there so we can see how bad they're hurt
-            $("#msgText").append(mokePortrait(victim));
-        }
-    },
-    cactus: {
-        get occurs() {
-            return player.posse.length > 0 && !player.resting  && trail.currentLocation.type === "desert" && parseInt(Math.random() * 200) == 0;
-        },
-        function: () => {
-            victim = player.posse[parseInt(Math.random() * player.posse.length)];
-            let damage = Math.floor(Math.random() * 6 + 6)
-            player.messages.push(`${victim.name} suffered ${damage} damage from a cactus.`);
-            victim.hp = Math.max(victim.hp - damage, 0);
-            msgBox ("Ouch", `A cactus fell on ${victim.name}.`, [{text: ":_(", function: () => {
-                victim.hp += damage;
-                victim.hurt(damage);
-            }}])
-            // put a picture of the victim in there so we can see how bad they're hurt
-            $("#msgText").append(mokePortrait(victim));
+            $("#msgText").append(mokePortrait(victim))
         }
     },
     scorpion: {
@@ -1266,7 +1259,7 @@ const events = {
         },
         function: () => {
             let mokeNames = player.posse.map(moke => moke.name.toLowerCase());
-            let offer = ['dezzy', 'apismanion', 'mallowbear', 'marlequin', 'wingmat', 'zyant', 'shadowdragon']
+            let offer = Object.keys(mokeInfo)
                 .filter(moke => !mokeNames.includes(moke));
             if (offer.length > 0) offer = offer[Math.floor(Math.random() * offer.length)];
             else return;
@@ -1304,6 +1297,7 @@ const events = {
                 {type: 'money', quantity: 300}, 
                 {type: 'mokeballs', quantity: 9}, 
                 {type: 'grenades', quantity: 9}, 
+                {type: 'arrows', quantity: 100},
                 {type: 'mokemon', quantity: "a"}
             ]
             if (mokesYouDontHave.length === 0) possibleScores.pop()
@@ -1385,12 +1379,3 @@ const events = {
         }
     }
 };
-
-const effects = {
-    ebola: (victim) => { victim.hurt(.01 * victim.max_hp) },
-    sars: (victim) => { victim.hurt(.005 * victim.max_hp) },
-    "the plague": (victim) => { victim.hurt(.015 * victim.max_hp) },
-    rest: (moke) => { 
-        moke.hp = Math.min(moke.hp + moke.max_hp / 240, moke.max_hp) 
-    } // ten days to fully heal
-}
