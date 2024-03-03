@@ -222,6 +222,7 @@ class Mokeball extends Projectile {
                     else {
                         let messageText = `You caught: ${animal.type}!` 
                         if (animal.isMokemon) {
+                            player.messages.push(`You caught a wild ${animal.type} while hunting!`)
                             setTimeout(() => {
                                 player.posse.push({
                                     name: animal.type,
@@ -1021,6 +1022,7 @@ $(document).ready(() => {
                             [
                                 {text: "head back", function: () => {
                                     player.messages.push(`You scored ${hunter.food} food while hunting.`)
+                                    player.food += hunter.food
                                     saveGame()
                                     msgBox('finished', `You head back to the wagon with your catch of ${hunter.food} food.`,
                                     [{text: "ok", function: () => {
