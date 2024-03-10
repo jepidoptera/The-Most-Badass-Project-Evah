@@ -496,9 +496,9 @@ class mokePosse {
         var activeConditions = [];
         this.conditions.forEach((condition) => {
             if (condition.timeRemaining > 0) {
-                condition.timeRemaining --;
-                if (effects[condition.name]) effects[condition.name](this);
-                if (condition.timeRemaining > 0) activeConditions.push(condition);
+                condition.timeRemaining --
+                if (condition.effect) condition.effect(this)
+                if (condition.timeRemaining > 0) activeConditions.push(condition)
                 else if (condition.timeRemaining <= 0 && condition.type === 'disease') {
                     player.messages.push(`${this.name} recovered from ${condition.name}.`)
                 }
@@ -631,7 +631,7 @@ function timelyEvents() {
         player.hour = Math.floor(player.time);
         // random disasters
         Object.keys(events).forEach((key) => {
-            if (events[key].occurs) events[key].function();
+            if (events[key].occurs) events[key].effect();
         });
         // mokemon conditions (ebola and so forth)
         player.posse.forEach((mokemon) =>{
@@ -930,7 +930,7 @@ function mokemon() {
 function infoPanel() {
     $("#foodInfo").text(`food: ${player.food} (-${player.foodPerDay}/day)`)
     $("#moneyInfo").text(`money: ${player.money}`)
-    $("#ammoInfo").text(`mokeballs: ${player.mokeballs}, grenades: ${player.grenades}`)
+    $("#ammoInfo").text(`mokeballs: ${player.mokeballs}, grenades: ${player.grenades}, arrows: ${player.arrows}`)
     $("#playerInfo").show()
 }
 
@@ -998,89 +998,40 @@ function weightedRandom(nums) {
     return n-1;
 }
 
+class RandomEvent {
+    constructor (occurrence, effect) {
+        this._occurs = occurrence
+        this.effect = effect
+    }
+    get occurs() {
+        return this._occurs()
+    }
+}
 
-const events = {
-    disease: {
-        pathogens: [
-            {
-                name: "ebola",
-                get rarity() {return player.currentLocation.type === 'jungle' ? 100 : 10000},
-                duration: {
-                    base: 50,
-                    random: 10,
-                    immuneDependent: 70
-                },
-                damage: 0.01,
-                get contagionLevel() {player.posse.reduce((sum, moke) => 
-                    sum + moke.conditions.reduce((sum, condition) => 
-                        sum + (condition.name === "ebola" ? 1: 0) + (condition.name === "quarantine" ? -.92: 0), 0), 0
-                    )
-                }
-            }, {
-                name: "sars",
-                rarity: 150,
-                duration: { // in hours
-                    base: 80,
-                    random: 20,
-                    immuneDependent: 100
-                },
-                damage: 0.005,
-                get contagionLevel() {return player.posse.reduce((sum, moke) => 
-                    sum + moke.conditions.reduce((sum, condition) => 
-                        sum + (condition.name === "sars" ? 1: 0) + (condition.name === "quarantine" ? -.96: 0), 0), 1
-                    )                 
-                }   
-            }, {
-                name: "the plague",
-                rarity: 300,
-                duration: { // in hours
-                    base: 90,
-                    random: 20,
-                    immuneDependent: 50
-                },
-                damage: 0.015,
-                get contagionLevel() {return player.posse.reduce((sum, moke) => {
-                    return sum + (moke.conditions.includes("the plague") ? (moke.conditions.includes("quarantine") ? .133: 1) : 0)}, 1
-                )}
-            }
-        ],
-        get occurs() {
-            events.disease.name = "";
-            events.disease.pathogens.forEach(disease => {
-                if (disease.contagionLevel > Math.random() * disease.rarity) {
-                    events.disease.name = disease.name
-                    events.disease.duration = disease.duration
-                    events.disease.damage = disease.damage
-                }
-            })
-            return events.disease.name
-        },
-        function: () => {
-            // strikes randomly
+class Disease extends RandomEvent {
+    constructor(name, rarity, contagionLevel, duration, damage) {
+        let occurrence = () => Math.random() * rarity < contagionLevel
+        let effect = () => {
             let victim = player.posse[weightedRandom(player.posse.map(moke => 1 / moke.immuneResponse))];
-            if (victim.conditions.map(c => c.name).includes(events.disease.name)) {
+            if (victim.conditions.map(c => c.name).includes(name)) {
                 // can't get it twice
                 // console.log(`prevented double occurrence of ${events.disease.name}.`);
                 return
             }
-            let illnessLength = events.disease.duration.base 
-                + Math.random() * events.disease.duration.random 
-                + Math.random() * events.disease.duration.immuneDependent / victim.immuneResponse
-            let illnessName = events.disease.name
-
             victim.conditions.push ({
-                name: illnessName,
+                name: name,
                 type: 'disease', 
-                timeRemaining: illnessLength,
-                effect: () => {
-                    victim.hp -= events.disease.damage
+                timeRemaining: duration(victim),
+                effect: (victim) => {
+                    victim.hp -= damage(victim)
+                    if (victim.hp <= 0) victim.die(`died of ${name}`)
                 }
             })
-            player.messages.push(`${victim.name} caught ${illnessName}.`)
-            msgBox ("Outbreak!", `${victim.name} has ${illnessName}.`, [{
+            player.messages.push(`${victim.name} caught ${name}.`)
+            msgBox ("Outbreak!", `${victim.name} has ${name}.`, [{
                 text: "euthanize",
                     function: () => victim.die("had to be put down")
-            },{
+            }, {
                 text: "rest and quarantine",
                 function: () => {
                     player.messages.push("The posse enters lockdown.")
@@ -1089,92 +1040,124 @@ const events = {
                         if (victim.alive) {
                             msgBox(`${victim.name} has recovered from ${illnessName}.`)
                             player.messages.push(`${victim.name} survived ${illnessName}.`)
+                            player.posse.forEach(moke => moke.conditions = moke.conditions.filter(c => c.name !== "quarantine"))
                         }
                     });
                 }
-            },{
+            }, {
                 text: "ruthlessly carry forward" // do nothing, so there is no function
-            }]);
+            }])
         }
-    },
-    bear: {
-        get occurs() {
+        super(occurrence, effect)
+    }
+}
+const events = {
+    "ebola": new Disease(
+        "ebola", 150,
+        () => player.currentLocation.type === 'jungle' && player.posse.reduce((sum, moke) => {
+            return sum + (moke.conditions.includes("ebola") ? (moke.conditions.includes("quarantine") ? .08: 1) : 0)}, 1
+        ),
+        (victim) => 50 + Math.random() * 10 + Math.random() * 70 / victim.immuneResponse,
+        (victim) => victim.hp / 100
+    ),
+    "sars": new Disease(
+        "sars", 200,
+        () => player.posse.reduce((sum, moke) => {
+            return sum + (moke.conditions.includes("the plague") ? (moke.conditions.includes("quarantine") ? .04: 1) : 0)}, 1
+        ),
+        (victim) => 80 + Math.random() * 20 + Math.random() * 100 / victim.immuneResponse,
+        (victim) => victim.hp / 170
+    ),
+    "the plague": new Disease(
+        "the plague", 350,
+        () => player.posse.reduce((sum, moke) => {
+            return sum + (moke.conditions.includes("the plague") ? (moke.conditions.includes("quarantine") ? .08: 1) : 0)}, 1
+        ),
+        (victim) => 50 + Math.random() * 60 + Math.random() * 50 / victim.immuneResponse,
+        (victim) => victim.hp / 120
+    ),
+    "bear": new RandomEvent(
+        () => {
             return player.posse.length > 0 && trail.currentLocation.type === "forest" && parseInt(Math.random() * 200) == 0;
         },
-        function: () => {
+        () => {
             // most often eats the weakest one
             let victim = player.posse[weightedRandom(player.posse.map(moke => 1 / moke.hp))];
             victim.die("was slain by a hungry bear");
             msgBox ("Death", victim.name + " was eaten by a bear.", "damn")
         }
-    },
-    berries: {
-        get occurs() {
+    ),
+    "berries": new RandomEvent(
+        () => {
             return trail.currentLocation.type === "forest" && !player.resting && parseInt(Math.random() * 100) == 0;
         },
-        function: () => {
+        () => {
             let berries = Math.floor(Math.random() * 50 + 25)
             player.messages.push("You scored some berries.")
             msgBox ("Free food!", `You found some random berries worth ${berries} food!`, [{text: "sweet"}, {text: "carry on, then"}]);
             player.food += berries
         }
-    },
-    yeti: {
-        get occurs() {
+    ),
+    "yeti": new RandomEvent(
+        () => {
             return player.posse.length > 0 && trail.currentLocation.type === "mountains" && parseInt(Math.random() * 250) == 0;
         },
-        function: () => {
+        () => {
             // most often eats the weakest one
             let victim = player.posse[weightedRandom(player.posse.map(moke => 1 / moke.hp))];
             victim.die("was devoured by a monstrous yeti")
             msgBox ("Death", victim.name + " was eaten by a yeti.", "damn")
         }
-    },
-    falling_object: {
-        get occurs() {
+    ),
+    "falling object": new RandomEvent(
+        () => {
             return player.posse.length > 0 && !player.resting && (
                 trail.currentLocation.type == "forest" && parseInt(Math.random() * 100) == 0
                 || trail.currentLocation.type == "desert" && parseInt(Math.random() * 200) == 0
             )
         },
-        function: () => {
+        () => {
+            let damage = 0
             victim = player.posse[parseInt(Math.random() * player.posse.length)]
             if (trail.currentLocation.type === "forest") {
-                let damage = Math.floor(Math.random() * 11 + 1)
+                damage = Math.floor(Math.random() * 11 + 1)
                 fallingObject = damage > 7 ? "tree" : (damage > 3 ? "branch" : "stick")
             }
             else if (trail.currentLocation.type === "desert") {
-                let damage = Math.floor(Math.random() * 6 + 6)
+                damage = Math.floor(Math.random() * 6 + 6)
                 fallingObject = "cactus"
             }
             player.messages.push(`${victim.name} suffered ${damage} damage from a falling ${fallingObject}.`)
             victim.hp = Math.max(victim.hp - damage, 0)
             msgBox ("Ouch", `A ${fallingObject} fell on ${victim.name}.`, [{text: ":_(", function: () => {
-                if (victim.hp <= 0) victim.die(`Was crushed by a ${fallingObject}`)
+                if (victim.hp <= 0) victim.die(`Was killed by a falling ${fallingObject}`)
             }}])
             // put a picture of the victim in there so we can see how bad they're hurt
             $("#msgText").append(mokePortrait(victim))
         }
-    },
-    scorpion: {
-        get occurs() {
+    ),
+    "scorpion": new RandomEvent(
+        () => {
             return player.posse.length > 0 && trail.currentLocation.type === "desert" && parseInt(Math.random() * 200) == 0;
         },
-        function: () => {
+        () => {
             victim = player.posse[parseInt(Math.random() * player.posse.length)]
-            victim.hurt(1)
+            victim.hp -= 1
+            if (victim.hp <= 0) {
+                victim.die("was stung by a scorpion and died")
+            }
             message = `${victim.name} was stung by a scorpion${victim.alive ? "" : " and died"}.`
-            player.messages.push(message);
+            if (victim.alive) player.messages.push(message)
             msgBox ("Venemous wildlife", message, "That's how it goes sometimes")
             // put a picture of the victim in there so we can see how bad they're hurt
-            $("#msgText").append(mokePortrait(victim));
+            $("#msgText").append(mokePortrait(victim))
         }
-    },
-    sandstorm: {
-        get occurs() {
+    ),
+    "sandstorm": new RandomEvent(
+        () => {
             return trail.currentLocation.type === "desert" && parseInt(Math.random() * 200) == 0;
         },
-        function: () => {
+        () => {
             $("#canvasArea").css({"filter": "sepia(0.5) brightness(1.5)", "transition:": "filter 5s"})
             msgBox('delays', "Sandstorm.  Lose one day.", [{
                 text: "ok", 
@@ -1183,15 +1166,14 @@ const events = {
                 }
             }]);
         }
-    },
-    thief: {
-        get occurs() {
-            return player.day > 0 && player.hour === 0 && Math.random() * 10 < 1 && !events.thief.alreadyHappening;
+    ),
+    "thief": new RandomEvent(
+        () => {
+            return player.day > 0 && player.hour === 0 && Math.random() * 10 < 1 && !this.alreadyHappening;
         },
-        // don't allow a thief to come while you're in the middle of chasing a thief
-        // would just be messy
-        alreadyHappening: false,
-        function: () => {
+        () => {
+            // don't allow a thief to come while you're in the middle of chasing a thief
+            // would just be messy
             let theftType = ["food", "mokeballs", "money", "mokemon"][Math.floor(Math.random() * 4)];
             let lossAmount = 0;
             let loss = "";
@@ -1211,7 +1193,7 @@ const events = {
             msgBox ("Theft", "A thief comes in the night and makes off with: " + loss + ".", [
                 {text: "how unfortunate", function: concludeChase},
                 {text: "give chase!", function: () => {
-                    events.thief.alreadyHappening = true;
+                    this.alreadyHappening = true;
                     giveChase();
                 }}
             ])
@@ -1252,13 +1234,13 @@ const events = {
                 }
             }
         }
-    },
-    trader: {
-        get occurs() {
+    ),
+    "trader": new RandomEvent(
+        () => {
             return player.day > 0 && Math.random() * 360  < 1;
         },
-        function: () => {
-            let mokeNames = player.posse.map(moke => moke.name.toLowerCase());
+        () => {
+            let mokeNames = player.posse.map(moke => moke.name);
             let offer = Object.keys(mokeInfo)
                 .filter(moke => !mokeNames.includes(moke));
             if (offer.length > 0) offer = offer[Math.floor(Math.random() * offer.length)];
@@ -1273,7 +1255,7 @@ const events = {
                 item: possibleTrades[Math.floor(Math.random() * possibleTrades.length)],
             }
             trade.quantity = Math.min(player[trade.item], minPrice[trade.item] + Math.floor(Math.random() * minPrice[trade.item] * 3));
-            msgBox("Can you refuse this offer?", `A wandering Mokemon trader passes by with a ${offer} for sale, asking ${trade.quantity} ${trade.item} in exchange.  Do you accept?`, [
+            msgBox("Can you refuse this offer?", `A wandering Mokemon trader passes by with a ${offer} for sale, asking ${trade.quantity} ${trade.item} in exchange (you have ${player[trade.item]}).  Do you accept?`, [
                 {text: "yes, please",
                 function: () => {
                     player.posse.push(new mokePosse(offer));
@@ -1283,12 +1265,12 @@ const events = {
                 {text: "nope"}
             ])
         }
-    },
-    abandonedVehicle: {
-        get occurs() {
+    ),
+    "abandoned vehicle": new RandomEvent(
+        () => {
             return player.day > 3 && !player.resting && Math.random() * 360  < 1;
         },
-        function: () => {
+        () => {
             let mokesYouHave = player.posse.map(moke => moke.name.toLowerCase());
             let mokesYouDontHave = Object.keys(mokeInfo).map(moke => moke.toLowerCase())
                 .filter(moke => !mokesYouHave.includes(moke))
@@ -1328,22 +1310,22 @@ const events = {
                 player.messages.push(`Passed an empty, abandoned ${vehicle}.`)
             }
         }
-    },
-    foodLow: {
-        get occurs() {
+    ),
+    "food low": new RandomEvent(
+        () => {
             return player.hour === 0 && player.food < player.foodPerDay * 3;
         },
-        function: () => {
+        () => {
             let daysRemaining = parseInt(player.food / player.foodPerDay) + 1;
             player.foodLow = true;
             player.messages.push(`You are low on food.  It will be gone in: ${daysRemaining} days.`)
         }
-    },
-    starve: {
-        get occurs() {
+    ),
+    "starve": new RandomEvent(
+        () => {
             return player.food <= 0;
         },
-        function: () => {
+        () => {
             if (player.posse.length === 0) {
                 msgBox("death by starvation", "You have no food and no Mokemon.  You have starved to death!", [
                     {text: "awwwwwww", function: () => window.location.href="/"}
@@ -1363,19 +1345,20 @@ const events = {
                     player.messages.push("You have no food!");
                 }
                 player.posse.forEach(moke => {
-                    moke.hurt(moke.hunger / 100)
+                    moke.hp -= moke.hunger / 100
+                    if (moke.hp <= 0) moke.die("starved to death")
                 })
                 player.food = 0;
             }
         }
-    },
-    dontStarve: {
-        get occurs() {
+    ),
+    "don't starve": new RandomEvent(
+        () => {
             return player.lowFood && player.food >= player.foodPerDay * 3;
         },
-        function () {
+        () => {
             player.lowFood = false;
             player.messages.push("You're doing ok on food for now.")
         }
-    }
-};
+    )
+}
