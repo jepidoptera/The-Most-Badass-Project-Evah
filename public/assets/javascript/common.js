@@ -1,7 +1,7 @@
 class Player{
     constructor(name) {
         // give player initial stats
-        this.food = 120
+        this.food = 200
         this.money = 3000
         this.mokeballs = 0
         this.grenades = 0
@@ -30,7 +30,6 @@ class Player{
             isLoaded: false,
             currentLocation: player.currentLocation.name,
             posse: player.posse.map(moke => {return {
-                type: moke.type,
                 name: moke.name,
                 hp: moke.hp,
                 conditions: moke.conditions
@@ -60,7 +59,12 @@ function msgBox(title, text, buttons = [{text: "ok", function: () => {}}]) {
         $("#msgbuttons").append($("<button>")
             .addClass('msgbutton')
             .text(button.text)
-            .click(() => {$("#msgbox").hide(); unpause(); msgBoxActive = false; if (button.function) button.function();})
+            .click(() => {
+                $("#msgbox").hide()
+                unpause()
+                msgBoxActive = false
+                if (button.function) button.function()
+            })
             .attr("type", (buttons.length === 1 ? "submit" : "none"))
         )
     })
