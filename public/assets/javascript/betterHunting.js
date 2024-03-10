@@ -50,8 +50,11 @@ class PowerUp {
     }
     detect() {
         if (this.onScreen) {
-            let dist = approxDist(this.x + this.offset.x, this.y + this.offset.y, hunter.x + hunter.offset.x, hunter.y + hunter.offset.y);
-            if (dist < 1) {
+            // let dist = approxDist(this.x + this.offset.x, this.y + this.offset.y, hunter.x + hunter.offset.x, hunter.y + hunter.offset.y)
+            if (
+                this.x + this.offset.x + this.width > hunter.x + hunter.offset.x && this.x + this.offset.x < hunter.x + hunter.offset.x + hunter.width 
+                && this.y + this.offset.y + this.height > hunter.y + hunter.offset.y && this.y + this.offset.y < hunter.y + hunter.offset.y + hunter.height
+            ) {
                 this.pickUp()
             }
         }
@@ -80,7 +83,7 @@ class GoldNugget extends PowerUp {
     pickUp() {
         this.money = Math.floor(Math.random() * 25 + 25)
         message(`You found a gold nugget worth $${this.money}.`)
-        player.money += this.money
+        hunter.gold += this.money
         this.gone = true
     }
 }
@@ -467,6 +470,7 @@ class Hunter extends Character {
         this.image = $("<img>").attr('src', './assets/images/hunter.png')[0];
         this.moveInterval = setInterval(() => {this.move()}, 1000 / this.frameRate);
         this.food = 0
+        this.gold = 0
         this.max_hp = 10000
         this.hp = this.max_hp
         this.stopped = true
@@ -716,6 +720,20 @@ class Animal extends Character {
             this.fleeRadius = 7;
             this.foodValue = Math.floor(9 * this.size);
             this.max_hp = 2 * this.size;
+        }
+        else if (type === "wild boar") {
+            this.frameCount = {x: 1, y: 2};
+            this.size = Math.random() ** 2 * 0.7 + .7;
+            this.width = this.size * 1.2;
+            this.height = this.size / 1.2;
+            this.walkSpeed = 1;
+            this.runSpeed = 3;
+            this.chaseRadius = 5;
+            this.fleeRadius = 8;
+            this.attackVerb = "gores";
+            this.damage = 25 * this.size;
+            this.foodValue = Math.floor(100 * this.size);
+            this.max_hp = 40 * this.size;
         }
         else {
             this.walkSpeed = 1;
@@ -1018,11 +1036,12 @@ $(document).ready(() => {
                     if (hoursTilDark == 0) {
                         $("#canvas").css({'cursor': 'pointer'})
                         msgBox(
-                            'darkness', `The sun has gone down and you have collected ${hunter.food} food. Do you want to head back or make camp and keep hunting tomorrow?`,
+                            'darkness', `The sun has gone down and you have collected ${hunter.food} food${hunter.gold ? (" and " + hunter.gold) : ""}. Do you want to head back or make camp and keep hunting tomorrow?`,
                             [
                                 {text: "head back", function: () => {
                                     player.messages.push(`You scored ${hunter.food} food while hunting.`)
                                     player.food += hunter.food
+                                    player.money += hunter.gold
                                     saveGame()
                                     msgBox('finished', `You head back to the wagon with your catch of ${hunter.food} food.`,
                                     [{text: "ok", function: () => {
@@ -1139,8 +1158,10 @@ $(document).ready(() => {
                         hunter.aiming = true
                     }
                     if (event.key === "Escape") {
-                        msgBox("Leave early?", `Head back to the wagon with ${hunter.food} food?`, [
+                        msgBox("Leave early?", `Head back to the wagon with ${hunter.food} food${hunter.gold ? (" and " + hunter.gold) : ""}?`, [
                             {text: "yes", function: () => {
+                                player.food += hunter.food
+                                player.money += hunter.gold
                                 player.messages.push(`You scored ${hunter.food} food while hunting.`)
                                 saveGame()
                                 window.location.href = `/journey?name=${player.name}&auth=${player.authtoken}`
