@@ -1,4 +1,3 @@
-animals = require('./public/assets/javascript/animals.js');
 const trail = [
     {
         type: 'city',
@@ -206,6 +205,7 @@ const trail = [
             {type: "alligator", frequency: 30},
             {type: "heron", frequency: 85},
             {type: "beaver", frequency: 150},
+            {type: "wild boar", frequency: 40}
         ],
         mokemon: [
             {type: "Apismanion", frequency: 10},
