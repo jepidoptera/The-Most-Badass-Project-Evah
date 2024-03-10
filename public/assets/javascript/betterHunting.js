@@ -384,6 +384,7 @@ class Character {
         this.travelFrames = 0;
         this.moving = false;
         this.nextNode = map.nodes[this.x][this.y];
+        this.direction = {x: 0, y: 0, index: 0}
     }
     get center_x() {
         return this.x + this.offset.x + this.width / 2
@@ -455,8 +456,7 @@ class Character {
             this.realX += this.travelX;
         }
         else {
-            this.moving = false;
-            if (this.direction) this.direction.index = -10;
+            this.moving = false
         }
     }
 }
@@ -467,22 +467,33 @@ class Hunter extends Character {
         this.speed = 2.5;
         this.frameRate = 30;
         this.ammo = "arrows";
-        this.image = $("<img>").attr('src', './assets/images/hunter.png')[0];
+        this.image = $("<img>").attr('src', './assets/images/hunter2.png')[0];
         this.moveInterval = setInterval(() => {this.move()}, 1000 / this.frameRate);
         this.food = 0
         this.gold = 0
         this.max_hp = 10000
         this.hp = this.max_hp
         this.stopped = true
-        this.width = 1
-        this.height = 1
+        this.width = 1.2
+        this.height = 1.2
+        this.imageFrame = {x: 0, y: 0}
+        this.frameCount = {x: 9, y: 12}
+        this.animationCounter = 0
         // this.centerScreen()
     }
     move() {
-        if (paused) return;
-        if (this.stopped || this.aiming) return
+        if (paused) return
+        if (this.stopped || this.aiming) {
+            this.imageFrame.x = 0
+            this.animationCounter = 0
+            return
+        }
         super.move()
         this.centerScreen()
+        this.animationCounter += 1
+        if (this.animationCounter % 3 == 0) {
+            this.imageFrame.x = (this.imageFrame.x % 8) + 1
+        }
         powerups.forEach((powerup) => {
             powerup.detect()
         })
@@ -1311,22 +1322,27 @@ function drawCanvas() {
 }
 
 function drawHunter() {
-    let hunterImgSize = 360
-    let hunterFrame = 0
-    if (hunter.travelFrames) hunterFrame = ((hunter.travelFrames % (frameRate / 3) < frameRate / 6) ? 1 : 2)
-    if (hunter.throwing) hunterFrame = 3
+    // steer
+    hunter.destination.x = Math.floor((mouseX - $("#canvasFrame").position().left) * canvasScaleFactor / mapHexWidth + viewport.x)
+    hunter.destination.y = Math.floor((mouseY - $("#canvasFrame").position().top) * canvasScaleFactor / mapHexHeight + viewport.y - (hunter.destination.x % 2 === 0 ? 0.5 : 0))
+    
+    // choose animation frame based on direction
+    hunter.imageFrame.y = hunter.direction.index
+
+    // if (hunter.throwing) hunterFrame = 3
     ctx.save()
     ctx.translate((hunter.x - viewport.x + hunter.offset.x) * mapHexWidth,
         (hunter.y - viewport.y + hunter.offset.y + (hunter.x % 2 === 0 ? 0.25 : -0.25)) * mapHexHeight)
-    ctx.drawImage(hunter.image, hunterFrame * hunterImgSize, 0, hunterImgSize, hunterImgSize,
-        0, 0, mapHexHeight * 1.1547, mapHexHeight)
+    ctx.drawImage(
+        hunter.image, 
+        hunter.imageFrame.x * hunter.image.naturalWidth / hunter.frameCount.x, 
+        hunter.imageFrame.y * hunter.image.naturalHeight / hunter.frameCount.y, 
+        hunter.image.naturalWidth / hunter.frameCount.x, hunter.image.naturalHeight / hunter.frameCount.y,
+        0, 0, hunter.width * mapHexHeight, hunter.height * mapHexHeight)
     if (hunter.healthBar) {
         hunter.drawHealthBar()
     }
     ctx.restore()
-    // steer
-    hunter.destination.x = Math.floor((mouseX - $("#canvasFrame").position().left) * canvasScaleFactor / mapHexWidth + viewport.x)
-    hunter.destination.y = Math.floor((mouseY - $("#canvasFrame").position().top) * canvasScaleFactor / mapHexHeight + viewport.y - (hunter.destination.x % 2 === 0 ? 0.5 : 0))
 }
 
 function drawMokeballs() {
@@ -1462,36 +1478,36 @@ function findPath(startingNode, destinationNode) {
     let destinationPoint = {x: map.nodes[destinationNode.x][destinationNode.y].x, y: map.nodes[destinationNode.x][destinationNode.y].y};
     if (startingNode.x % 2 === 0) {
         directions = [
-            {x: 0, y: -1},
-            {x: 1, y: 0},
-            {x: 1, y: 1},
-            {x: 0, y: 1},
-            {x: -1, y: 1},
-            {x: -1, y: 0},
+            {x: 0, y: -1, index: 3},
+            {x: 1, y: 0, index: 5},
+            {x: 1, y: 1, index: 7},
+            {x: 0, y: 1, index: 9},
+            {x: -1, y: 1, index: 11},
+            {x: -1, y: 0, index: 1},
 
-            {x: 1, y: -1},
-            {x: 2, y: 0},
-            {x: 1, y: 2},
-            {x: -1, y: 2},
-            {x: -2, y: 0},
-            {x: -1, y: -1},
+            {x: 1, y: -1, index: 4},
+            {x: 2, y: 0, index: 6},
+            {x: 1, y: 2, index: 8},
+            {x: -1, y: 2, index: 10},
+            {x: -2, y: 0, index: 0},
+            {x: -1, y: -1, index: 2},
         ]
     }
     else {
         directions = [
-            {x: 0, y: -1},
-            {x: 1, y: -1},
-            {x: 1, y: 0},
-            {x: 0, y: 1},
-            {x: -1, y: 0},
-            {x: -1, y: -1},
+            {x: 0, y: -1, index: 3},
+            {x: 1, y: -1, index: 5},
+            {x: 1, y: 0, index: 7},
+            {x: 0, y: 1, index: 9},
+            {x: -1, y: 0, index: 11},
+            {x: -1, y: -1, index: 1},
 
-            {x: 1, y: -2},
-            {x: 2, y: 0},
-            {x: 1, y: 1},
-            {x: -1, y: 1},
-            {x: -2, y: 0},
-            {x: -1, y: -2}
+            {x: 1, y: -2, index: 4},
+            {x: 2, y: 0, index: 6},
+            {x: 1, y: 1, index: 8},
+            {x: -1, y: 1, index: 10},
+            {x: -2, y: 0, index: 0},
+            {x: -1, y: -2, index: 2}
         ]
     }
     for (let n = 0; n < 12; n++) {
@@ -1546,7 +1562,7 @@ function findPath(startingNode, destinationNode) {
             }
         }
     }
-    return {...directions[bestDirection], index: bestDirection};
+    return directions[bestDirection]
 }
 
 function approxDist (x1, y1, x2, y2) {
